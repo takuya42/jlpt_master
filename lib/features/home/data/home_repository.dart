@@ -12,8 +12,8 @@ class MockHomeRepository implements HomeRepository {
 
   @override
   Future<HomeContent> fetchHomeContent() async {
-    return const HomeContent(
-      levels: [
+    return HomeContent(
+      levels: const [
         JlptLevelCardData(
           level: 'N5',
           title: LocalizedText(en: 'Beginner', ja: '入門'),
@@ -86,13 +86,13 @@ class MockHomeRepository implements HomeRepository {
           routePath: AppRoute.mockExam.path,
         ),
       ],
-      studyStatus: StudyStatusData(
+      studyStatus: const StudyStatusData(
         studyTimeMinutes: 45,
         studyDays: 12,
         accuracyPercent: 86,
         goalProgress: 0.72,
       ),
-      recentHistory: [
+      recentHistory: const [
         StudyHistoryItemData(
           title: LocalizedText(en: 'N5 Vocabulary Review', ja: 'N5 語彙復習'),
           subtitle: LocalizedText(en: '32 words practiced', ja: '32語を練習'),

@@ -40,7 +40,12 @@ class MainShell extends StatelessWidget {
 
   int _selectedIndex(BuildContext context) {
     final location = GoRouterState.of(context).uri.path;
-    final index = _items.indexWhere((item) => item.route.path == location);
+    final index = _items.indexWhere((item) {
+      if (item.route == AppRoute.home) {
+        return item.route.path == location;
+      }
+      return location.startsWith(item.route.path);
+    });
     return index < 0 ? 0 : index;
   }
 }
