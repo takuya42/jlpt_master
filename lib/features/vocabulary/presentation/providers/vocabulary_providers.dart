@@ -9,11 +9,13 @@ final vocabularyRepositoryProvider = Provider<VocabularyRepository>((ref) {
   return const MockVocabularyRepository();
 });
 
-final vocabularyWordsProvider = FutureProvider<List<VocabularyWord>>((ref) async {
+final vocabularyWordsProvider =
+    FutureProvider<List<VocabularyWord>>((ref) async {
   return ref.watch(vocabularyRepositoryProvider).fetchWords();
 });
 
-final vocabularyWordProvider = FutureProvider.family<VocabularyWord?, String>((ref, id) async {
+final vocabularyWordProvider =
+    FutureProvider.family<VocabularyWord?, String>((ref, id) async {
   final word = await ref.watch(vocabularyRepositoryProvider).fetchWordById(id);
   final favoriteIds = ref.watch(favoriteVocabularyIdsProvider);
 
@@ -38,7 +40,8 @@ class VocabularySearchQueryNotifier extends Notifier<String> {
   }
 }
 
-final selectedJlptLevelProvider = NotifierProvider<SelectedJlptLevelNotifier, String>(
+final selectedJlptLevelProvider =
+    NotifierProvider<SelectedJlptLevelNotifier, String>(
   SelectedJlptLevelNotifier.new,
 );
 
@@ -73,7 +76,8 @@ class FavoriteVocabularyIdsNotifier extends Notifier<Set<String>> {
   }
 }
 
-final filteredVocabularyWordsProvider = Provider<AsyncValue<List<VocabularyWord>>>((ref) {
+final filteredVocabularyWordsProvider =
+    Provider<AsyncValue<List<VocabularyWord>>>((ref) {
   final selectedLevel = ref.watch(selectedJlptLevelProvider);
   final query = ref.watch(vocabularySearchQueryProvider).trim().toLowerCase();
   final favoriteIds = ref.watch(favoriteVocabularyIdsProvider);

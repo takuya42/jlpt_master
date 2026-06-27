@@ -67,12 +67,16 @@ class _VocabularyHeader extends StatelessWidget {
       children: [
         Text(
           'Vocabulary',
-          style: theme.textTheme.headlineMedium?.copyWith(fontWeight: FontWeight.w900),
+          style: theme.textTheme.headlineMedium?.copyWith(
+            fontWeight: FontWeight.w900,
+          ),
         ),
         const SizedBox(height: 6),
         Text(
           '単語を検索して、JLPTレベル別に学習しましょう。',
-          style: theme.textTheme.bodyLarge?.copyWith(color: theme.colorScheme.onSurfaceVariant),
+          style: theme.textTheme.bodyLarge?.copyWith(
+            color: theme.colorScheme.onSurfaceVariant,
+          ),
         ),
       ],
     );
@@ -106,7 +110,9 @@ class _VocabularyFilters extends ConsumerWidget {
             ],
             selected: {selectedLevel},
             onSelectionChanged: (selection) {
-              ref.read(selectedJlptLevelProvider.notifier).select(selection.first);
+              ref
+                  .read(selectedJlptLevelProvider.notifier)
+                  .select(selection.first);
             },
           ),
         ),
@@ -139,7 +145,8 @@ class _VocabularyWordGrid extends StatelessWidget {
             crossAxisSpacing: 12,
             childAspectRatio: crossAxisCount == 1 ? 2.65 : 1.7,
           ),
-          itemBuilder: (context, index) => _VocabularyWordCard(word: words[index]),
+          itemBuilder: (context, index) =>
+              _VocabularyWordCard(word: words[index]),
         );
       },
     );
@@ -177,18 +184,23 @@ class _VocabularyWordCard extends ConsumerWidget {
                       children: [
                         Text(
                           word.word,
-                          style: theme.textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.w900),
+                          style: theme.textTheme.headlineSmall?.copyWith(
+                            fontWeight: FontWeight.w900,
+                          ),
                         ),
                         const SizedBox(height: 2),
                         Text(
                           word.reading,
-                          style: theme.textTheme.titleMedium?.copyWith(color: colorScheme.primary),
+                          style: theme.textTheme.titleMedium?.copyWith(
+                            color: colorScheme.primary,
+                          ),
                         ),
                       ],
                     ),
                   ),
                   IconButton.filledTonal(
-                    tooltip: word.isFavorite ? 'Remove favorite' : 'Add favorite',
+                    tooltip:
+                        word.isFavorite ? 'Remove favorite' : 'Add favorite',
                     onPressed: () => toggleFavorite(ref, word),
                     icon: Icon(word.isFavorite ? Icons.favorite : Icons.favorite_border),
                   ),
@@ -199,7 +211,9 @@ class _VocabularyWordCard extends ConsumerWidget {
                 word.meaning,
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
-                style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
+                style: theme.textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.w700,
+                ),
               ),
               const SizedBox(height: 12),
               Wrap(
@@ -227,11 +241,18 @@ class _EmptyVocabularyView extends StatelessWidget {
     return Column(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        Icon(Icons.search_off_outlined, size: 64, color: theme.colorScheme.onSurfaceVariant),
+        Icon(
+          Icons.search_off_outlined,
+          size: 64,
+          color: theme.colorScheme.onSurfaceVariant,
+        ),
         const SizedBox(height: 16),
         Text('No vocabulary found', style: theme.textTheme.titleLarge),
         const SizedBox(height: 6),
-        Text('検索条件に一致する単語がありません。', style: theme.textTheme.bodyMedium),
+        Text(
+          '検索条件に一致する単語がありません。',
+          style: theme.textTheme.bodyMedium,
+        ),
       ],
     );
   }
@@ -245,7 +266,10 @@ class _VocabularyErrorView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Center(
-      child: Text('Could not load vocabulary.\n$message', textAlign: TextAlign.center),
+      child: Text(
+        'Could not load vocabulary.\n$message',
+        textAlign: TextAlign.center,
+      ),
     );
   }
 }
