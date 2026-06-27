@@ -7,6 +7,7 @@ import '../../features/kanji/presentation/pages/kanji_page.dart';
 import '../../features/mock_exam/presentation/pages/mock_exam_page.dart';
 import '../../features/settings/presentation/pages/settings_page.dart';
 import '../../features/shell/presentation/main_shell.dart';
+import '../../features/vocabulary/presentation/pages/vocabulary_detail_page.dart';
 import '../../features/vocabulary/presentation/pages/vocabulary_page.dart';
 import 'app_route.dart';
 
@@ -24,6 +25,12 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           GoRoute(
             path: AppRoute.vocabulary.path,
             builder: (context, state) => const VocabularyPage(),
+          ),
+          GoRoute(
+            path: AppRoute.vocabularyDetail.path,
+            builder: (context, state) => VocabularyDetailPage(
+              wordId: state.pathParameters['wordId'] ?? '',
+            ),
           ),
           GoRoute(
             path: AppRoute.grammar.path,
