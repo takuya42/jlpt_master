@@ -24,13 +24,56 @@ final vocabularyWordProvider = FutureProvider.family<VocabularyWord?, String>((r
   return word.copyWith(isFavorite: favoriteIds.contains(word.id));
 });
 
-final vocabularySearchQueryProvider = StateProvider<String>((ref) => '');
+final vocabularySearchQueryProvider = NotifierProvider<VocabularySearchQueryNotifier, String>(
+  VocabularySearchQueryNotifier.new,
+);
 
-final selectedJlptLevelProvider = StateProvider<String>((ref) => 'N5');
+class VocabularySearchQueryNotifier extends Notifier<String> {
+  @override
+  String build() => '';
 
-final favoriteVocabularyIdsProvider = StateProvider<Set<String>>((ref) {
-  return const {'n5-001', 'n3-001'};
-});
+  void setQuery(String query) {
+    state = query;
+  }
+}
+
+final selectedJlptLevelProvider = NotifierProvider<SelectedJlptLevelNotifier, String>(
+  SelectedJlptLevelNotifier.new,
+);
+
+class SelectedJlptLevelNotifier extends Notifier<String> {
+  @override
+  String build() => 'N5';
+
+  void selectLevel(String level) {
+    if (jlptLevels.contains(level)) {
+      state = level;
+    }
+  }
+}
+
+final favoriteVocabularyIdsProvider = NotifierProvider<FavoriteVocabularyIdsNotifier, Set<String>>(
+  FavoriteVocabularyIdsNotifier.new,
+);
+
+class FavoriteVocabularyIdsNotifier extends Notifier<Set<String>> {
+  @override
+  Set<String> build() {
+    return const {'n5-001', 'n3-001'};
+  }
+
+  void toggle(String wordId) {
+    final updated = {...state};
+
+    if (updated.contains(wordId)) {
+      updated.remove(wordId);
+    } else {
+      updated.add(wordId);
+    }
+
+    state = updated;
+  }
+}
 
 final filteredVocabularyWordsProvider = Provider<AsyncValue<List<VocabularyWord>>>((ref) {
   final selectedLevel = ref.watch(selectedJlptLevelProvider);
@@ -56,14 +99,5 @@ final filteredVocabularyWordsProvider = Provider<AsyncValue<List<VocabularyWord>
 });
 
 void toggleFavorite(WidgetRef ref, VocabularyWord word) {
-  final current = ref.read(favoriteVocabularyIdsProvider);
-  final updated = {...current};
-
-  if (updated.contains(word.id)) {
-    updated.remove(word.id);
-  } else {
-    updated.add(word.id);
-  }
-
-  ref.read(favoriteVocabularyIdsProvider.notifier).state = updated;
+  ref.read(favoriteVocabularyIdsProvider.notifier).toggle(word.id);
 }
