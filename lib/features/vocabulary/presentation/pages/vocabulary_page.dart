@@ -93,7 +93,7 @@ class _VocabularyFilters extends ConsumerWidget {
           leading: const Icon(Icons.search),
           hintText: 'Search vocabulary / 単語を検索',
           onChanged: (value) {
-            ref.read(vocabularySearchQueryProvider.notifier).state = value;
+            ref.read(vocabularySearchQueryProvider.notifier).setQuery(value);
           },
         ),
         const SizedBox(height: 16),
@@ -106,7 +106,7 @@ class _VocabularyFilters extends ConsumerWidget {
             ],
             selected: {selectedLevel},
             onSelectionChanged: (selection) {
-              ref.read(selectedJlptLevelProvider.notifier).state = selection.first;
+              ref.read(selectedJlptLevelProvider.notifier).selectLevel(selection.first);
             },
           ),
         ),
