@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../domain/home_content.dart';
+import '../../../../shared/presentation/widgets/app_state_views.dart';
 import '../providers/home_content_provider.dart';
 
 class HomePage extends ConsumerWidget {
@@ -16,8 +17,12 @@ class HomePage extends ConsumerWidget {
       body: SafeArea(
         child: homeContent.when(
           data: (content) => _HomeContentView(content: content),
-          error: (error, stackTrace) => _HomeErrorView(message: error.toString()),
-          loading: () => const Center(child: CircularProgressIndicator()),
+          error: (error, stackTrace) => AppErrorView(
+            title: 'Could not load home content',
+            message: error.toString(),
+            onRetry: () => ref.invalidate(homeContentProvider),
+          ),
+          loading: () => const AppLoadingView(message: 'Loading home / ホームを読み込み中'),
         ),
       ),
     );
@@ -438,16 +443,5 @@ class _ResponsiveTwoColumn extends StatelessWidget {
         );
       },
     );
-  }
-}
-
-class _HomeErrorView extends StatelessWidget {
-  const _HomeErrorView({required this.message});
-
-  final String message;
-
-  @override
-  Widget build(BuildContext context) {
-    return Center(child: Text('Could not load home content.\n$message', textAlign: TextAlign.center));
   }
 }

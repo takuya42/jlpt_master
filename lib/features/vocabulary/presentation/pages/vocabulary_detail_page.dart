@@ -68,12 +68,16 @@ class _VocabularyDetailContent extends ConsumerWidget {
                             children: [
                               Text(
                                 word.word,
-                                style: theme.textTheme.displaySmall?.copyWith(fontWeight: FontWeight.w900),
+                                style: theme.textTheme.displaySmall?.copyWith(
+                                  fontWeight: FontWeight.w900,
+                                ),
                               ),
                               const SizedBox(height: 6),
                               Text(
                                 word.reading,
-                                style: theme.textTheme.headlineSmall?.copyWith(color: colorScheme.primary),
+                                style: theme.textTheme.headlineSmall?.copyWith(
+                                  color: colorScheme.primary,
+                                ),
                               ),
                             ],
                           ),
@@ -111,11 +115,21 @@ class _VocabularyDetailContent extends ConsumerWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('Example sentence', style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800)),
+                    Text(
+                      'Example sentence',
+                      style: theme.textTheme.titleLarge?.copyWith(
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
                     const SizedBox(height: 12),
                     Text(word.exampleSentence, style: theme.textTheme.titleLarge),
                     const SizedBox(height: 8),
-                    Text(word.exampleMeaning, style: theme.textTheme.bodyLarge?.copyWith(color: colorScheme.onSurfaceVariant)),
+                    Text(
+                      word.exampleMeaning,
+                      style: theme.textTheme.bodyLarge?.copyWith(
+                        color: colorScheme.onSurfaceVariant,
+                      ),
+                    ),
                   ],
                 ),
               ),
