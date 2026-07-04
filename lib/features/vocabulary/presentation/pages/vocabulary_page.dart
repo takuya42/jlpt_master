@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../app/navigation/app_route.dart';
+import '../../../../shared/presentation/widgets/app_state_views.dart';
 import '../../domain/vocabulary_word.dart';
 import '../providers/vocabulary_providers.dart';
 
@@ -43,7 +44,7 @@ class VocabularyPage extends ConsumerWidget {
                     ),
                     loading: () => const SliverFillRemaining(
                       hasScrollBody: false,
-                      child: Center(child: CircularProgressIndicator()),
+                      child: AppLoadingView(message: 'Loading vocabulary / 単語を読み込み中'),
                     ),
                   ),
                 ),
@@ -177,7 +178,9 @@ class _VocabularyWordCard extends ConsumerWidget {
                       children: [
                         Text(
                           word.word,
-                          style: theme.textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.w900),
+                          style: theme.textTheme.headlineSmall?.copyWith(
+                            fontWeight: FontWeight.w900,
+                          ),
                         ),
                         const SizedBox(height: 2),
                         Text(
@@ -244,8 +247,6 @@ class _VocabularyErrorView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Center(
-      child: Text('Could not load vocabulary.\n$message', textAlign: TextAlign.center),
-    );
+    return AppErrorView(title: 'Could not load vocabulary', message: message);
   }
 }
