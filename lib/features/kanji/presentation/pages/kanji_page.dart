@@ -62,12 +62,16 @@ class _Header extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+<<<<<<< HEAD
             Text(
               'Kanji',
               style: theme.textTheme.headlineMedium?.copyWith(
                 fontWeight: FontWeight.w900,
               ),
             ),
+=======
+            Text('Kanji', style: theme.textTheme.headlineMedium?.copyWith(fontWeight: FontWeight.w900)),
+>>>>>>> main
             const SizedBox(height: 6),
             Text('読み・意味・熟語をまとめて確認できます。', style: theme.textTheme.bodyLarge),
           ],
@@ -90,18 +94,23 @@ class _KanjiCard extends StatelessWidget {
         padding: const EdgeInsets.all(20),
         child: Row(
           children: [
+<<<<<<< HEAD
             Text(
               item.character,
               style: theme.textTheme.displayLarge?.copyWith(
                 fontWeight: FontWeight.w900,
               ),
             ),
+=======
+            Text(item.character, style: theme.textTheme.displayLarge?.copyWith(fontWeight: FontWeight.w900)),
+>>>>>>> main
             const SizedBox(width: 18),
             Expanded(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+<<<<<<< HEAD
                   Text(
                     item.reading,
                     style: theme.textTheme.titleMedium?.copyWith(
@@ -115,6 +124,11 @@ class _KanjiCard extends StatelessWidget {
                       fontWeight: FontWeight.w700,
                     ),
                   ),
+=======
+                  Text(item.reading, style: theme.textTheme.titleMedium?.copyWith(color: theme.colorScheme.primary)),
+                  const SizedBox(height: 8),
+                  Text(item.meaning, style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700)),
+>>>>>>> main
                   const SizedBox(height: 6),
                   Text(item.examples, style: theme.textTheme.bodyMedium),
                 ],

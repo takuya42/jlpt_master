@@ -6,6 +6,7 @@ class GrammarPage extends StatelessWidget {
   static const _patterns = [
     _GrammarPattern('〜てください', 'Please do...', '名前を書いてください。', 'Please write your name.', 'N5'),
     _GrammarPattern('〜なければならない', 'Must do...', '薬を飲まなければなりません。', 'I must take medicine.', 'N4'),
+<<<<<<< HEAD
     _GrammarPattern(
       '〜ことにする',
       'Decide to do...',
@@ -20,6 +21,10 @@ class GrammarPage extends StatelessWidget {
       'It does not mean I dislike it.',
       'N2',
     ),
+=======
+    _GrammarPattern('〜ことにする', 'Decide to do...', '毎朝走ることにしました。', 'I decided to run every morning.', 'N3'),
+    _GrammarPattern('〜わけではない', 'It does not mean that...', '嫌いなわけではありません。', 'It does not mean I dislike it.', 'N2'),
+>>>>>>> main
   ];
 
   @override
@@ -93,12 +98,16 @@ class _GrammarCard extends StatelessWidget {
 }
 
 class _PageHeader extends StatelessWidget {
+<<<<<<< HEAD
   const _PageHeader({
     required this.title,
     required this.subtitle,
     required this.icon,
     required this.color,
   });
+=======
+  const _PageHeader({required this.title, required this.subtitle, required this.icon, required this.color});
+>>>>>>> main
 
   final String title;
   final String subtitle;
@@ -120,12 +129,16 @@ class _PageHeader extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+<<<<<<< HEAD
                   Text(
                     title,
                     style: theme.textTheme.headlineMedium?.copyWith(
                       fontWeight: FontWeight.w900,
                     ),
                   ),
+=======
+                  Text(title, style: theme.textTheme.headlineMedium?.copyWith(fontWeight: FontWeight.w900)),
+>>>>>>> main
                   const SizedBox(height: 6),
                   Text(subtitle, style: theme.textTheme.bodyLarge),
                 ],

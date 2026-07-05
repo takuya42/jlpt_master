@@ -18,6 +18,7 @@ class _MockExamPageState extends State<MockExamPage> {
     explanation: '学校 is read がっこう and means school.',
   );
 
+<<<<<<< HEAD
   void _selectAnswer(int index) {
     if (_submitted) {
       return;
@@ -39,6 +40,8 @@ class _MockExamPageState extends State<MockExamPage> {
     });
   }
 
+=======
+>>>>>>> main
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -50,6 +53,7 @@ class _MockExamPageState extends State<MockExamPage> {
             child: ListView(
               padding: const EdgeInsets.all(20),
               children: [
+<<<<<<< HEAD
                 Text(
                   'Mock Exam',
                   style: theme.textTheme.headlineMedium?.copyWith(
@@ -61,6 +65,11 @@ class _MockExamPageState extends State<MockExamPage> {
                   '本番形式で1問ずつ練習しましょう。',
                   style: theme.textTheme.bodyLarge,
                 ),
+=======
+                Text('Mock Exam', style: theme.textTheme.headlineMedium?.copyWith(fontWeight: FontWeight.w900)),
+                const SizedBox(height: 8),
+                Text('本番形式で1問ずつ練習しましょう。', style: theme.textTheme.bodyLarge),
+>>>>>>> main
                 const SizedBox(height: 20),
                 Card(
                   child: Padding(
@@ -70,6 +79,7 @@ class _MockExamPageState extends State<MockExamPage> {
                       children: [
                         const Chip(label: Text('N5 Vocabulary')),
                         const SizedBox(height: 14),
+<<<<<<< HEAD
                         Text(
                           _question.prompt,
                           style: theme.textTheme.titleLarge?.copyWith(
@@ -108,6 +118,27 @@ class _MockExamPageState extends State<MockExamPage> {
                             isCorrect: _selected == _question.answerIndex,
                             explanation: _question.explanation,
                           ),
+=======
+                        Text(_question.prompt, style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800)),
+                        const SizedBox(height: 16),
+                        for (var i = 0; i < _question.options.length; i++)
+                          RadioListTile<int>(
+                            value: i,
+                            groupValue: _selected,
+                            onChanged: _submitted ? null : (value) => setState(() => _selected = value),
+                            title: Text(_question.options[i]),
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                          ),
+                        const SizedBox(height: 12),
+                        FilledButton.icon(
+                          onPressed: _selected == null ? null : () => setState(() => _submitted = true),
+                          icon: const Icon(Icons.check),
+                          label: const Text('Submit / 回答する'),
+                        ),
+                        if (_submitted) ...[
+                          const SizedBox(height: 18),
+                          _ResultBanner(isCorrect: _selected == _question.answerIndex, explanation: _question.explanation),
+>>>>>>> main
                         ],
                       ],
                     ),
@@ -122,6 +153,7 @@ class _MockExamPageState extends State<MockExamPage> {
   }
 }
 
+<<<<<<< HEAD
 class _AnswerOption extends StatelessWidget {
   const _AnswerOption({
     required this.label,
@@ -175,6 +207,8 @@ class _AnswerOption extends StatelessWidget {
   }
 }
 
+=======
+>>>>>>> main
 class _ResultBanner extends StatelessWidget {
   const _ResultBanner({required this.isCorrect, required this.explanation});
 
@@ -196,12 +230,16 @@ class _ResultBanner extends StatelessWidget {
 }
 
 class _ExamQuestion {
+<<<<<<< HEAD
   const _ExamQuestion({
     required this.prompt,
     required this.options,
     required this.answerIndex,
     required this.explanation,
   });
+=======
+  const _ExamQuestion({required this.prompt, required this.options, required this.answerIndex, required this.explanation});
+>>>>>>> main
 
   final String prompt;
   final List<String> options;

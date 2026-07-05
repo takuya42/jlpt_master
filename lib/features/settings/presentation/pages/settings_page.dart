@@ -23,12 +23,16 @@ class _SettingsPageState extends State<SettingsPage> {
             child: ListView(
               padding: const EdgeInsets.fromLTRB(20, 24, 20, 32),
               children: [
+<<<<<<< HEAD
                 Text(
                   'Settings',
                   style: theme.textTheme.headlineMedium?.copyWith(
                     fontWeight: FontWeight.w900,
                   ),
                 ),
+=======
+                Text('Settings', style: theme.textTheme.headlineMedium?.copyWith(fontWeight: FontWeight.w900)),
+>>>>>>> main
                 const SizedBox(height: 6),
                 Text('学習しやすい環境に調整できます。', style: theme.textTheme.bodyLarge),
                 const SizedBox(height: 20),
@@ -60,12 +64,16 @@ class _SettingsPageState extends State<SettingsPage> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
+<<<<<<< HEAD
                         Text(
                           'Daily study goal: ${_dailyGoal.round()} min',
                           style: theme.textTheme.titleMedium?.copyWith(
                             fontWeight: FontWeight.w800,
                           ),
                         ),
+=======
+                        Text('Daily study goal: ${_dailyGoal.round()} min', style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800)),
+>>>>>>> main
                         Slider(
                           value: _dailyGoal,
                           min: 10,
