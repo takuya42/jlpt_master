@@ -45,7 +45,9 @@ class KanjiPage extends StatelessWidget {
                       mainAxisSpacing: 12,
                       childAspectRatio: columns == 1 ? 2.4 : 1.45,
                     ),
-                    itemBuilder: (context, index) => _KanjiCard(item: _kanji[index]),
+                    itemBuilder: (context, index) {
+                      return _KanjiCard(item: _kanji[index]);
+                    },
                   ),
                 ),
               ],

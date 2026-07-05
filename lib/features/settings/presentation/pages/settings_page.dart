@@ -36,7 +36,9 @@ class _SettingsPageState extends State<SettingsPage> {
                     children: [
                       SwitchListTile(
                         value: _dailyReminder,
-                        onChanged: (value) => setState(() => _dailyReminder = value),
+                        onChanged: (value) => setState(
+                          () => _dailyReminder = value,
+                        ),
                         title: const Text('Daily reminder'),
                         subtitle: const Text('毎日の学習リマインダーを有効にします。'),
                         secondary: const Icon(Icons.notifications_outlined),

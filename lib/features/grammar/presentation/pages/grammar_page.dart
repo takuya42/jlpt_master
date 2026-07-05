@@ -6,8 +6,20 @@ class GrammarPage extends StatelessWidget {
   const GrammarPage({super.key});
 
   static const _patterns = [
-    _GrammarPattern('〜てください', 'Please do...', '名前を書いてください。', 'Please write your name.', 'N5'),
-    _GrammarPattern('〜なければならない', 'Must do...', '薬を飲まなければなりません。', 'I must take medicine.', 'N4'),
+    _GrammarPattern(
+      '〜てください',
+      'Please do...',
+      '名前を書いてください。',
+      'Please write your name.',
+      'N5',
+    ),
+    _GrammarPattern(
+      '〜なければならない',
+      'Must do...',
+      '薬を飲まなければなりません。',
+      'I must take medicine.',
+      'N4',
+    ),
     _GrammarPattern(
       '〜ことにする',
       'Decide to do...',
@@ -76,7 +88,9 @@ class _GrammarCard extends StatelessWidget {
                 Expanded(
                   child: Text(
                     pattern.expression,
-                    style: theme.textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.w900),
+                    style: theme.textTheme.headlineSmall?.copyWith(
+                      fontWeight: FontWeight.w900,
+                    ),
                   ),
                 ),
               ],
@@ -86,7 +100,10 @@ class _GrammarCard extends StatelessWidget {
             const Divider(height: 28),
             Text(pattern.exampleJa, style: theme.textTheme.titleLarge),
             const SizedBox(height: 6),
-            Text(pattern.exampleEn, style: TextStyle(color: theme.colorScheme.onSurfaceVariant)),
+            Text(
+              pattern.exampleEn,
+              style: TextStyle(color: theme.colorScheme.onSurfaceVariant),
+            ),
           ],
         ),
       ),
@@ -95,7 +112,13 @@ class _GrammarCard extends StatelessWidget {
 }
 
 class _GrammarPattern {
-  const _GrammarPattern(this.expression, this.meaning, this.exampleJa, this.exampleEn, this.level);
+  const _GrammarPattern(
+    this.expression,
+    this.meaning,
+    this.exampleJa,
+    this.exampleEn,
+    this.level,
+  );
 
   final String expression;
   final String meaning;

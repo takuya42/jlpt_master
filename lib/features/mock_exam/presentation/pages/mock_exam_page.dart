@@ -73,7 +73,9 @@ class _MockExamPageState extends State<MockExamPage> {
                           ),
                         ),
                         const SizedBox(height: 16),
-                        for (var index = 0; index < _question.options.length; index++)
+                        for (var index = 0;
+                            index < _question.options.length;
+                            index++)
                           _AnswerOption(
                             label: _question.options[index],
                             selected: _selected == index,
@@ -159,7 +161,9 @@ class _AnswerOption extends StatelessWidget {
             children: [
               Icon(
                 selected ? Icons.radio_button_checked : Icons.radio_button_off,
-                color: selected ? colorScheme.primary : colorScheme.onSurfaceVariant,
+                color: selected
+                    ? colorScheme.primary
+                    : colorScheme.onSurfaceVariant,
               ),
               const SizedBox(width: 12),
               Expanded(child: Text(label, style: theme.textTheme.titleMedium)),
