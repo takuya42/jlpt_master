@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 
 class MockExamPage extends StatefulWidget {
@@ -45,29 +46,37 @@ class _MockExamPageState extends State<MockExamPage> {
     final firestore = FirebaseFirestore.instance;
     final userRef = firestore.collection('users').doc(user.uid);
 
-    await userRef.collection('studyHistory').add({
-      'type': 'mockExam',
-      'title': 'N5 Vocabulary Mock Exam',
-      'correct': isCorrect,
-      'answeredAt': FieldValue.serverTimestamp(),
-      'studyMinutes': 5,
-    });
-    await userRef.set({
-      'statistics': {
-        'studyMinutes': FieldValue.increment(5),
-        'weeklyStudyMinutes': FieldValue.increment(5),
-        'completedLessons': FieldValue.increment(1),
-        'correctAnswers': FieldValue.increment(isCorrect ? 1 : 0),
-        'totalAnswers': FieldValue.increment(1),
-      },
-      'updatedAt': FieldValue.serverTimestamp(),
-    }, SetOptions(merge: true));
+    try {
+      await userRef.collection('studyHistory').add({
+        'type': 'mockExam',
+        'title': 'N5 Vocabulary Mock Exam',
+        'correct': isCorrect,
+        'answeredAt': FieldValue.serverTimestamp(),
+        'studyMinutes': 5,
+      });
+      await userRef.set({
+        'statistics': {
+          'studyMinutes': FieldValue.increment(5),
+          'weeklyStudyMinutes': FieldValue.increment(5),
+          'completedLessons': FieldValue.increment(1),
+          'correctAnswers': FieldValue.increment(isCorrect ? 1 : 0),
+          'totalAnswers': FieldValue.increment(1),
+        },
+        'updatedAt': FieldValue.serverTimestamp(),
+      }, SetOptions(merge: true));
 
-    if (!mounted) return;
-    setState(() {
-      _saving = false;
-      _saveMessage = '学習履歴を保存しました。';
-    });
+      if (!mounted) return;
+      setState(() {
+        _saving = false;
+        _saveMessage = '学習履歴を保存しました。';
+      });
+    } on FirebaseException catch (error) {
+      if (!mounted) return;
+      setState(() {
+        _saving = false;
+        _saveMessage = error.message ?? error.code;
+      });
+    }
   }
 
   @override

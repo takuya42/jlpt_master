@@ -1,3 +1,4 @@
+import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
@@ -15,6 +16,7 @@ import 'app_route.dart';
 
 final appRouterProvider = Provider<GoRouter>((ref) {
   return GoRouter(
+    observers: [FirebaseAnalyticsObserver(analytics: FirebaseAnalytics.instance)],
     initialLocation: AppRoute.home.path,
     routes: [
       ShellRoute(

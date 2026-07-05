@@ -35,6 +35,8 @@ class VocabularySearchQueryNotifier extends Notifier<String> {
   void setQuery(String query) {
     state = query;
   }
+
+  return true;
 }
 
 final selectedJlptLevelProvider = NotifierProvider<SelectedJlptLevelNotifier, String>(
@@ -83,9 +85,9 @@ final filteredVocabularyWordsProvider = Provider<AsyncValue<List<VocabularyWord>
   });
 });
 
-Future<void> toggleFavorite(WidgetRef ref, VocabularyWord word) async {
+Future<bool> toggleFavorite(WidgetRef ref, VocabularyWord word) async {
   final user = FirebaseAuth.instance.currentUser;
-  if (user == null) return;
+  if (user == null) return false;
 
   final firestore = FirebaseFirestore.instance;
   final favoriteRef = firestore.collection('users').doc(user.uid).collection('favorites').doc(word.id);
@@ -111,4 +113,6 @@ Future<void> toggleFavorite(WidgetRef ref, VocabularyWord word) async {
       'updatedAt': FieldValue.serverTimestamp(),
     }, SetOptions(merge: true));
   }
+
+  return true;
 }

@@ -1,4 +1,5 @@
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 
 import '../../../app/firebase/firebase_services.dart';
@@ -32,9 +33,12 @@ class _AuthPageState extends State<AuthPage> {
     try {
       await action();
       await FirebaseServices.registerMessagingToken();
+      await FirebaseServices.uploadProfileBackup();
       await FirebaseServices.logScreenView('account');
       if (mounted) setState(() => _message = successMessage);
     } on FirebaseAuthException catch (error) {
+      if (mounted) setState(() => _message = error.message ?? error.code);
+    } on FirebaseException catch (error) {
       if (mounted) setState(() => _message = error.message ?? error.code);
     } finally {
       if (mounted) setState(() => _loading = false);
