@@ -32,8 +32,6 @@ class _AuthPageState extends State<AuthPage> {
 
     try {
       await action();
-      await FirebaseServices.registerMessagingToken();
-      await FirebaseServices.uploadProfileBackup();
       await FirebaseServices.logScreenView('account');
       if (mounted) setState(() => _message = successMessage);
     } on FirebaseAuthException catch (error) {
