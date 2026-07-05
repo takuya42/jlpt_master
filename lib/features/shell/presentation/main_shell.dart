@@ -13,7 +13,6 @@ class MainShell extends StatelessWidget {
     _NavigationItem(AppRoute.login, Icons.person_outline, Icons.person),
     _NavigationItem(AppRoute.vocabulary, Icons.menu_book_outlined, Icons.menu_book),
     _NavigationItem(AppRoute.grammar, Icons.subject_outlined, Icons.subject),
-    _NavigationItem(AppRoute.kanji, Icons.translate_outlined, Icons.translate),
     _NavigationItem(AppRoute.mockExam, Icons.quiz_outlined, Icons.quiz),
     _NavigationItem(AppRoute.statistics, Icons.bar_chart_outlined, Icons.bar_chart),
     _NavigationItem(AppRoute.settings, Icons.settings_outlined, Icons.settings),
