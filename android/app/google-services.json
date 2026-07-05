@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "1078285757343",
+    "project_id": "jlpt-master-5ad0e",
+    "storage_bucket": "jlpt-master-5ad0e.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1078285757343:android:2ad4c70c43c8c95da6ebaa",
+        "android_client_info": {
+          "package_name": "com.kounotakuya.jlpt_master"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBJUdsHFsKKcgpnJJH81Qks5dessKJIWQo"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
