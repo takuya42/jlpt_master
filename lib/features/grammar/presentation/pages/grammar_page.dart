@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../../../../shared/presentation/widgets/feature_page_header.dart';
+
 class GrammarPage extends StatelessWidget {
   const GrammarPage({super.key});
 
@@ -36,11 +38,11 @@ class GrammarPage extends StatelessWidget {
               separatorBuilder: (_, __) => const SizedBox(height: 12),
               itemBuilder: (context, index) {
                 if (index == 0) {
-                  return _PageHeader(
+                  return FeaturePageHeader(
                     title: 'Grammar',
                     subtitle: '文型を例文と一緒に確認しましょう。',
                     icon: Icons.subject_outlined,
-                    color: theme.colorScheme.tertiaryContainer,
+                    backgroundColor: theme.colorScheme.tertiaryContainer,
                   );
                 }
                 return _GrammarCard(pattern: _patterns[index - 1]);
@@ -85,52 +87,6 @@ class _GrammarCard extends StatelessWidget {
             Text(pattern.exampleJa, style: theme.textTheme.titleLarge),
             const SizedBox(height: 6),
             Text(pattern.exampleEn, style: TextStyle(color: theme.colorScheme.onSurfaceVariant)),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _PageHeader extends StatelessWidget {
-  const _PageHeader({
-    required this.title,
-    required this.subtitle,
-    required this.icon,
-    required this.color,
-  });
-
-  final String title;
-  final String subtitle;
-  final IconData icon;
-  final Color color;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return Card(
-      color: color,
-      child: Padding(
-        padding: const EdgeInsets.all(24),
-        child: Row(
-          children: [
-            Icon(icon, size: 42),
-            const SizedBox(width: 18),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    title,
-                    style: theme.textTheme.headlineMedium?.copyWith(
-                      fontWeight: FontWeight.w900,
-                    ),
-                  ),
-                  const SizedBox(height: 6),
-                  Text(subtitle, style: theme.textTheme.bodyLarge),
-                ],
-              ),
-            ),
           ],
         ),
       ),

@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../../../../shared/presentation/widgets/feature_page_header.dart';
+
 class SettingsPage extends StatefulWidget {
   const SettingsPage({super.key});
 
@@ -23,14 +25,11 @@ class _SettingsPageState extends State<SettingsPage> {
             child: ListView(
               padding: const EdgeInsets.fromLTRB(20, 24, 20, 32),
               children: [
-                Text(
-                  'Settings',
-                  style: theme.textTheme.headlineMedium?.copyWith(
-                    fontWeight: FontWeight.w900,
-                  ),
+                const FeaturePageHeader(
+                  title: 'Settings',
+                  subtitle: '学習しやすい環境に調整できます。',
+                  icon: Icons.settings_outlined,
                 ),
-                const SizedBox(height: 6),
-                Text('学習しやすい環境に調整できます。', style: theme.textTheme.bodyLarge),
                 const SizedBox(height: 20),
                 Card(
                   child: Column(

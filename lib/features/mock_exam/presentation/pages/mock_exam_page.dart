@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../../../../shared/presentation/widgets/feature_page_header.dart';
+
 class MockExamPage extends StatefulWidget {
   const MockExamPage({super.key});
 
@@ -50,16 +52,10 @@ class _MockExamPageState extends State<MockExamPage> {
             child: ListView(
               padding: const EdgeInsets.all(20),
               children: [
-                Text(
-                  'Mock Exam',
-                  style: theme.textTheme.headlineMedium?.copyWith(
-                    fontWeight: FontWeight.w900,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  '本番形式で1問ずつ練習しましょう。',
-                  style: theme.textTheme.bodyLarge,
+                const FeaturePageHeader(
+                  title: 'Mock Exam',
+                  subtitle: '本番形式で1問ずつ練習しましょう。',
+                  icon: Icons.quiz_outlined,
                 ),
                 const SizedBox(height: 20),
                 Card(

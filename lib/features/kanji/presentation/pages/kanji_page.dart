@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../../../../shared/presentation/widgets/feature_page_header.dart';
+
 class KanjiPage extends StatelessWidget {
   const KanjiPage({super.key});
 
@@ -25,7 +27,13 @@ class KanjiPage extends StatelessWidget {
               slivers: [
                 const SliverPadding(
                   padding: EdgeInsets.fromLTRB(20, 24, 20, 16),
-                  sliver: SliverToBoxAdapter(child: _Header()),
+                  sliver: SliverToBoxAdapter(
+                    child: FeaturePageHeader(
+                      title: 'Kanji',
+                      subtitle: '読み・意味・熟語をまとめて確認できます。',
+                      icon: Icons.translate_outlined,
+                    ),
+                  ),
                 ),
                 SliverPadding(
                   padding: const EdgeInsets.fromLTRB(20, 0, 20, 32),
@@ -43,34 +51,6 @@ class KanjiPage extends StatelessWidget {
               ],
             ),
           ),
-        ),
-      ),
-    );
-  }
-}
-
-class _Header extends StatelessWidget {
-  const _Header();
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return Card(
-      color: theme.colorScheme.secondaryContainer,
-      child: Padding(
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Kanji',
-              style: theme.textTheme.headlineMedium?.copyWith(
-                fontWeight: FontWeight.w900,
-              ),
-            ),
-            const SizedBox(height: 6),
-            Text('読み・意味・熟語をまとめて確認できます。', style: theme.textTheme.bodyLarge),
-          ],
         ),
       ),
     );
