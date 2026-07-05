@@ -1,10 +1,12 @@
 enum AppRoute {
   home('/', 'Home'),
+  login('/login', 'Login'),
   vocabulary('/vocabulary', 'Vocabulary'),
   vocabularyDetail('/vocabulary/:wordId', 'Vocabulary Detail'),
   grammar('/grammar', 'Grammar'),
   kanji('/kanji', 'Kanji'),
   mockExam('/mock-exam', 'Mock Exam'),
+  statistics('/statistics', 'Stats'),
   settings('/settings', 'Settings');
 
   const AppRoute(this.path, this.label);
