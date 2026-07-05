@@ -7,8 +7,8 @@ abstract interface class HomeRepository {
   Future<HomeContent> fetchHomeContent();
 }
 
-class MockHomeRepository implements HomeRepository {
-  const MockHomeRepository();
+class BundledHomeRepository implements HomeRepository {
+  const BundledHomeRepository();
 
   @override
   Future<HomeContent> fetchHomeContent() async {

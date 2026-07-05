@@ -6,8 +6,8 @@ abstract interface class VocabularyRepository {
   Future<VocabularyWord?> fetchWordById(String id);
 }
 
-class MockVocabularyRepository implements VocabularyRepository {
-  const MockVocabularyRepository();
+class BundledVocabularyRepository implements VocabularyRepository {
+  const BundledVocabularyRepository();
 
   static const _words = [
     VocabularyWord(

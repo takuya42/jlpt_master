@@ -80,7 +80,9 @@ class _VocabularyDetailContent extends ConsumerWidget {
                         ),
                         IconButton.filledTonal(
                           tooltip: word.isFavorite ? 'Remove favorite' : 'Add favorite',
-                          onPressed: () => toggleFavorite(ref, word),
+                          onPressed: () {
+                            toggleFavorite(ref, word);
+                          },
                           iconSize: 28,
                           icon: Icon(word.isFavorite ? Icons.favorite : Icons.favorite_border),
                         ),

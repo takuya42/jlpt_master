@@ -4,7 +4,7 @@ import '../../data/home_repository.dart';
 import '../../domain/home_content.dart';
 
 final homeRepositoryProvider = Provider<HomeRepository>((ref) {
-  return const MockHomeRepository();
+  return const BundledHomeRepository();
 });
 
 final homeContentProvider = FutureProvider<HomeContent>((ref) async {
