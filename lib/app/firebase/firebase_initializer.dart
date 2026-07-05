@@ -11,9 +11,9 @@ class FirebaseInitializer {
   const FirebaseInitializer._();
 
   static Future<void> initialize() async {
-    if (Firebase.apps.isEmpty) {
-      await Firebase.initializeApp();
-    }
+    if (Firebase.apps.isNotEmpty) return;
+
+    await Firebase.initializeApp();
 
     await FirebaseCrashlytics.instance.setCrashlyticsCollectionEnabled(!kDebugMode);
     FlutterError.onError = FirebaseCrashlytics.instance.recordFlutterFatalError;
