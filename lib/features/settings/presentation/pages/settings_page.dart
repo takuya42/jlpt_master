@@ -8,7 +8,6 @@ class SettingsPage extends StatefulWidget {
 }
 
 class _SettingsPageState extends State<SettingsPage> {
-  bool _dailyReminder = true;
   bool _furigana = true;
   double _dailyGoal = 30;
 
@@ -31,18 +30,10 @@ class _SettingsPageState extends State<SettingsPage> {
                   child: Column(
                     children: [
                       SwitchListTile(
-                        value: _dailyReminder,
-                        onChanged: (value) => setState(() => _dailyReminder = value),
-                        title: const Text('Daily reminder'),
-                        subtitle: const Text('毎日の学習リマインダーを有効にします。'),
-                        secondary: const Icon(Icons.notifications_outlined),
-                      ),
-                      const Divider(height: 1),
-                      SwitchListTile(
                         value: _furigana,
                         onChanged: (value) => setState(() => _furigana = value),
                         title: const Text('Show furigana'),
-                        subtitle: const Text('漢字カードで読み仮名を表示します。'),
+                        subtitle: const Text('学習カードで読み仮名を表示します。'),
                         secondary: const Icon(Icons.text_fields_outlined),
                       ),
                     ],

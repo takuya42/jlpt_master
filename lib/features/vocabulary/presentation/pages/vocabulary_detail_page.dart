@@ -80,7 +80,16 @@ class _VocabularyDetailContent extends ConsumerWidget {
                         ),
                         IconButton.filledTonal(
                           tooltip: word.isFavorite ? 'Remove favorite' : 'Add favorite',
-                          onPressed: () => toggleFavorite(ref, word),
+                          onPressed: () async {
+                            final saved = await toggleFavorite(ref, word);
+                            if (!saved && context.mounted) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                  content: Text('ログインするとお気に入りを保存できます。'),
+                                ),
+                              );
+                            }
+                          },
                           iconSize: 28,
                           icon: Icon(word.isFavorite ? Icons.favorite : Icons.favorite_border),
                         ),

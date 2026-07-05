@@ -7,8 +7,8 @@ abstract interface class HomeRepository {
   Future<HomeContent> fetchHomeContent();
 }
 
-class MockHomeRepository implements HomeRepository {
-  const MockHomeRepository();
+class BundledHomeRepository implements HomeRepository {
+  const BundledHomeRepository();
 
   @override
   Future<HomeContent> fetchHomeContent() async {
@@ -36,8 +36,8 @@ class MockHomeRepository implements HomeRepository {
           level: 'N3',
           title: LocalizedText(en: 'Intermediate', ja: '中級'),
           description: LocalizedText(
-            en: 'Connect grammar, kanji, and real examples.',
-            ja: '文法・漢字・実例をつなげて学習します。',
+            en: 'Connect grammar, vocabulary, and real examples.',
+            ja: '文法・語彙・実例をつなげて学習します。'
           ),
           progress: 0.22,
         ),
@@ -74,12 +74,6 @@ class MockHomeRepository implements HomeRepository {
           routePath: AppRoute.grammar.path,
         ),
         LearningMenuItemData(
-          title: LocalizedText(en: 'Kanji', ja: '漢字'),
-          subtitle: LocalizedText(en: 'Readings and meanings', ja: '読み方と意味'),
-          icon: Icons.translate_outlined,
-          routePath: AppRoute.kanji.path,
-        ),
-        LearningMenuItemData(
           title: LocalizedText(en: 'Mock Exam', ja: '模擬試験'),
           subtitle: LocalizedText(en: 'Timed practice tests', ja: '時間制限付き演習'),
           icon: Icons.quiz_outlined,
@@ -106,13 +100,6 @@ class MockHomeRepository implements HomeRepository {
           completedAtLabel: 'Yesterday',
           accuracyPercent: 80,
           icon: Icons.subject_outlined,
-        ),
-        StudyHistoryItemData(
-          title: LocalizedText(en: 'Kanji quick practice', ja: '漢字クイック練習'),
-          subtitle: LocalizedText(en: '15 kanji reviewed', ja: '15字を復習'),
-          completedAtLabel: '2 days ago',
-          accuracyPercent: 87,
-          icon: Icons.translate_outlined,
         ),
       ],
     );

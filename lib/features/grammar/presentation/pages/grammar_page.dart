@@ -1,4 +1,7 @@
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
+
+import '../../../learning/data/firestore_learning_repository.dart';
 
 class GrammarPage extends StatelessWidget {
   const GrammarPage({super.key});
@@ -41,14 +44,48 @@ class GrammarPage extends StatelessWidget {
   }
 }
 
-class _GrammarCard extends StatelessWidget {
+class _GrammarCard extends StatefulWidget {
   const _GrammarCard({required this.pattern});
 
   final _GrammarPattern pattern;
 
   @override
+  State<_GrammarCard> createState() => _GrammarCardState();
+}
+
+class _GrammarCardState extends State<_GrammarCard> {
+  bool _saving = false;
+
+  Future<void> _markStudied() async {
+    setState(() => _saving = true);
+    try {
+      final saved = await FirestoreLearningRepository.recordActivity(
+        type: 'grammar',
+        title: widget.pattern.expression,
+        studyMinutes: 4,
+        metadata: {
+          'level': widget.pattern.level,
+          'meaning': widget.pattern.meaning,
+        },
+      );
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(saved ? '学習履歴を保存しました。' : 'ログインすると学習履歴を保存できます。')),
+      );
+    } on FirebaseException catch (error) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(error.message ?? error.code)),
+      );
+    } finally {
+      if (mounted) setState(() => _saving = false);
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final pattern = widget.pattern;
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(20),
@@ -73,6 +110,17 @@ class _GrammarCard extends StatelessWidget {
             Text(pattern.exampleJa, style: theme.textTheme.titleLarge),
             const SizedBox(height: 6),
             Text(pattern.exampleEn, style: TextStyle(color: theme.colorScheme.onSurfaceVariant)),
+            const SizedBox(height: 16),
+            FilledButton.icon(
+              onPressed: _saving ? null : _markStudied,
+              icon: _saving
+                  ? const SizedBox.square(
+                      dimension: 18,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                  : const Icon(Icons.check_circle_outline),
+              label: const Text('Mark studied / 学習済みにする'),
+            ),
           ],
         ),
       ),
