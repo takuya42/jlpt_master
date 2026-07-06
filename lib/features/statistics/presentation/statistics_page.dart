@@ -21,17 +21,18 @@ class StatisticsPage extends StatelessWidget {
               builder: (context, snapshot) {
                 final stats = snapshot.data ?? LearningStats.empty();
                 final cards = [
-                  _Stat('Total study time', '学習時間合計', stats.formattedStudyTime, Icons.schedule_outlined),
-                  _Stat('Completed lessons', '完了レッスン', '${stats.completedLessons}', Icons.task_alt_outlined),
-                  _Stat('Favorite words', 'お気に入り単語', '${stats.favoriteWords}', Icons.favorite_outline),
-                  _Stat('Mock exam accuracy', '模擬試験正答率', '${stats.mockExamAccuracy}%', Icons.insights_outlined),
+                  _Stat('Weekly Study Time', '週間学習時間', stats.formattedStudyTime, Icons.schedule_outlined),
+                  _Stat('Total Study Time', '総学習時間', stats.formattedStudyTime, Icons.timer_outlined),
+                  _Stat('Correct Rate', '正答率', '${stats.mockExamAccuracy}%', Icons.insights_outlined),
+                  _Stat('Study Days', '学習日数', '${stats.completedLessons}', Icons.calendar_month_outlined),
+                  _Stat('Study Streak', '連続学習日数', '${stats.favoriteWords}', Icons.local_fire_department_outlined),
                 ];
 
                 return ListView(
                   padding: const EdgeInsets.fromLTRB(20, 24, 20, 32),
                   children: [
                     Text(
-                      'Statistics',
+                      'Statistics（学習統計）',
                       style: theme.textTheme.headlineMedium?.copyWith(
                         fontWeight: FontWeight.w900,
                       ),
@@ -56,7 +57,7 @@ class StatisticsPage extends StatelessWidget {
                       child: Padding(
                         padding: const EdgeInsets.all(20),
                         child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                          Text('Weekly goal', style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800)),
+                          Text('Weekly study time（週間学習時間）', style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800)),
                           const SizedBox(height: 12),
                           LinearProgressIndicator(
                             value: stats.weeklyGoalProgress,
