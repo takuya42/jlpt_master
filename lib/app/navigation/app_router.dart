@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
@@ -21,40 +22,61 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         routes: [
           GoRoute(
             path: AppRoute.home.path,
-            builder: (context, state) => const HomePage(),
+            pageBuilder: (context, state) => _fadePage(state, const HomePage()),
           ),
           GoRoute(
             path: AppRoute.login.path,
-            builder: (context, state) => const AuthPage(),
+            pageBuilder: (context, state) => _fadePage(state, const AuthPage()),
           ),
           GoRoute(
             path: AppRoute.vocabulary.path,
-            builder: (context, state) => const VocabularyPage(),
+            pageBuilder: (context, state) => _fadePage(state, const VocabularyPage()),
           ),
           GoRoute(
             path: AppRoute.vocabularyDetail.path,
-            builder: (context, state) => VocabularyDetailPage(
-              wordId: state.pathParameters['wordId'] ?? '',
+            pageBuilder: (context, state) => _fadePage(
+              state,
+              VocabularyDetailPage(wordId: state.pathParameters['wordId'] ?? ''),
             ),
           ),
           GoRoute(
             path: AppRoute.grammar.path,
-            builder: (context, state) => const GrammarPage(),
+            pageBuilder: (context, state) => _fadePage(state, const GrammarPage()),
           ),
           GoRoute(
             path: AppRoute.mockExam.path,
-            builder: (context, state) => const MockExamPage(),
+            pageBuilder: (context, state) => _fadePage(state, const MockExamPage()),
           ),
           GoRoute(
             path: AppRoute.statistics.path,
-            builder: (context, state) => const StatisticsPage(),
+            pageBuilder: (context, state) => _fadePage(state, const StatisticsPage()),
           ),
           GoRoute(
             path: AppRoute.settings.path,
-            builder: (context, state) => const SettingsPage(),
+            pageBuilder: (context, state) => _fadePage(state, const SettingsPage()),
           ),
         ],
       ),
     ],
   );
 });
+
+
+CustomTransitionPage<void> _fadePage(GoRouterState state, Widget child) {
+  return CustomTransitionPage<void>(
+    key: state.pageKey,
+    transitionDuration: const Duration(milliseconds: 200),
+    reverseTransitionDuration: const Duration(milliseconds: 200),
+    child: child,
+    transitionsBuilder: (context, animation, secondaryAnimation, child) {
+      final curved = CurvedAnimation(parent: animation, curve: Curves.easeOutCubic);
+      return FadeTransition(
+        opacity: curved,
+        child: ScaleTransition(
+          scale: Tween<double>(begin: 0.985, end: 1).animate(curved),
+          child: child,
+        ),
+      );
+    },
+  );
+}

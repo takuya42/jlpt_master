@@ -4,10 +4,10 @@ class GrammarPage extends StatelessWidget {
   const GrammarPage({super.key});
 
   static const _patterns = [
-    _GrammarPattern('〜てください', 'Please do...', '名前を書いてください。', 'Please write your name.', 'N5'),
-    _GrammarPattern('〜なければならない', 'Must do...', '薬を飲まなければなりません。', 'I must take medicine.', 'N4'),
-    _GrammarPattern('〜ことにする', 'Decide to do...', '毎朝走ることにしました。', 'I decided to run every morning.', 'N3'),
-    _GrammarPattern('〜わけではない', 'It does not mean that...', '嫌いなわけではありません。', 'It does not mean I dislike it.', 'N2'),
+    _GrammarPattern('〜てください', 'Please do...（〜してください）', '名前を書いてください。', 'Please write your name.（名前を書いてください。）', 'N5'),
+    _GrammarPattern('〜なければならない', 'Must do...（〜しなければならない）', '薬を飲まなければなりません。', 'I must take medicine.（薬を飲まなければなりません。）', 'N4'),
+    _GrammarPattern('〜ことにする', 'Decide to do...（〜することに決める）', '毎朝走ることにしました。', 'I decided to run every morning.（毎朝走ることにしました。）', 'N3'),
+    _GrammarPattern('〜わけではない', 'It does not mean that...（〜というわけではない）', '嫌いなわけではありません。', 'It does not mean I dislike it.（嫌いなわけではありません。）', 'N2'),
   ];
 
   @override
@@ -25,7 +25,7 @@ class GrammarPage extends StatelessWidget {
               itemBuilder: (context, index) {
                 if (index == 0) {
                   return _PageHeader(
-                    title: 'Grammar',
+                    title: 'Grammar（文法）',
                     subtitle: '文型を例文と一緒に確認しましょう。',
                     icon: Icons.subject_outlined,
                     color: theme.colorScheme.tertiaryContainer,
@@ -49,7 +49,12 @@ class _GrammarCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
     return Card(
+      elevation: 1,
+      shadowColor: colorScheme.shadow.withValues(alpha: 0.08),
+      color: theme.colorScheme.brightness == Brightness.light ? Colors.white : colorScheme.surfaceContainerHighest,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
       child: Padding(
         padding: const EdgeInsets.all(20),
         child: Column(

@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../domain/home_content.dart';
 import '../../../../shared/presentation/widgets/app_state_views.dart';
+import '../../domain/home_content.dart';
 import '../providers/home_content_provider.dart';
 
 class HomePage extends ConsumerWidget {
@@ -18,11 +18,11 @@ class HomePage extends ConsumerWidget {
         child: homeContent.when(
           data: (content) => _HomeContentView(content: content),
           error: (error, stackTrace) => AppErrorView(
-            title: 'Could not load home content',
+            title: 'Could not load home content（ホームを読み込めません）',
             message: error.toString(),
             onRetry: () => ref.invalidate(homeContentProvider),
           ),
-          loading: () => const AppLoadingView(message: 'Loading home / ホームを読み込み中'),
+          loading: () => const AppSkeletonListView(itemCount: 4),
         ),
       ),
     );
@@ -36,56 +36,29 @@ class _HomeContentView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final width = MediaQuery.sizeOf(context).width;
-    final horizontalPadding = width >= 1200
-        ? 40.0
-        : width >= 600
-            ? 32.0
-            : 20.0;
-    final maxContentWidth = width >= 1200 ? 1180.0 : double.infinity;
-
     return Center(
       child: ConstrainedBox(
-        constraints: BoxConstraints(maxWidth: maxContentWidth),
-        child: CustomScrollView(
-          slivers: [
-            SliverPadding(
-              padding: EdgeInsets.fromLTRB(
-                horizontalPadding,
-                24,
-                horizontalPadding,
-                32,
-              ),
-              sliver: SliverList.list(
-                children: [
-                  const _HeroCard(),
-                  const SizedBox(height: 28),
-                  _SectionHeader(title: 'JLPT Levels', subtitle: 'レベルを選択'),
-                  const SizedBox(height: 12),
-                  _ResponsiveGrid(
-                    minTileWidth: 190,
-                    children: [
-                      for (final level in content.levels) _LevelCard(level: level),
-                    ],
-                  ),
-                  const SizedBox(height: 28),
-                  _SectionHeader(title: 'Learning Menu', subtitle: '学習メニュー'),
-                  const SizedBox(height: 12),
-                  _ResponsiveGrid(
-                    minTileWidth: 220,
-                    children: [
-                      for (final item in content.learningMenuItems)
-                        _LearningMenuCard(item: item),
-                    ],
-                  ),
-                  const SizedBox(height: 28),
-                  _ResponsiveTwoColumn(
-                    left: _StudyStatusCard(status: content.studyStatus),
-                    right: _RecentHistoryCard(items: content.recentHistory),
-                  ),
-                ],
-              ),
+        constraints: const BoxConstraints(maxWidth: 980),
+        child: ListView(
+          padding: const EdgeInsets.fromLTRB(20, 20, 20, 28),
+          children: [
+            Text(
+              'Home（ホーム）',
+              style: Theme.of(context).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.w900),
             ),
+            const SizedBox(height: 14),
+            _TodayGoalCard(status: content.studyStatus),
+            const SizedBox(height: 14),
+            _SectionHeader(title: 'Continue Learning', subtitle: '続きから学習'),
+            const SizedBox(height: 10),
+            for (final item in content.learningMenuItems) ...[
+              _LearningMenuCard(item: item),
+              const SizedBox(height: 10),
+            ],
+            const SizedBox(height: 4),
+            const _SectionHeader(title: 'Recently Studied Words', subtitle: '最近学習した単語'),
+            const SizedBox(height: 10),
+            _RecentHistoryCard(items: content.recentHistory),
           ],
         ),
       ),
@@ -93,57 +66,48 @@ class _HomeContentView extends StatelessWidget {
   }
 }
 
-class _HeroCard extends StatelessWidget {
-  const _HeroCard();
+class _TodayGoalCard extends StatelessWidget {
+  const _TodayGoalCard({required this.status});
+
+  final StudyStatusData status;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
-
-    return Card(
-      elevation: 3,
-      shadowColor: colorScheme.shadow.withValues(alpha: 0.18),
-      color: colorScheme.primaryContainer,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(32)),
-      child: Padding(
-        padding: const EdgeInsets.all(28),
-        child: Row(
-          children: [
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Welcome to JLPT Master',
-                    style: theme.textTheme.headlineMedium?.copyWith(
-                      fontWeight: FontWeight.w800,
-                    ),
-                  ),
-                  const SizedBox(height: 10),
-                  Text(
-                    'Study Japanese step by step. / 日本語を一歩ずつ学びましょう。',
-                    style: theme.textTheme.titleMedium?.copyWith(
-                      color: colorScheme.onPrimaryContainer.withValues(alpha: 0.78),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            if (MediaQuery.sizeOf(context).width >= 700) ...[
-              const SizedBox(width: 24),
-              CircleAvatar(
-                radius: 46,
-                backgroundColor: colorScheme.primary,
-                child: Icon(
-                  Icons.school_outlined,
-                  size: 48,
-                  color: colorScheme.onPrimary,
+    return _RoundedCard(
+      child: Row(
+        children: [
+          SizedBox(
+            width: 96,
+            height: 96,
+            child: Stack(
+              alignment: Alignment.center,
+              children: [
+                CircularProgressIndicator(
+                  value: status.goalProgress,
+                  strokeWidth: 9,
+                  strokeCap: StrokeCap.round,
                 ),
-              ),
-            ],
-          ],
-        ),
+                Text(
+                  '${(status.goalProgress * 100).round()}%',
+                  style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w900),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: 18),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('Today’s Goal（今日の目標）', style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w900)),
+                const SizedBox(height: 6),
+                Text('Study Time（学習時間） ${status.studyTimeMinutes} min', style: theme.textTheme.bodyMedium),
+                Text('Correct Rate（正答率） ${status.accuracyPercent}%', style: theme.textTheme.bodyMedium),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -158,63 +122,7 @@ class _SectionHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          title,
-          style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800),
-        ),
-        const SizedBox(height: 2),
-        Text(
-          subtitle,
-          style: theme.textTheme.bodyMedium?.copyWith(
-            color: theme.colorScheme.onSurfaceVariant,
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-class _LevelCard extends StatelessWidget {
-  const _LevelCard({required this.level});
-
-  final JlptLevelCardData level;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return _RoundedCard(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            level.level,
-            style: theme.textTheme.headlineSmall?.copyWith(
-              fontWeight: FontWeight.w900,
-              color: theme.colorScheme.primary,
-            ),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            '${level.title.en} / ${level.title.ja}',
-            style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            '${level.description.en}\n${level.description.ja}',
-            style: theme.textTheme.bodyMedium,
-          ),
-          const Spacer(),
-          const SizedBox(height: 16),
-          LinearProgressIndicator(
-            value: level.progress,
-            borderRadius: BorderRadius.circular(99),
-          ),
-        ],
-      ),
-    );
+    return Text('$title（$subtitle）', style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w900));
   }
 }
 
@@ -230,109 +138,19 @@ class _LearningMenuCard extends StatelessWidget {
       onTap: () => context.go(item.routePath),
       child: Row(
         children: [
-          CircleAvatar(child: Icon(item.icon)),
-          const SizedBox(width: 16),
+          Icon(item.icon, color: theme.colorScheme.primary),
+          const SizedBox(width: 14),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  item.title.en,
-                  style: theme.textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.w800,
-                  ),
-                ),
+                Text('${item.title.en}（${item.title.ja}）', style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800)),
                 const SizedBox(height: 3),
-                Text(
-                  '${item.title.ja} • ${item.subtitle.en} / ${item.subtitle.ja}',
-                  style: theme.textTheme.bodyMedium,
-                ),
+                Text('${item.subtitle.en}（${item.subtitle.ja}）', style: theme.textTheme.bodyMedium),
               ],
             ),
           ),
-        ],
-      ),
-    );
-  }
-}
-
-class _StudyStatusCard extends StatelessWidget {
-  const _StudyStatusCard({required this.status});
-
-  final StudyStatusData status;
-
-  @override
-  Widget build(BuildContext context) {
-    return _RoundedCard(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const _SectionHeader(
-            title: 'Today\'s Study Status',
-            subtitle: '今日の学習状況',
-          ),
-          const SizedBox(height: 18),
-          LinearProgressIndicator(
-            value: status.goalProgress,
-            minHeight: 10,
-            borderRadius: BorderRadius.circular(99),
-          ),
-          const SizedBox(height: 20),
-          Wrap(
-            spacing: 12,
-            runSpacing: 12,
-            children: [
-              _MetricChip(
-                icon: Icons.schedule_outlined,
-                label: 'Study Time\n学習時間',
-                value: '${status.studyTimeMinutes} min',
-              ),
-              _MetricChip(
-                icon: Icons.local_fire_department_outlined,
-                label: 'Study Days\n学習日数',
-                value: '${status.studyDays} days',
-              ),
-              _MetricChip(
-                icon: Icons.check_circle_outline,
-                label: 'Accuracy\n正答率',
-                value: '${status.accuracyPercent}%',
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _MetricChip extends StatelessWidget {
-  const _MetricChip({required this.icon, required this.label, required this.value});
-
-  final IconData icon;
-  final String label;
-  final String value;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return Container(
-      width: 150,
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: theme.colorScheme.secondaryContainer.withValues(alpha: 0.55),
-        borderRadius: BorderRadius.circular(20),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Icon(icon, color: theme.colorScheme.primary),
-          const SizedBox(height: 10),
-          Text(
-            value,
-            style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w900),
-          ),
-          const SizedBox(height: 3),
-          Text(label, style: theme.textTheme.bodySmall),
+          const Icon(Icons.chevron_right_rounded),
         ],
       ),
     );
@@ -346,26 +164,23 @@ class _RecentHistoryCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    if (items.isEmpty) {
+      return const AppEmptyView(
+        icon: Icons.history_rounded,
+        title: 'No recent words（最近の単語はありません）',
+        message: 'Start learning to see your history.（学習すると履歴が表示されます。）',
+      );
+    }
     return _RoundedCard(
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const _SectionHeader(title: 'Recent History', subtitle: '最近の学習履歴'),
-          const SizedBox(height: 12),
           for (final item in items)
             ListTile(
               contentPadding: EdgeInsets.zero,
-              leading: CircleAvatar(child: Icon(item.icon)),
-              title: Text('${item.title.en} / ${item.title.ja}'),
-              subtitle: Text('${item.subtitle.en} / ${item.subtitle.ja}'),
-              trailing: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: [
-                  Text(item.completedAtLabel),
-                  Text('${item.accuracyPercent}%'),
-                ],
-              ),
+              leading: Icon(item.icon, color: Theme.of(context).colorScheme.primary),
+              title: Text('${item.title.en}（${item.title.ja}）'),
+              subtitle: Text('${item.subtitle.en}（${item.subtitle.ja}）'),
+              trailing: Text('${item.accuracyPercent}%'),
             ),
         ],
       ),
@@ -381,67 +196,13 @@ class _RoundedCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
     return Card(
-      elevation: 2,
-      shadowColor: theme.colorScheme.shadow.withValues(alpha: 0.12),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
       child: InkWell(
         onTap: onTap,
         borderRadius: BorderRadius.circular(24),
-        child: Padding(padding: const EdgeInsets.all(20), child: child),
+        child: Padding(padding: const EdgeInsets.all(18), child: child),
       ),
-    );
-  }
-}
-
-class _ResponsiveGrid extends StatelessWidget {
-  const _ResponsiveGrid({required this.children, required this.minTileWidth});
-
-  final List<Widget> children;
-  final double minTileWidth;
-
-  @override
-  Widget build(BuildContext context) {
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final count = (constraints.maxWidth / minTileWidth).floor().clamp(1, 5);
-        return GridView.count(
-          crossAxisCount: count,
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
-          mainAxisSpacing: 12,
-          crossAxisSpacing: 12,
-          childAspectRatio: count == 1 ? 1.45 : 1.05,
-          children: children,
-        );
-      },
-    );
-  }
-}
-
-class _ResponsiveTwoColumn extends StatelessWidget {
-  const _ResponsiveTwoColumn({required this.left, required this.right});
-
-  final Widget left;
-  final Widget right;
-
-  @override
-  Widget build(BuildContext context) {
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        if (constraints.maxWidth < 860) {
-          return Column(children: [left, const SizedBox(height: 12), right]);
-        }
-        return Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Expanded(child: left),
-            const SizedBox(width: 12),
-            Expanded(child: right),
-          ],
-        );
-      },
     );
   }
 }
