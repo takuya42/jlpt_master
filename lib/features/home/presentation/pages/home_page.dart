@@ -60,7 +60,7 @@ class _HomeContentView extends StatelessWidget {
                 children: [
                   const _HeroCard(),
                   const SizedBox(height: 28),
-                  _SectionHeader(title: 'JLPT Levels', subtitle: 'レベルを選択'),
+                  _SectionHeader(title: 'Study Progress', subtitle: '学習進捗'),
                   const SizedBox(height: 12),
                   _ResponsiveGrid(
                     minTileWidth: 190,
@@ -69,7 +69,7 @@ class _HomeContentView extends StatelessWidget {
                     ],
                   ),
                   const SizedBox(height: 28),
-                  _SectionHeader(title: 'Learning Menu', subtitle: '学習メニュー'),
+                  _SectionHeader(title: 'Continue Learning', subtitle: '続きから学習'),
                   const SizedBox(height: 12),
                   _ResponsiveGrid(
                     minTileWidth: 220,
@@ -115,14 +115,14 @@ class _HeroCard extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Welcome to JLPT Master',
+                    'JLPT Masterへようこそ',
                     style: theme.textTheme.headlineMedium?.copyWith(
                       fontWeight: FontWeight.w800,
                     ),
                   ),
                   const SizedBox(height: 10),
                   Text(
-                    'Study Japanese step by step. / 日本語を一歩ずつ学びましょう。',
+                    'Today’s Study（今日の学習）から、無理なく続けましょう。',
                     style: theme.textTheme.titleMedium?.copyWith(
                       color: colorScheme.onPrimaryContainer.withValues(alpha: 0.78),
                     ),
@@ -268,7 +268,7 @@ class _StudyStatusCard extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const _SectionHeader(
-            title: 'Today\'s Study Status',
+            title: 'Today’s Study',
             subtitle: '今日の学習状況',
           ),
           const SizedBox(height: 18),
@@ -289,12 +289,12 @@ class _StudyStatusCard extends StatelessWidget {
               ),
               _MetricChip(
                 icon: Icons.local_fire_department_outlined,
-                label: 'Study Days\n学習日数',
+                label: 'Completed Lessons\n学習済み',
                 value: '${status.studyDays} days',
               ),
               _MetricChip(
                 icon: Icons.check_circle_outline,
-                label: 'Accuracy\n正答率',
+                label: 'Correct Rate\n正答率',
                 value: '${status.accuracyPercent}%',
               ),
             ],
@@ -350,7 +350,7 @@ class _RecentHistoryCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const _SectionHeader(title: 'Recent History', subtitle: '最近の学習履歴'),
+          const _SectionHeader(title: 'Recently Studied Words', subtitle: '最近学習した単語'),
           const SizedBox(height: 12),
           for (final item in items)
             ListTile(
