@@ -9,12 +9,12 @@ class MainShell extends StatelessWidget {
   final Widget child;
 
   static final _items = [
-    _NavigationItem(AppRoute.home, Icons.home_outlined, Icons.home),
-    _NavigationItem(AppRoute.vocabulary, Icons.menu_book_outlined, Icons.menu_book),
-    _NavigationItem(AppRoute.grammar, Icons.subject_outlined, Icons.subject),
-    _NavigationItem(AppRoute.mockExam, Icons.quiz_outlined, Icons.quiz),
-    _NavigationItem(AppRoute.statistics, Icons.bar_chart_outlined, Icons.bar_chart),
-    _NavigationItem(AppRoute.settings, Icons.settings_outlined, Icons.settings),
+    _NavigationItem(AppRoute.home, Icons.home_outlined, Icons.home, 'ホーム'),
+    _NavigationItem(AppRoute.vocabulary, Icons.menu_book_outlined, Icons.menu_book, '単語'),
+    _NavigationItem(AppRoute.grammar, Icons.subject_outlined, Icons.subject, '文法'),
+    _NavigationItem(AppRoute.mockExam, Icons.quiz_outlined, Icons.quiz, '模試'),
+    _NavigationItem(AppRoute.statistics, Icons.bar_chart_outlined, Icons.bar_chart, '統計'),
+    _NavigationItem(AppRoute.settings, Icons.settings_outlined, Icons.settings, '設定'),
   ];
 
   @override
@@ -31,7 +31,7 @@ class MainShell extends StatelessWidget {
             NavigationDestination(
               icon: Icon(item.icon),
               selectedIcon: Icon(item.selectedIcon),
-              label: item.route.label,
+              label: item.label,
             ),
         ],
       ),
@@ -51,9 +51,10 @@ class MainShell extends StatelessWidget {
 }
 
 class _NavigationItem {
-  const _NavigationItem(this.route, this.icon, this.selectedIcon);
+  const _NavigationItem(this.route, this.icon, this.selectedIcon, this.label);
 
   final AppRoute route;
   final IconData icon;
   final IconData selectedIcon;
+  final String label;
 }

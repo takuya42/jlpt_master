@@ -46,12 +46,12 @@ class AppTheme {
       ),
       cardTheme: CardThemeData(
         clipBehavior: Clip.antiAlias,
-        elevation: 1,
-        shadowColor: colorScheme.shadow.withValues(alpha: 0.08),
+        elevation: 2,
+        shadowColor: colorScheme.shadow.withValues(alpha: 0.10),
         margin: EdgeInsets.zero,
         color: card,
         surfaceTintColor: Colors.transparent,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(22)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
       ),
       chipTheme: ChipThemeData(
         labelStyle: TextStyle(
@@ -89,7 +89,7 @@ class AppTheme {
         labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
         iconTheme: const WidgetStatePropertyAll(IconThemeData(size: 23)),
         labelTextStyle: WidgetStatePropertyAll(
-          const TextStyle(fontSize: 11, fontWeight: FontWeight.w700),
+          const TextStyle(fontSize: 11, fontWeight: FontWeight.w800),
         ),
       ),
       dividerTheme: DividerThemeData(color: colorScheme.outlineVariant.withValues(alpha: 0.55)),

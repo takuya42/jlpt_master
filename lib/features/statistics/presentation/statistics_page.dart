@@ -21,53 +21,31 @@ class StatisticsPage extends StatelessWidget {
               builder: (context, snapshot) {
                 final stats = snapshot.data ?? LearningStats.empty();
                 final cards = [
-                  _Stat('Weekly Study Time', '週間学習時間', stats.formattedStudyTime, Icons.schedule_outlined),
-                  _Stat('Total Study Time', '総学習時間', stats.formattedStudyTime, Icons.timer_outlined),
-                  _Stat('Correct Rate', '正答率', '${stats.mockExamAccuracy}%', Icons.insights_outlined),
-                  _Stat('Study Days', '学習日数', '${stats.completedLessons}', Icons.calendar_month_outlined),
-                  _Stat('Study Streak', '連続学習日数', '${stats.favoriteWords}', Icons.local_fire_department_outlined),
+                  _Stat('学習時間', stats.formattedStudyTime, Icons.timer_outlined),
+                  _Stat('正答率', '${stats.mockExamAccuracy}%', Icons.insights_outlined),
+                  _Stat('連続学習日数', '${stats.favoriteWords}日', Icons.local_fire_department_outlined),
                 ];
 
                 return ListView(
                   padding: const EdgeInsets.fromLTRB(20, 24, 20, 32),
                   children: [
-                    Text(
-                      'Statistics（学習統計）',
-                      style: theme.textTheme.headlineMedium?.copyWith(
-                        fontWeight: FontWeight.w900,
-                      ),
-                    ),
-                    const SizedBox(height: 6),
-                    Text('学習履歴から進捗を可視化します。', style: theme.textTheme.bodyLarge),
-                    const SizedBox(height: 20),
-                    LayoutBuilder(builder: (context, constraints) {
-                      final columns = constraints.maxWidth >= 760 ? 2 : 1;
-                      return GridView.count(
-                        crossAxisCount: columns,
-                        shrinkWrap: true,
-                        physics: const NeverScrollableScrollPhysics(),
-                        mainAxisSpacing: 12,
-                        crossAxisSpacing: 12,
-                        childAspectRatio: columns == 1 ? 2.5 : 2.0,
-                        children: [for (final stat in cards) _StatCard(stat: stat)],
-                      );
-                    }),
-                    const SizedBox(height: 16),
+                    Text('統計', style: theme.textTheme.headlineMedium?.copyWith(fontWeight: FontWeight.w900)),
+                    const SizedBox(height: 18),
                     Card(
                       child: Padding(
                         padding: const EdgeInsets.all(20),
                         child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                          Text('Weekly study time（週間学習時間）', style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800)),
-                          const SizedBox(height: 12),
-                          LinearProgressIndicator(
-                            value: stats.weeklyGoalProgress,
-                            minHeight: 12,
-                            borderRadius: BorderRadius.circular(99),
-                          ),
-                          const SizedBox(height: 8),
-                          Text('${(stats.weeklyGoalProgress * 100).round()}% complete / 週間目標達成率'),
+                          Text('週間学習時間グラフ', style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w900)),
+                          const SizedBox(height: 18),
+                          _WeeklyBarChart(progress: stats.weeklyGoalProgress),
                         ]),
                       ),
+                    ),
+                    const SizedBox(height: 16),
+                    Wrap(
+                      spacing: 12,
+                      runSpacing: 12,
+                      children: [for (final stat in cards) _StatCard(stat: stat)],
                     ),
                   ],
                 );
@@ -75,6 +53,43 @@ class StatisticsPage extends StatelessWidget {
             ),
           ),
         ),
+      ),
+    );
+  }
+}
+
+class _WeeklyBarChart extends StatelessWidget {
+  const _WeeklyBarChart({required this.progress});
+  final double progress;
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final values = [0.35, 0.55, 0.42, progress.clamp(0.1, 1.0).toDouble(), 0.68, 0.48, 0.76];
+    final labels = ['月', '火', '水', '木', '金', '土', '日'];
+    return SizedBox(
+      height: 170,
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.end,
+        children: [
+          for (var i = 0; i < values.length; i++)
+            Expanded(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 4),
+                child: Column(mainAxisAlignment: MainAxisAlignment.end, children: [
+                  Flexible(
+                    child: FractionallySizedBox(
+                      heightFactor: values[i],
+                      alignment: Alignment.bottomCenter,
+                      child: Container(decoration: BoxDecoration(color: colorScheme.primary, borderRadius: BorderRadius.circular(999))),
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(labels[i]),
+                ]),
+              ),
+            ),
+        ],
       ),
     );
   }
@@ -88,26 +103,28 @@ class _StatCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(20),
-        child: Row(children: [
-          CircleAvatar(radius: 28, child: Icon(stat.icon)),
-          const SizedBox(width: 16),
-          Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, mainAxisAlignment: MainAxisAlignment.center, children: [
-            Text(stat.value, style: theme.textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.w900)),
-            Text('${stat.en} / ${stat.ja}', style: theme.textTheme.bodyMedium),
-          ])),
-        ]),
+    return SizedBox(
+      width: 300,
+      child: Card(
+        child: Padding(
+          padding: const EdgeInsets.all(20),
+          child: Row(children: [
+            CircleAvatar(radius: 26, child: Icon(stat.icon)),
+            const SizedBox(width: 16),
+            Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+              Text(stat.value, style: theme.textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.w900)),
+              Text(stat.label, style: theme.textTheme.bodyMedium),
+            ])),
+          ]),
+        ),
       ),
     );
   }
 }
 
 class _Stat {
-  const _Stat(this.en, this.ja, this.value, this.icon);
-  final String en;
-  final String ja;
+  const _Stat(this.label, this.value, this.icon);
+  final String label;
   final String value;
   final IconData icon;
 }
