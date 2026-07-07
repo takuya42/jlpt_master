@@ -21,32 +21,52 @@ class _SettingsPageState extends State<SettingsPage> {
             child: ListView(
               padding: const EdgeInsets.fromLTRB(24, 28, 24, 36),
               children: [
-                Text('Settings\n設定', style: theme.textTheme.headlineMedium?.copyWith(fontWeight: FontWeight.w900)),
+                Text('Settings\n設定',
+                    style: theme.textTheme.headlineMedium?.copyWith(
+                        fontWeight: FontWeight.w900)),
                 const SizedBox(height: 20),
                 Card(
                   child: Padding(
                     padding: const EdgeInsets.symmetric(vertical: 8),
                     child: Column(children: [
-                      const _SettingsTile(icon: Icons.person_outline, title: 'Account', subtitle: 'アカウント'),
-                      const _SettingsTile(icon: Icons.favorite_border, title: 'Favorite', subtitle: 'お気に入り'),
-                      const _SettingsTile(icon: Icons.flag_outlined, title: 'Learning Goal', subtitle: '学習目標'),
+                      const _SettingsTile(icon: Icons.person_outline,
+                          title: 'Account',
+                          subtitle: 'アカウント'),
+                      const _SettingsTile(icon: Icons.favorite_border,
+                          title: 'Favorite',
+                          subtitle: 'お気に入り'),
+                      const _SettingsTile(icon: Icons.flag_outlined,
+                          title: 'Learning Goal',
+                          subtitle: '学習目標'),
                       SwitchListTile(
-                        contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 6),
+                        contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 20, vertical: 6),
                         value: _darkMode,
                         onChanged: (value) => setState(() => _darkMode = value),
                         secondary: const Icon(Icons.dark_mode_outlined),
-                        title: const Text('Dark Mode', maxLines: 1, overflow: TextOverflow.ellipsis),
-                        subtitle: const Text('ダークモード', maxLines: 1, overflow: TextOverflow.ellipsis),
+                        title: const Text('Dark Mode', maxLines: 1,
+                            overflow: TextOverflow.ellipsis),
+                        subtitle: const Text('ダークモード', maxLines: 1,
+                            overflow: TextOverflow.ellipsis),
                       ),
-                      const AboutListTile(
-                        contentPadding: EdgeInsets.symmetric(horizontal: 20, vertical: 6),
-                        icon: Icon(Icons.info_outline),
-                        applicationName: 'JLPT Master',
-                        applicationVersion: '1.0.0',
-                        applicationLegalese: '© 2026 JLPT Master',
-                        child: Text('About\nこのアプリについて'),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 20,
+                            vertical: 6),
+                        child: AboutListTile(
+                          icon: const Icon(Icons.info_outline),
+                          applicationName: 'JLPT Master',
+                          applicationVersion: '1.0.0',
+                          applicationLegalese: '© 2026 JLPT Master',
+                          child: const Text(
+                            'About\nこのアプリについて',
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
                       ),
-                    ]),
+                    ]
+
+                    ),
                   ),
                 ),
               ],
@@ -59,7 +79,8 @@ class _SettingsPageState extends State<SettingsPage> {
 }
 
 class _SettingsTile extends StatelessWidget {
-  const _SettingsTile({required this.icon, required this.title, required this.subtitle});
+  const _SettingsTile(
+      {required this.icon, required this.title, required this.subtitle});
 
   final IconData icon;
   final String title;
