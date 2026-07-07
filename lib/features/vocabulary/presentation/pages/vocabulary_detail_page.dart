@@ -14,7 +14,7 @@ class VocabularyDetailPage extends ConsumerWidget {
     final word = ref.watch(vocabularyWordProvider(wordId));
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Vocabulary Detail')),
+      appBar: AppBar(title: const Text('Vocabulary Detail / 単語詳細')),
       body: SafeArea(
         child: word.when(
           data: (data) {
@@ -24,7 +24,7 @@ class VocabularyDetailPage extends ConsumerWidget {
             return _VocabularyDetailContent(word: data);
           },
           error: (error, stackTrace) => Center(
-            child: Text('Could not load vocabulary detail.\n$error', textAlign: TextAlign.center),
+            child: Text('Could not load vocabulary detail. / 単語詳細を読み込めません。\n$error', textAlign: TextAlign.center),
           ),
           loading: () => const Center(child: CircularProgressIndicator()),
         ),
@@ -79,7 +79,7 @@ class _VocabularyDetailContent extends ConsumerWidget {
                           ),
                         ),
                         IconButton.filledTonal(
-                          tooltip: word.isFavorite ? 'Remove favorite' : 'Add favorite',
+                          tooltip: word.isFavorite ? 'Favorite / お気に入り解除' : 'Favorite / お気に入り追加',
                           onPressed: () => toggleFavorite(ref, word),
                           iconSize: 28,
                           icon: Icon(word.isFavorite ? Icons.favorite : Icons.favorite_border),
@@ -87,9 +87,11 @@ class _VocabularyDetailContent extends ConsumerWidget {
                       ],
                     ),
                     const SizedBox(height: 24),
-                    Text('English', style: theme.textTheme.labelLarge),
+                    Text('English / 日本語', style: theme.textTheme.labelLarge),
                     const SizedBox(height: 4),
                     Text(word.meaning, style: theme.textTheme.headlineSmall),
+                    const SizedBox(height: 4),
+                    Text(word.word, style: theme.textTheme.titleLarge?.copyWith(color: colorScheme.primary, fontWeight: FontWeight.w800)),
                     const SizedBox(height: 20),
                     Wrap(
                       spacing: 8,
@@ -111,7 +113,7 @@ class _VocabularyDetailContent extends ConsumerWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('Example sentence', style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800)),
+                    Text('Example Sentence / 例文', style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800)),
                     const SizedBox(height: 12),
                     Text(word.exampleSentence, style: theme.textTheme.titleLarge),
                     const SizedBox(height: 8),
@@ -132,6 +134,6 @@ class _WordNotFoundView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const Center(child: Text('Vocabulary word not found.'));
+    return const Center(child: Text('Vocabulary word not found. / 単語が見つかりません。'));
   }
 }

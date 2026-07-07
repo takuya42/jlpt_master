@@ -9,12 +9,11 @@ class MainShell extends StatelessWidget {
   final Widget child;
 
   static final _items = [
-    _NavigationItem(AppRoute.home, Icons.home_outlined, Icons.home, 'ホーム'),
-    _NavigationItem(AppRoute.vocabulary, Icons.menu_book_outlined, Icons.menu_book, '単語'),
-    _NavigationItem(AppRoute.grammar, Icons.subject_outlined, Icons.subject, '文法'),
-    _NavigationItem(AppRoute.mockExam, Icons.quiz_outlined, Icons.quiz, '模試'),
-    _NavigationItem(AppRoute.statistics, Icons.bar_chart_outlined, Icons.bar_chart, '統計'),
-    _NavigationItem(AppRoute.settings, Icons.settings_outlined, Icons.settings, '設定'),
+    _NavigationItem(AppRoute.home, Icons.home_outlined, Icons.home, 'Home\nホーム'),
+    _NavigationItem(AppRoute.vocabulary, Icons.menu_book_outlined, Icons.menu_book, 'Vocabulary\n単語'),
+    _NavigationItem(AppRoute.grammar, Icons.subject_outlined, Icons.subject, 'Grammar\n文法'),
+    _NavigationItem(AppRoute.statistics, Icons.bar_chart_outlined, Icons.bar_chart, 'Statistics\n学習記録'),
+    _NavigationItem(AppRoute.settings, Icons.settings_outlined, Icons.settings, 'Settings\n設定'),
   ];
 
   @override

@@ -3,15 +3,15 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:jlpt_master/app/app.dart';
 
 void main() {
-  testWidgets('shows initial home screen', (tester) async {
+  testWidgets('shows bilingual home screen without mock exam', (tester) async {
     await tester.pumpWidget(const ProviderScope(child: JlptMasterApp()));
     await tester.pumpAndSettle();
 
-    expect(find.text('Welcome to JLPT Master'), findsOneWidget);
-    expect(find.text('JLPT Levels'), findsOneWidget);
-    expect(find.text('Learning Menu'), findsOneWidget);
-    expect(find.text('Vocabulary'), findsWidgets);
-    expect(find.text('Today\'s Study Status'), findsOneWidget);
-    expect(find.text('Recent History'), findsOneWidget);
+    expect(find.text('Today\'s Goal\n今日の目標'), findsOneWidget);
+    expect(find.text('Learning Progress'), findsOneWidget);
+    expect(find.text('Continue Learning'), findsOneWidget);
+    expect(find.text('Recently Studied'), findsOneWidget);
+    expect(find.textContaining('Mock Exam'), findsNothing);
+    expect(find.textContaining('模擬試験'), findsNothing);
   });
 }

@@ -6,16 +6,16 @@ class LearningStats {
   const LearningStats({
     required this.studyTimeMinutes,
     required this.completedLessons,
-    required this.favoriteWords,
-    required this.mockExamAccuracy,
+    required this.learningStreakDays,
+    required this.accuracyPercent,
     required this.weeklyGoalProgress,
   });
 
   factory LearningStats.empty() => const LearningStats(
         studyTimeMinutes: 0,
         completedLessons: 0,
-        favoriteWords: 0,
-        mockExamAccuracy: 0,
+        learningStreakDays: 0,
+        accuracyPercent: 0,
         weeklyGoalProgress: 0,
       );
 
@@ -26,16 +26,16 @@ class LearningStats {
     return LearningStats(
       studyTimeMinutes: (data['studyTimeMinutes'] as num?)?.toInt() ?? 0,
       completedLessons: (data['completedLessons'] as num?)?.toInt() ?? 0,
-      favoriteWords: (data['favoriteWords'] as num?)?.toInt() ?? 0,
-      mockExamAccuracy: (data['mockExamAccuracy'] as num?)?.toInt() ?? 0,
+      learningStreakDays: (data['learningStreakDays'] as num?)?.toInt() ?? (data['studyDays'] as num?)?.toInt() ?? 0,
+      accuracyPercent: (data['accuracyPercent'] as num?)?.toInt() ?? 0,
       weeklyGoalProgress: ((data['weeklyGoalProgress'] as num?)?.toDouble() ?? 0).clamp(0, 1).toDouble(),
     );
   }
 
   final int studyTimeMinutes;
   final int completedLessons;
-  final int favoriteWords;
-  final int mockExamAccuracy;
+  final int learningStreakDays;
+  final int accuracyPercent;
   final double weeklyGoalProgress;
 
   String get formattedStudyTime {
