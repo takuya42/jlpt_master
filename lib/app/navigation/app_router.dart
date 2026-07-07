@@ -4,7 +4,6 @@ import 'package:go_router/go_router.dart';
 import '../../features/auth/presentation/auth_page.dart';
 import '../../features/grammar/presentation/pages/grammar_page.dart';
 import '../../features/home/presentation/pages/home_page.dart';
-import '../../features/mock_exam/presentation/pages/mock_exam_page.dart';
 import '../../features/settings/presentation/pages/settings_page.dart';
 import '../../features/statistics/presentation/statistics_page.dart';
 import '../../features/shell/presentation/main_shell.dart';
@@ -40,10 +39,6 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           GoRoute(
             path: AppRoute.grammar.path,
             builder: (context, state) => const GrammarPage(),
-          ),
-          GoRoute(
-            path: AppRoute.mockExam.path,
-            builder: (context, state) => const MockExamPage(),
           ),
           GoRoute(
             path: AppRoute.statistics.path,

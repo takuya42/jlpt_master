@@ -62,7 +62,7 @@ class MockHomeRepository implements HomeRepository {
       ],
       learningMenuItems: [
         LearningMenuItemData(
-          title: LocalizedText(en: 'Vocabulary', ja: '語彙'),
+          title: LocalizedText(en: 'Vocabulary', ja: '単語'),
           subtitle: LocalizedText(en: 'Words by level', ja: 'レベル別の単語'),
           icon: Icons.menu_book_outlined,
           routePath: AppRoute.vocabulary.path,
@@ -72,12 +72,6 @@ class MockHomeRepository implements HomeRepository {
           subtitle: LocalizedText(en: 'Patterns and examples', ja: '文型と例文'),
           icon: Icons.subject_outlined,
           routePath: AppRoute.grammar.path,
-        ),
-        LearningMenuItemData(
-          title: LocalizedText(en: 'Mock Exam', ja: '模擬試験'),
-          subtitle: LocalizedText(en: 'Timed practice tests', ja: '時間制限付き演習'),
-          icon: Icons.quiz_outlined,
-          routePath: AppRoute.mockExam.path,
         ),
       ],
       studyStatus: const StudyStatusData(
