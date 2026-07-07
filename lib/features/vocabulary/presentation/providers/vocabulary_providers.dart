@@ -1,12 +1,13 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../data/google_sheet_vocabulary_repository.dart';
 import '../../data/vocabulary_repository.dart';
 import '../../domain/vocabulary_word.dart';
 
 const jlptLevels = ['N5', 'N4', 'N3', 'N2', 'N1'];
 
 final vocabularyRepositoryProvider = Provider<VocabularyRepository>((ref) {
-  return const MockVocabularyRepository();
+  return GoogleSheetVocabularyRepository();
 });
 
 final vocabularyWordsProvider = FutureProvider<List<VocabularyWord>>((ref) async {
