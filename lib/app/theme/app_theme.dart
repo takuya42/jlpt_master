@@ -68,11 +68,14 @@ class AppTheme {
         elevation: const WidgetStatePropertyAll(0),
         backgroundColor: WidgetStatePropertyAll(card),
         surfaceTintColor: const WidgetStatePropertyAll(Colors.transparent),
-        minimumSize: const WidgetStatePropertyAll(Size.fromHeight(52)),
         shape: WidgetStatePropertyAll(
-          RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
         ),
-        padding: const WidgetStatePropertyAll(EdgeInsets.symmetric(horizontal: 16)),
+        padding: const WidgetStatePropertyAll(
+          EdgeInsets.symmetric(horizontal: 16),
+        ),
       ),
       filledButtonTheme: FilledButtonThemeData(
         style: FilledButton.styleFrom(
