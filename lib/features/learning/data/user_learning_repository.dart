@@ -196,7 +196,7 @@ class RecentActivityEntry {
 class LearningStatistics {
   const LearningStatistics({
     required this.totalStudyCount,
-    required this.learningDays,
+    required this.learningStreakDays,
     required this.accuracyPercent,
     required this.vocabularyCount,
     required this.grammarCount,
@@ -209,7 +209,7 @@ class LearningStatistics {
 
   factory LearningStatistics.empty({Map<String, int> totalQuestionsByLevel = const {}}) => LearningStatistics(
         totalStudyCount: 0,
-        learningDays: 0,
+        learningStreakDays: 0,
         accuracyPercent: 0,
         vocabularyCount: 0,
         grammarCount: 0,
@@ -253,7 +253,7 @@ class LearningStatistics {
 
     return LearningStatistics(
       totalStudyCount: (summary['totalStudyCount'] as num?)?.toInt() ?? learned.values.fold(0, (sum, count) => sum + count),
-      learningDays: (summary['learningDays'] as num?)?.toInt() ?? (summary['learningStreakDays'] as num?)?.toInt() ?? studyDays.length,
+      learningStreakDays: (summary['learningStreakDays'] as num?)?.toInt() ?? (summary['learningDays'] as num?)?.toInt() ?? studyDays.length,
       accuracyPercent: (summary['accuracyPercent'] as num?)?.toInt() ?? 0,
       vocabularyCount: vocabularyDocs.length,
       grammarCount: grammarDocs.length,
@@ -267,7 +267,7 @@ class LearningStatistics {
 
   static const _jlptLevels = ['N5', 'N4', 'N3', 'N2', 'N1'];
 
-  final int totalStudyCount, learningDays, accuracyPercent, vocabularyCount, grammarCount, studyTimeMinutes;
+  final int totalStudyCount, learningStreakDays, accuracyPercent, vocabularyCount, grammarCount, studyTimeMinutes;
   final Map<String, double> progressByLevel;
   final Map<String, int> learnedQuestionsByLevel;
   final Map<String, int> totalQuestionsByLevel;
