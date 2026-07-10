@@ -8,7 +8,7 @@ final homeRepositoryProvider = Provider<HomeRepository>((ref) => const MockHomeR
 
 final homeContentProvider = FutureProvider<HomeContent>((ref) async {
   final content = await ref.watch(homeRepositoryProvider).fetchHomeContent();
-  final stats = ref.watch(studyProgressProvider).valueOrNull;
+  final stats = ref.watch(studyProgressProvider).asData?.value;
   if (stats == null) return content;
   return HomeContent(
     levels: content.levels,

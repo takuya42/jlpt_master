@@ -17,7 +17,7 @@ final vocabularyWordsProvider = FutureProvider<List<VocabularyWord>>((ref) async
 
 final vocabularyWordProvider = FutureProvider.family<VocabularyWord?, String>((ref, id) async {
   final word = await ref.watch(vocabularyRepositoryProvider).fetchWordById(id);
-  final favoriteIds = ref.watch(favoriteVocabularyIdsProvider).valueOrNull ?? <String>{};
+  final favoriteIds = ref.watch(favoriteVocabularyIdsProvider).asData?.value ?? <String>{};
 
   if (word == null) {
     return null;
@@ -61,7 +61,7 @@ final favoriteVocabularyIdsProvider = StreamProvider<Set<String>>((ref) {
 final filteredVocabularyWordsProvider = Provider<AsyncValue<List<VocabularyWord>>>((ref) {
   final selectedLevel = ref.watch(selectedJlptLevelProvider);
   final query = ref.watch(vocabularySearchQueryProvider).trim().toLowerCase();
-  final favoriteIds = ref.watch(favoriteVocabularyIdsProvider).valueOrNull ?? <String>{};
+  final favoriteIds = ref.watch(favoriteVocabularyIdsProvider).asData?.value ?? <String>{};
   final words = ref.watch(vocabularyWordsProvider);
 
   return words.whenData((items) {
@@ -82,7 +82,7 @@ final filteredVocabularyWordsProvider = Provider<AsyncValue<List<VocabularyWord>
 });
 
 Future<void> toggleFavorite(WidgetRef ref, VocabularyWord word) async {
-  final favorites = ref.read(favoriteVocabularyIdsProvider).valueOrNull ?? <String>{};
+  final favorites = ref.read(favoriteVocabularyIdsProvider).asData?.value ?? <String>{};
   await ref.read(userLearningRepositoryProvider).setFavorite(
         type: 'vocabulary',
         itemId: word.id,
