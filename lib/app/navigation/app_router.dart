@@ -18,7 +18,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
   return GoRouter(
     initialLocation: AppRoute.home.path,
     redirect: (context, state) {
-      final user = authState.valueOrNull;
+      final user = authState.asData?.value;
       final isAuthRoute = state.matchedLocation == AppRoute.login.path ||
           state.matchedLocation == AppRoute.emailLogin.path ||
           state.matchedLocation == AppRoute.register.path;
