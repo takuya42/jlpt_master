@@ -26,14 +26,16 @@ class StatisticsPage extends ConsumerWidget {
                 const SizedBox(height: 20),
                 Wrap(spacing: 14, runSpacing: 14, children: [
                   _StatCard(stat: _Stat('Total Study Count', '総学習数', '${data.totalStudyCount}', Icons.school_outlined)),
-                  _StatCard(stat: _Stat('Learning Streak', '連続学習日数', '${data.learningStreakDays} days', Icons.local_fire_department_outlined)),
+                  _StatCard(stat: _Stat('Learning Days', '学習日数', '${data.learningDays} days', Icons.calendar_month_outlined)),
                   _StatCard(stat: _Stat('Accuracy', '正答率', '${data.accuracyPercent}%', Icons.insights_outlined)),
-                  _StatCard(stat: _Stat('Vocabulary', '単語数', '${data.vocabularyCount}', Icons.menu_book_outlined)),
-                  _StatCard(stat: _Stat('Grammar', '文法数', '${data.grammarCount}', Icons.subject_outlined)),
+                  _StatCard(stat: _Stat('Vocabulary Studied', '学習した単語数', '${data.vocabularyCount}', Icons.menu_book_outlined)),
+                  _StatCard(stat: _Stat('Grammar Studied', '学習した文法数', '${data.grammarCount}', Icons.subject_outlined)),
                   _StatCard(stat: _Stat('Study Time', '学習時間', '${data.studyTimeMinutes} min', Icons.timer_outlined)),
                 ]),
                 const SizedBox(height: 20),
                 _LearningProgressList(stats: data),
+                const SizedBox(height: 20),
+                _RecentActivityList(stats: data),
               ]),
             ),
           ),
@@ -78,5 +80,54 @@ class _LearningProgressList extends StatelessWidget {
         ]),
       ),
     );
+  }
+}
+
+
+class _RecentActivityList extends StatelessWidget {
+  const _RecentActivityList({required this.stats});
+  final LearningStatistics stats;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final grouped = <String, List<RecentActivityEntry>>{};
+    for (final activity in stats.recentActivities) {
+      grouped.putIfAbsent(_dateLabel(activity.occurredAt), () => []).add(activity);
+    }
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(22),
+        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          Text('Recent Activity\n最近学習した内容', style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w900)),
+          const SizedBox(height: 14),
+          if (grouped.isEmpty)
+            Text('No recent activity yet.\n最近の学習履歴はまだありません。', style: theme.textTheme.bodyLarge)
+          else
+            for (final entry in grouped.entries) ...[
+              Padding(
+                padding: const EdgeInsets.only(top: 8, bottom: 8),
+                child: Text(entry.key, style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w900)),
+              ),
+              for (final activity in entry.value)
+                ListTile(
+                  dense: true,
+                  leading: Icon(activity.type == 'vocabulary' ? Icons.menu_book_outlined : Icons.subject_outlined),
+                  title: Text(activity.title),
+                ),
+            ],
+        ]),
+      ),
+    );
+  }
+
+  String _dateLabel(DateTime date) {
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    final target = DateTime(date.year, date.month, date.day);
+    final diff = today.difference(target).inDays;
+    if (diff == 0) return 'Today / 今日は';
+    if (diff == 1) return 'Yesterday / 昨日';
+    return '${target.year}/${target.month}/${target.day}';
   }
 }

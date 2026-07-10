@@ -30,7 +30,21 @@ class GrammarPage extends ConsumerWidget {
                     color: theme.colorScheme.tertiaryContainer,
                   );
                 }
-                return _GrammarCard(pattern: grammarPatterns[index - 1], onStudied: () => ref.read(userLearningRepositoryProvider).recordGrammarStudy(grammarPatterns[index - 1].expression, jlptLevel: grammarPatterns[index - 1].level));
+                final pattern = grammarPatterns[index - 1];
+                final favoriteIds = ref.watch(favoritesProvider('grammar')).asData?.value ?? <String>{};
+                return _GrammarCard(
+                  pattern: pattern,
+                  isFavorite: favoriteIds.contains(pattern.expression),
+                  onFavorite: () => ref.read(userLearningRepositoryProvider).setFavorite(
+                        type: 'grammar',
+                        itemId: pattern.expression,
+                        isFavorite: !favoriteIds.contains(pattern.expression),
+                        title: pattern.expression,
+                        subtitle: pattern.meaningEn,
+                        jlptLevel: pattern.level,
+                      ),
+                  onStudied: () => ref.read(userLearningRepositoryProvider).recordGrammarStudy(pattern.expression, jlptLevel: pattern.level, title: pattern.expression),
+                );
               },
             ),
           ),
@@ -41,8 +55,10 @@ class GrammarPage extends ConsumerWidget {
 }
 
 class _GrammarCard extends StatelessWidget {
-  const _GrammarCard({required this.pattern, required this.onStudied});
+  const _GrammarCard({required this.pattern, required this.isFavorite, required this.onFavorite, required this.onStudied});
   final GrammarPattern pattern;
+  final bool isFavorite;
+  final VoidCallback onFavorite;
   final VoidCallback onStudied;
 
   @override
@@ -56,6 +72,7 @@ class _GrammarCard extends StatelessWidget {
             Chip(label: Text(pattern.level)),
             const SizedBox(width: 10),
             Expanded(child: Text(pattern.expression, maxLines: 1, overflow: TextOverflow.ellipsis, style: theme.textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.w900))),
+            IconButton.filledTonal(onPressed: onFavorite, icon: Icon(isFavorite ? Icons.favorite : Icons.favorite_border), tooltip: 'Favorite / お気に入り'),
           ]),
           const SizedBox(height: 12),
           Text(pattern.meaningEn, style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800)),

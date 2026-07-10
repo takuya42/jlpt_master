@@ -8,6 +8,8 @@ enum AppRoute {
   grammar('/grammar', 'Grammar（文法）'),
   statistics('/statistics', 'Statistics（学習記録）'),
   settings('/settings', 'Settings（設定）'),
+  favorite('/favorite', 'Favorite（お気に入り）'),
+  learningGoal('/learning-goal', 'Learning Goal（学習目標）'),
   premium('/premium', 'Premium');
 
   const AppRoute(this.path, this.label);
