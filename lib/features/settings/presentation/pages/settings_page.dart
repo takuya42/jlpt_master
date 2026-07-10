@@ -1,16 +1,18 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../app/navigation/app_route.dart';
+import '../../../auth/presentation/providers/auth_providers.dart';
 
-class SettingsPage extends StatefulWidget {
+class SettingsPage extends ConsumerStatefulWidget {
   const SettingsPage({super.key});
 
   @override
-  State<SettingsPage> createState() => _SettingsPageState();
+  ConsumerState<SettingsPage> createState() => _SettingsPageState();
 }
 
-class _SettingsPageState extends State<SettingsPage> {
+class _SettingsPageState extends ConsumerState<SettingsPage> {
   bool _darkMode = false;
 
   void _openTermsOfUse() {
@@ -91,13 +93,17 @@ class _SettingsPageState extends State<SettingsPage> {
   }
 }
 
-class _AccountCard extends StatelessWidget {
+class _AccountCard extends ConsumerWidget {
   const _AccountCard();
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
+    final user = ref.watch(currentUserProvider).asData?.value;
+    final isSignedIn = user != null;
+    final displayName = user?.displayName.trim();
+    final email = user?.email.trim();
 
     return Card(
       child: InkWell(
@@ -109,9 +115,9 @@ class _AccountCard extends StatelessWidget {
             children: [
               CircleAvatar(
                 radius: 28,
-                backgroundColor: colorScheme.secondaryContainer,
-                foregroundColor: colorScheme.onSecondaryContainer,
-                child: const Icon(Icons.account_circle_outlined),
+                backgroundColor: isSignedIn ? colorScheme.primaryContainer : colorScheme.secondaryContainer,
+                foregroundColor: isSignedIn ? colorScheme.onPrimaryContainer : colorScheme.onSecondaryContainer,
+                child: Icon(isSignedIn ? Icons.verified_user_outlined : Icons.account_circle_outlined),
               ),
               const SizedBox(width: 16),
               Expanded(
@@ -119,12 +125,14 @@ class _AccountCard extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Account\nアカウント',
+                      isSignedIn && displayName != null && displayName.isNotEmpty ? displayName : 'Account\nアカウント',
                       style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w900, height: 1.2),
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      'Sign in to sync your progress across devices.\nログインして学習データを同期しましょう。',
+                      isSignedIn
+                          ? (email != null && email.isNotEmpty ? email : 'No email address\nメールアドレス未登録')
+                          : 'Not signed in\nログインしていません',
                       style: theme.textTheme.bodyMedium?.copyWith(color: colorScheme.onSurfaceVariant, height: 1.45),
                     ),
                   ],

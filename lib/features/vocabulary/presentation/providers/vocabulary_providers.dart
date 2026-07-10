@@ -2,6 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../data/google_sheet_vocabulary_repository.dart';
 import '../../data/vocabulary_repository.dart';
+import '../../../../features/auth/presentation/providers/auth_providers.dart';
 import '../../../../features/learning/presentation/providers/learning_providers.dart';
 import '../../domain/vocabulary_word.dart';
 
@@ -55,6 +56,7 @@ class SelectedJlptLevelNotifier extends Notifier<String> {
 }
 
 final favoriteVocabularyIdsProvider = StreamProvider<Set<String>>((ref) {
+  ref.watch(authStateProvider);
   return ref.watch(userLearningRepositoryProvider).watchFavoriteIds('vocabulary');
 });
 
