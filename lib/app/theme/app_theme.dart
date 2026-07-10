@@ -89,7 +89,7 @@ class AppTheme {
         elevation: 0,
         backgroundColor: card,
         indicatorColor: colorScheme.primaryContainer.withValues(alpha: 0.72),
-        labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
+        labelBehavior: NavigationDestinationLabelBehavior.alwaysHide,
         iconTheme: const WidgetStatePropertyAll(IconThemeData(size: 23)),
         labelTextStyle: WidgetStatePropertyAll(
           const TextStyle(fontSize: 11, fontWeight: FontWeight.w800),

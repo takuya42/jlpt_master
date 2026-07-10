@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import '../../features/auth/presentation/auth_page.dart';
 import '../../features/grammar/presentation/pages/grammar_page.dart';
 import '../../features/home/presentation/pages/home_page.dart';
+import '../../features/premium/presentation/pages/premium_page.dart';
 import '../../features/settings/presentation/pages/settings_page.dart';
 import '../../features/statistics/presentation/statistics_page.dart';
 import '../../features/shell/presentation/main_shell.dart';
@@ -49,6 +50,10 @@ final appRouterProvider = Provider<GoRouter>((ref) {
             builder: (context, state) => const SettingsPage(),
           ),
         ],
+      ),
+      GoRoute(
+        path: AppRoute.premium.path,
+        builder: (context, state) => const PremiumPage(),
       ),
     ],
   );
