@@ -5,7 +5,8 @@ enum AppRoute {
   vocabularyDetail('/vocabulary/:wordId', 'Vocabulary Detail（単語詳細）'),
   grammar('/grammar', 'Grammar（文法）'),
   statistics('/statistics', 'Statistics（学習記録）'),
-  settings('/settings', 'Settings（設定）');
+  settings('/settings', 'Settings（設定）'),
+  premium('/premium', 'Premium');
 
   const AppRoute(this.path, this.label);
 

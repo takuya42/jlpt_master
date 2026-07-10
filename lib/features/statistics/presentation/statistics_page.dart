@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../../shared/presentation/widgets/premium_button.dart';
 import '../data/firestore_learning_repository.dart';
 
 class StatisticsPage extends StatelessWidget {
@@ -11,6 +12,7 @@ class StatisticsPage extends StatelessWidget {
     final repository = FirestoreLearningRepository();
 
     return Scaffold(
+      appBar: AppBar(actions: const [PremiumButton()]),
       body: SafeArea(
         child: Center(
           child: ConstrainedBox(
