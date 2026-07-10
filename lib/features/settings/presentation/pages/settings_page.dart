@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../../app/navigation/app_route.dart';
 import '../../../auth/presentation/providers/auth_providers.dart';
+import '../providers/theme_mode_provider.dart';
 
 class SettingsPage extends ConsumerStatefulWidget {
   const SettingsPage({super.key});
@@ -13,7 +14,7 @@ class SettingsPage extends ConsumerStatefulWidget {
 }
 
 class _SettingsPageState extends ConsumerState<SettingsPage> {
-  bool _darkMode = false;
+  bool _isDeletingAccount = false;
 
   void _openTermsOfUse() {
     // TODO: Open Terms of Use
@@ -21,6 +22,51 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
 
   void _openPrivacyPolicy() {
     // TODO: Open Privacy Policy
+  }
+
+  Future<void> _confirmDeleteAccount() async {
+    final shouldDelete = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Delete Account\nアカウントを削除'),
+        content: const Text(
+          'Are you sure you want to delete your account?\n'
+          'This action cannot be undone.\n\n'
+          'アカウントを削除しますか？\n'
+          'この操作は元に戻せません。',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text('Cancel\nキャンセル'),
+          ),
+          FilledButton(
+            style: FilledButton.styleFrom(
+              backgroundColor: Theme.of(context).colorScheme.error,
+              foregroundColor: Theme.of(context).colorScheme.onError,
+            ),
+            onPressed: () => Navigator.of(context).pop(true),
+            child: const Text('Delete\n削除'),
+          ),
+        ],
+      ),
+    );
+
+    if (shouldDelete != true || !mounted) return;
+
+    setState(() => _isDeletingAccount = true);
+    try {
+      await ref.read(authRepositoryProvider).deleteCurrentUserAccount();
+      if (!mounted) return;
+      context.go(AppRoute.home.path);
+    } on Exception catch (error) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed to delete account: $error')),
+      );
+    } finally {
+      if (mounted) setState(() => _isDeletingAccount = false);
+    }
   }
 
   @override
@@ -50,14 +96,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
                       children: [
                         _SettingsTile(icon: Icons.favorite_border, title: 'Favorite', subtitle: 'お気に入り', onTap: () => context.go(AppRoute.favorite.path)),
                         _SettingsTile(icon: Icons.flag_outlined, title: 'Learning Goal', subtitle: '学習目標', onTap: () => context.go(AppRoute.learningGoal.path)),
-                        SwitchListTile(
-                          contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 6),
-                          value: _darkMode,
-                          onChanged: (value) => setState(() => _darkMode = value),
-                          secondary: const Icon(Icons.dark_mode_outlined),
-                          title: const Text('Dark Mode', maxLines: 1, overflow: TextOverflow.ellipsis),
-                          subtitle: const Text('ダークモード', maxLines: 1, overflow: TextOverflow.ellipsis),
-                        ),
+                        const _ThemeModeTile(),
                         _SettingsTile(
                           icon: Icons.description_outlined,
                           title: 'Terms of Use',
@@ -70,6 +109,11 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
                           subtitle: 'プライバシーポリシー',
                           onTap: _openPrivacyPolicy,
                         ),
+                        if (ref.watch(authStateProvider).asData?.value != null)
+                          _DeleteAccountTile(
+                            isDeleting: _isDeletingAccount,
+                            onTap: _confirmDeleteAccount,
+                          ),
                       ],
                     ),
                   ),
@@ -176,6 +220,93 @@ class _GoPremiumCard extends StatelessWidget {
           ),
         ),
       ),
+    );
+  }
+}
+
+class _ThemeModeTile extends ConsumerWidget {
+  const _ThemeModeTile();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final selectedThemeMode = ref.watch(themeModeControllerProvider).valueOrNull ?? ThemeMode.system;
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Padding(
+            padding: EdgeInsets.only(top: 8),
+            child: Icon(Icons.dark_mode_outlined),
+          ),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text('Dark Mode', maxLines: 1, overflow: TextOverflow.ellipsis),
+                const SizedBox(height: 2),
+                Text(
+                  _themeModeSubtitle(selectedThemeMode),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: Theme.of(context).colorScheme.onSurfaceVariant),
+                ),
+                const SizedBox(height: 12),
+                SegmentedButton<ThemeMode>(
+                  segments: const [
+                    ButtonSegment(value: ThemeMode.system, label: Text('System'), icon: Icon(Icons.settings_suggest_outlined)),
+                    ButtonSegment(value: ThemeMode.light, label: Text('Light'), icon: Icon(Icons.light_mode_outlined)),
+                    ButtonSegment(value: ThemeMode.dark, label: Text('Dark'), icon: Icon(Icons.dark_mode_outlined)),
+                  ],
+                  selected: {selectedThemeMode},
+                  onSelectionChanged: (selection) async {
+                    await ref.read(themeModeControllerProvider.notifier).setThemeMode(selection.first);
+                  },
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  static String _themeModeSubtitle(ThemeMode themeMode) {
+    return switch (themeMode) {
+      ThemeMode.light => 'Light\nライト',
+      ThemeMode.dark => 'Dark\nダーク',
+      ThemeMode.system => 'System\nシステム設定',
+    };
+  }
+}
+
+class _DeleteAccountTile extends StatelessWidget {
+  const _DeleteAccountTile({required this.isDeleting, required this.onTap});
+
+  final bool isDeleting;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+
+    return ListTile(
+      contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 6),
+      leading: isDeleting
+          ? SizedBox(
+              width: 24,
+              height: 24,
+              child: CircularProgressIndicator(strokeWidth: 2, color: colorScheme.error),
+            )
+          : Icon(Icons.delete_forever_outlined, color: colorScheme.error),
+      title: Text('Delete Account', maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(color: colorScheme.error, fontWeight: FontWeight.w700)),
+      subtitle: Text('退会', maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(color: colorScheme.error)),
+      trailing: Icon(Icons.chevron_right_rounded, color: colorScheme.error),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+      enabled: !isDeleting,
+      onTap: isDeleting ? null : onTap,
     );
   }
 }

@@ -54,6 +54,46 @@ class AuthRepository {
 
   Future<void> signOut() => _auth.signOut();
 
+  Future<void> deleteCurrentUserAccount() async {
+    final user = _auth.currentUser;
+    if (user == null) return;
+
+    await _deleteUserData(user.uid);
+    await user.delete();
+  }
+
+  Future<void> _deleteUserData(String uid) async {
+    final userRef = _userDoc(uid);
+    const collectionNames = [
+      'favorites',
+      'vocabulary_history',
+      'grammar_history',
+      'study_progress',
+      'statistics',
+    ];
+
+    for (final collectionName in collectionNames) {
+      await _deleteCollection(userRef.collection(collectionName));
+    }
+
+    await userRef.delete();
+  }
+
+  Future<void> _deleteCollection(CollectionReference<Map<String, dynamic>> collection) async {
+    const batchLimit = 450;
+
+    while (true) {
+      final snapshot = await collection.limit(batchLimit).get();
+      if (snapshot.docs.isEmpty) return;
+
+      final batch = _firestore.batch();
+      for (final doc in snapshot.docs) {
+        batch.delete(doc.reference);
+      }
+      await batch.commit();
+    }
+  }
+
   Future<void> ensureUserDocument(User? user, {String? displayName}) async {
     if (user == null) return;
     final ref = _userDoc(user.uid);
