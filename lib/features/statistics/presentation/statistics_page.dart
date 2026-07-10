@@ -26,7 +26,7 @@ class StatisticsPage extends ConsumerWidget {
                 const SizedBox(height: 20),
                 Wrap(spacing: 14, runSpacing: 14, children: [
                   _StatCard(stat: _Stat('Total Study Count', '総学習数', '${data.totalStudyCount}', Icons.school_outlined)),
-                  _StatCard(stat: _Stat('Learning Days', '学習日数', '${data.learningDays} days', Icons.calendar_month_outlined)),
+                  _StatCard(stat: _Stat('Learning Days', '学習日数', '${data.learningStreakDays} days', Icons.calendar_month_outlined)),
                   _StatCard(stat: _Stat('Accuracy', '正答率', '${data.accuracyPercent}%', Icons.insights_outlined)),
                   _StatCard(stat: _Stat('Vocabulary Studied', '学習した単語数', '${data.vocabularyCount}', Icons.menu_book_outlined)),
                   _StatCard(stat: _Stat('Grammar Studied', '学習した文法数', '${data.grammarCount}', Icons.subject_outlined)),
