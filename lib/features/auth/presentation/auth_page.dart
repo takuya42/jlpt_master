@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
 
-class AuthPage extends StatefulWidget {
-  const AuthPage({super.key});
+class LoginPage extends StatefulWidget {
+  const LoginPage({super.key});
 
   @override
-  State<AuthPage> createState() => _AuthPageState();
+  State<LoginPage> createState() => _LoginPageState();
 }
 
-class _AuthPageState extends State<AuthPage> {
+class _LoginPageState extends State<LoginPage> {
   void onGoogleSignIn() {
     // TODO: Implement Google sign-in.
   }
@@ -55,7 +55,9 @@ class _AuthPageState extends State<AuthPage> {
                         ),
                         style: OutlinedButton.styleFrom(
                           minimumSize: const Size.fromHeight(56),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(16),
+                          ),
                         ),
                       ),
                       const SizedBox(height: 12),
@@ -68,7 +70,9 @@ class _AuthPageState extends State<AuthPage> {
                         ),
                         style: FilledButton.styleFrom(
                           minimumSize: const Size.fromHeight(56),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(16),
+                          ),
                         ),
                       ),
                     ],
@@ -80,7 +84,9 @@ class _AuthPageState extends State<AuthPage> {
                 Text(
                   'By continuing, you agree to our',
                   textAlign: TextAlign.center,
-                  style: theme.textTheme.bodySmall?.copyWith(color: colorScheme.onSurfaceVariant),
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: colorScheme.onSurfaceVariant,
+                  ),
                 ),
                 const SizedBox(height: 4),
                 const _PolicyLinks(),
@@ -88,7 +94,10 @@ class _AuthPageState extends State<AuthPage> {
                 Text(
                   '利用を続けることで\n利用規約・プライバシーポリシー\nに同意したものとします。',
                   textAlign: TextAlign.center,
-                  style: theme.textTheme.bodySmall?.copyWith(color: colorScheme.onSurfaceVariant, height: 1.5),
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: colorScheme.onSurfaceVariant,
+                    height: 1.5,
+                  ),
                 ),
               ],
             ),
@@ -116,7 +125,11 @@ class _WelcomeHeader extends StatelessWidget {
             color: colorScheme.primaryContainer,
             borderRadius: BorderRadius.circular(24),
           ),
-          child: Icon(Icons.school_rounded, color: colorScheme.onPrimaryContainer, size: 36),
+          child: Icon(
+            Icons.school_rounded,
+            color: colorScheme.onPrimaryContainer,
+            size: 36,
+          ),
         ),
         const SizedBox(height: 24),
         Text(
@@ -154,7 +167,9 @@ class _AuthCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.55),
         borderRadius: BorderRadius.circular(28),
-        border: Border.all(color: colorScheme.outlineVariant.withValues(alpha: 0.55)),
+        border: Border.all(
+          color: colorScheme.outlineVariant.withValues(alpha: 0.55),
+        ),
       ),
       child: Padding(
         padding: const EdgeInsets.all(16),
@@ -175,7 +190,8 @@ class _SocialSignInButton extends StatelessWidget {
     required this.borderColor,
   });
 
-  factory _SocialSignInButton.google({required VoidCallback onPressed}) => _SocialSignInButton._(
+  factory _SocialSignInButton.google({required VoidCallback onPressed}) =>
+      _SocialSignInButton._(
         label: 'Continue with Google',
         japaneseLabel: 'Googleで続ける',
         logo: const _GoogleLogo(),
@@ -185,7 +201,8 @@ class _SocialSignInButton extends StatelessWidget {
         borderColor: const Color(0xFFDADCE0),
       );
 
-  factory _SocialSignInButton.apple({required VoidCallback onPressed}) => _SocialSignInButton._(
+  factory _SocialSignInButton.apple({required VoidCallback onPressed}) =>
+      _SocialSignInButton._(
         label: 'Continue with Apple',
         japaneseLabel: 'Appleで続ける',
         logo: const Icon(Icons.apple, size: 24),
@@ -215,13 +232,18 @@ class _SocialSignInButton extends StatelessWidget {
           borderRadius: BorderRadius.circular(16),
           side: BorderSide(color: borderColor),
         ),
-        textStyle: Theme.of(context).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w800),
+        textStyle: Theme.of(context).textTheme.titleSmall?.copyWith(
+              fontWeight: FontWeight.w800,
+            ),
       ),
       child: Stack(
         alignment: Alignment.center,
         children: [
           Align(alignment: Alignment.centerLeft, child: logo),
-          _BilingualButtonLabel(englishLabel: label, japaneseLabel: japaneseLabel),
+          _BilingualButtonLabel(
+            englishLabel: label,
+            japaneseLabel: japaneseLabel,
+          ),
         ],
       ),
     );
@@ -229,7 +251,10 @@ class _SocialSignInButton extends StatelessWidget {
 }
 
 class _BilingualButtonLabel extends StatelessWidget {
-  const _BilingualButtonLabel({required this.englishLabel, required this.japaneseLabel});
+  const _BilingualButtonLabel({
+    required this.englishLabel,
+    required this.japaneseLabel,
+  });
 
   final String englishLabel;
   final String japaneseLabel;
@@ -252,13 +277,17 @@ class _CreateAccountPrompt extends StatelessWidget {
       children: [
         Text(
           'Don\'t have an account?',
-          style: theme.textTheme.bodyMedium?.copyWith(color: colorScheme.onSurfaceVariant),
+          style: theme.textTheme.bodyMedium?.copyWith(
+            color: colorScheme.onSurfaceVariant,
+          ),
         ),
         TextButton(onPressed: () {}, child: const Text('Create Account')),
         const SizedBox(height: 4),
         Text(
           'アカウントをお持ちでないですか？',
-          style: theme.textTheme.bodyMedium?.copyWith(color: colorScheme.onSurfaceVariant),
+          style: theme.textTheme.bodyMedium?.copyWith(
+            color: colorScheme.onSurfaceVariant,
+          ),
         ),
         TextButton(onPressed: () {}, child: const Text('新規登録')),
       ],
