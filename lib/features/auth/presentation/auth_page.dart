@@ -1,4 +1,3 @@
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
 class AuthPage extends StatefulWidget {
@@ -9,48 +8,26 @@ class AuthPage extends StatefulWidget {
 }
 
 class _AuthPageState extends State<AuthPage> {
-  final _emailController = TextEditingController();
-  final _passwordController = TextEditingController();
-  bool _loading = false;
-  String? _message;
-
-  @override
-  void dispose() {
-    _emailController.dispose();
-    _passwordController.dispose();
-    super.dispose();
+  void onGoogleSignIn() {
+    // TODO: Implement Google sign-in.
   }
 
-  Future<void> _signInAnonymously() => _run(() => FirebaseAuth.instance.signInAnonymously());
+  void onAppleSignIn() {
+    // TODO: Implement Apple sign-in.
+  }
 
-  Future<void> _signInWithEmail() => _run(
-        () => FirebaseAuth.instance.signInWithEmailAndPassword(
-          email: _emailController.text.trim(),
-          password: _passwordController.text,
-        ),
-      );
+  void onEmailSignIn() {
+    // TODO: Implement email sign-in.
+  }
 
-  Future<void> _run(Future<UserCredential> Function() action) async {
-    setState(() {
-      _loading = true;
-      _message = null;
-    });
-    try {
-      await action();
-      if (!mounted) return;
-      setState(() => _message = 'Signed in successfully / ログインしました');
-    } on FirebaseAuthException catch (error) {
-      if (!mounted) return;
-      setState(() => _message = error.message ?? error.code);
-    } finally {
-      if (mounted) setState(() => _loading = false);
-    }
+  void onGuestSignIn() {
+    // TODO: Implement guest sign-in.
   }
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final user = FirebaseAuth.instance.currentUser;
+    final colorScheme = theme.colorScheme;
 
     return Scaffold(
       body: SafeArea(
@@ -58,91 +35,60 @@ class _AuthPageState extends State<AuthPage> {
           child: ConstrainedBox(
             constraints: const BoxConstraints(maxWidth: 560),
             child: ListView(
-              padding: const EdgeInsets.fromLTRB(28, 24, 28, 36),
+              padding: const EdgeInsets.fromLTRB(28, 32, 28, 36),
               children: [
-                const _LalaHero(),
+                const _WelcomeHeader(),
+                const SizedBox(height: 36),
+                _AuthCard(
+                  child: Column(
+                    children: [
+                      _SocialSignInButton.google(onPressed: onGoogleSignIn),
+                      const SizedBox(height: 12),
+                      _SocialSignInButton.apple(onPressed: onAppleSignIn),
+                      const SizedBox(height: 12),
+                      OutlinedButton.icon(
+                        onPressed: onEmailSignIn,
+                        icon: const Icon(Icons.mail_outline_rounded),
+                        label: const _BilingualButtonLabel(
+                          englishLabel: 'Continue with Email',
+                          japaneseLabel: 'メールアドレスで続ける',
+                        ),
+                        style: OutlinedButton.styleFrom(
+                          minimumSize: const Size.fromHeight(56),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      FilledButton.tonalIcon(
+                        onPressed: onGuestSignIn,
+                        icon: const Icon(Icons.person_outline_rounded),
+                        label: const _BilingualButtonLabel(
+                          englishLabel: 'Continue as Guest',
+                          japaneseLabel: 'ゲストで始める',
+                        ),
+                        style: FilledButton.styleFrom(
+                          minimumSize: const Size.fromHeight(56),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 28),
+                const _CreateAccountPrompt(),
                 const SizedBox(height: 28),
                 Text(
-                  'Welcome to JLPT Master\nJLPT Masterへようこそ',
+                  'By continuing, you agree to our',
                   textAlign: TextAlign.center,
-                  style: theme.textTheme.headlineSmall?.copyWith(
-                    fontWeight: FontWeight.w900,
-                    height: 1.18,
-                  ),
+                  style: theme.textTheme.bodySmall?.copyWith(color: colorScheme.onSurfaceVariant),
                 ),
+                const SizedBox(height: 4),
+                const _PolicyLinks(),
                 const SizedBox(height: 12),
                 Text(
-                  'Learn Japanese with your new friend, Lala.\nララと一緒に楽しく日本語を学びましょう。',
+                  '利用を続けることで\n利用規約・プライバシーポリシー\nに同意したものとします。',
                   textAlign: TextAlign.center,
-                  style: theme.textTheme.bodyLarge?.copyWith(
-                    color: theme.colorScheme.onSurfaceVariant,
-                    height: 1.5,
-                  ),
-                ),
-                const SizedBox(height: 28),
-                if (user != null) ...[
-                  Card(
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-                    child: ListTile(
-                      leading: const Icon(Icons.verified_user_outlined),
-                      title: Text(user.email ?? 'Guest user'),
-                      subtitle: Text(user.uid),
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                ],
-                _SocialSignInButton.google(onPressed: _loading ? null : () {}),
-                const SizedBox(height: 12),
-                _SocialSignInButton.apple(onPressed: _loading ? null : () {}),
-                const SizedBox(height: 20),
-                TextField(
-                  controller: _emailController,
-                  keyboardType: TextInputType.emailAddress,
-                  decoration: const InputDecoration(labelText: 'Email'),
-                ),
-                const SizedBox(height: 12),
-                TextField(
-                  controller: _passwordController,
-                  obscureText: true,
-                  decoration: const InputDecoration(labelText: 'Password'),
-                ),
-                const SizedBox(height: 16),
-                OutlinedButton.icon(
-                  onPressed: _loading ? null : _signInWithEmail,
-                  icon: const Icon(Icons.mail_outline_rounded),
-                  label: const Text('Continue with Email'),
-                  style: OutlinedButton.styleFrom(
-                    minimumSize: const Size.fromHeight(56),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                  ),
-                ),
-                const SizedBox(height: 8),
-                TextButton(
-                  onPressed: _loading ? null : _signInAnonymously,
-                  child: const Text('Continue as guest / ゲストで開始'),
-                ),
-                if (_loading)
-                  const Padding(
-                    padding: EdgeInsets.all(16),
-                    child: Center(child: CircularProgressIndicator()),
-                  ),
-                if (_message != null)
-                  Padding(
-                    padding: const EdgeInsets.only(top: 12),
-                    child: Text(_message!, textAlign: TextAlign.center),
-                  ),
-                const SizedBox(height: 24),
-                Column(
-                  children: [
-                    Text(
-                      'Don\'t have an account?',
-                      style: theme.textTheme.bodyMedium?.copyWith(color: theme.colorScheme.onSurfaceVariant),
-                    ),
-                    TextButton(
-                      onPressed: _loading ? null : () {},
-                      child: const Text('Create Account'),
-                    ),
-                  ],
+                  style: theme.textTheme.bodySmall?.copyWith(color: colorScheme.onSurfaceVariant, height: 1.5),
                 ),
               ],
             ),
@@ -153,50 +99,66 @@ class _AuthPageState extends State<AuthPage> {
   }
 }
 
-class _LalaHero extends StatelessWidget {
-  const _LalaHero();
+class _WelcomeHeader extends StatelessWidget {
+  const _WelcomeHeader();
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
+    return Column(
+      children: [
+        Container(
+          width: 72,
+          height: 72,
+          decoration: BoxDecoration(
+            color: colorScheme.primaryContainer,
+            borderRadius: BorderRadius.circular(24),
+          ),
+          child: Icon(Icons.school_rounded, color: colorScheme.onPrimaryContainer, size: 36),
+        ),
+        const SizedBox(height: 24),
+        Text(
+          'Welcome to JLPT Master\nJLPT Masterへようこそ',
+          textAlign: TextAlign.center,
+          style: theme.textTheme.headlineSmall?.copyWith(
+            fontWeight: FontWeight.w900,
+            height: 1.2,
+          ),
+        ),
+        const SizedBox(height: 14),
+        Text(
+          'Learn Japanese with confidence.\n楽しく日本語を学びましょう。',
+          textAlign: TextAlign.center,
+          style: theme.textTheme.bodyLarge?.copyWith(
+            color: colorScheme.onSurfaceVariant,
+            height: 1.5,
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _AuthCard extends StatelessWidget {
+  const _AuthCard({required this.child});
+
+  final Widget child;
 
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
 
-    return Container(
-      height: 220,
+    return DecoratedBox(
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(32),
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            colorScheme.primaryContainer,
-            colorScheme.tertiaryContainer,
-          ],
-        ),
+        color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.55),
+        borderRadius: BorderRadius.circular(28),
+        border: Border.all(color: colorScheme.outlineVariant.withValues(alpha: 0.55)),
       ),
-      child: Stack(
-        alignment: Alignment.center,
-        children: [
-          Positioned(
-            top: 22,
-            right: 28,
-            child: Icon(Icons.auto_awesome_rounded, color: colorScheme.primary.withValues(alpha: 0.45), size: 34),
-          ),
-          Positioned(
-            bottom: 18,
-            left: 24,
-            child: Icon(Icons.favorite_rounded, color: colorScheme.tertiary.withValues(alpha: 0.28), size: 42),
-          ),
-          Image.asset(
-            'assets/images/lala.png',
-            height: 172,
-            fit: BoxFit.contain,
-            errorBuilder: (_, _, _) => Icon(
-              Icons.pets_rounded,
-              size: 108,
-              color: colorScheme.onPrimaryContainer.withValues(alpha: 0.76),
-            ),
-          ),
-        ],
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: child,
       ),
     );
   }
@@ -205,6 +167,7 @@ class _LalaHero extends StatelessWidget {
 class _SocialSignInButton extends StatelessWidget {
   const _SocialSignInButton._({
     required this.label,
+    required this.japaneseLabel,
     required this.logo,
     required this.onPressed,
     required this.backgroundColor,
@@ -212,8 +175,9 @@ class _SocialSignInButton extends StatelessWidget {
     required this.borderColor,
   });
 
-  factory _SocialSignInButton.google({required VoidCallback? onPressed}) => _SocialSignInButton._(
+  factory _SocialSignInButton.google({required VoidCallback onPressed}) => _SocialSignInButton._(
         label: 'Continue with Google',
+        japaneseLabel: 'Googleで続ける',
         logo: const _GoogleLogo(),
         onPressed: onPressed,
         backgroundColor: Colors.white,
@@ -221,8 +185,9 @@ class _SocialSignInButton extends StatelessWidget {
         borderColor: const Color(0xFFDADCE0),
       );
 
-  factory _SocialSignInButton.apple({required VoidCallback? onPressed}) => _SocialSignInButton._(
+  factory _SocialSignInButton.apple({required VoidCallback onPressed}) => _SocialSignInButton._(
         label: 'Continue with Apple',
+        japaneseLabel: 'Appleで続ける',
         logo: const Icon(Icons.apple, size: 24),
         onPressed: onPressed,
         backgroundColor: Colors.black,
@@ -231,8 +196,9 @@ class _SocialSignInButton extends StatelessWidget {
       );
 
   final String label;
+  final String japaneseLabel;
   final Widget logo;
-  final VoidCallback? onPressed;
+  final VoidCallback onPressed;
   final Color backgroundColor;
   final Color foregroundColor;
   final Color borderColor;
@@ -244,22 +210,74 @@ class _SocialSignInButton extends StatelessWidget {
       style: FilledButton.styleFrom(
         backgroundColor: backgroundColor,
         foregroundColor: foregroundColor,
-        disabledBackgroundColor: backgroundColor.withValues(alpha: 0.5),
-        disabledForegroundColor: foregroundColor.withValues(alpha: 0.5),
         minimumSize: const Size.fromHeight(56),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(16),
           side: BorderSide(color: borderColor),
         ),
-        textStyle: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
+        textStyle: Theme.of(context).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w800),
       ),
       child: Stack(
         alignment: Alignment.center,
         children: [
           Align(alignment: Alignment.centerLeft, child: logo),
-          Text(label),
+          _BilingualButtonLabel(englishLabel: label, japaneseLabel: japaneseLabel),
         ],
       ),
+    );
+  }
+}
+
+class _BilingualButtonLabel extends StatelessWidget {
+  const _BilingualButtonLabel({required this.englishLabel, required this.japaneseLabel});
+
+  final String englishLabel;
+  final String japaneseLabel;
+
+  @override
+  Widget build(BuildContext context) {
+    return Text('$englishLabel\n$japaneseLabel', textAlign: TextAlign.center);
+  }
+}
+
+class _CreateAccountPrompt extends StatelessWidget {
+  const _CreateAccountPrompt();
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
+    return Column(
+      children: [
+        Text(
+          'Don\'t have an account?',
+          style: theme.textTheme.bodyMedium?.copyWith(color: colorScheme.onSurfaceVariant),
+        ),
+        TextButton(onPressed: () {}, child: const Text('Create Account')),
+        const SizedBox(height: 4),
+        Text(
+          'アカウントをお持ちでないですか？',
+          style: theme.textTheme.bodyMedium?.copyWith(color: colorScheme.onSurfaceVariant),
+        ),
+        TextButton(onPressed: () {}, child: const Text('新規登録')),
+      ],
+    );
+  }
+}
+
+class _PolicyLinks extends StatelessWidget {
+  const _PolicyLinks();
+
+  @override
+  Widget build(BuildContext context) {
+    return Wrap(
+      alignment: WrapAlignment.center,
+      spacing: 8,
+      children: [
+        TextButton(onPressed: () {}, child: const Text('Terms of Use')),
+        TextButton(onPressed: () {}, child: const Text('Privacy Policy')),
+      ],
     );
   }
 }
