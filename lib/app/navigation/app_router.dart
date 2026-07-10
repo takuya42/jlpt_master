@@ -2,8 +2,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../features/auth/presentation/auth_page.dart';
+import '../../features/favorite/presentation/pages/favorite_page.dart';
 import '../../features/grammar/presentation/pages/grammar_page.dart';
 import '../../features/home/presentation/pages/home_page.dart';
+import '../../features/learning/presentation/pages/learning_goal_page.dart';
 import '../../features/premium/presentation/pages/premium_page.dart';
 import '../../features/settings/presentation/pages/settings_page.dart';
 import '../../features/statistics/presentation/statistics_page.dart';
@@ -44,6 +46,14 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           GoRoute(
             path: AppRoute.settings.path,
             builder: (context, state) => const SettingsPage(),
+          ),
+          GoRoute(
+            path: AppRoute.favorite.path,
+            builder: (context, state) => const FavoritePage(),
+          ),
+          GoRoute(
+            path: AppRoute.learningGoal.path,
+            builder: (context, state) => const LearningGoalPage(),
           ),
         ],
       ),

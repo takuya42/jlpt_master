@@ -1,7 +1,6 @@
 import 'dart:async';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
-
 import 'package:firebase_auth/firebase_auth.dart';
 
 class UserLearningRepository {
@@ -21,23 +20,55 @@ class UserLearningRepository {
     return ref.collection('favorites').where('type', isEqualTo: type).snapshots().map((s) => s.docs.map((d) => d.id).toSet());
   }
 
-  Future<void> setFavorite({required String type, required String itemId, required bool isFavorite}) async {
+  Stream<List<FavoriteEntry>> watchFavorites() {
+    final ref = _userRef;
+    if (ref == null) return Stream.value(const <FavoriteEntry>[]);
+    return ref.collection('favorites').orderBy('updatedAt', descending: true).snapshots().map(
+          (snapshot) => snapshot.docs.map(FavoriteEntry.fromSnapshot).toList(growable: false),
+        );
+  }
+
+  Future<void> setFavorite({required String type, required String itemId, required bool isFavorite, String? title, String? subtitle, String? jlptLevel}) async {
     final ref = _userRef;
     if (ref == null) return;
     final doc = ref.collection('favorites').doc(itemId);
     if (isFavorite) {
-      await doc.set({'type': type, 'itemId': itemId, 'updatedAt': FieldValue.serverTimestamp()}, SetOptions(merge: true));
+      await doc.set({
+        'type': type,
+        'itemId': itemId,
+        if (title != null) 'title': title,
+        if (subtitle != null) 'subtitle': subtitle,
+        if (jlptLevel != null) 'jlptLevel': jlptLevel,
+        'updatedAt': FieldValue.serverTimestamp(),
+      }, SetOptions(merge: true));
     } else {
       await doc.delete();
     }
   }
 
-  Future<void> recordVocabularyView(String wordId, {String? jlptLevel}) async {
+  Stream<LearningGoal> watchLearningGoal() {
+    final ref = _userRef;
+    if (ref == null) return Stream.value(LearningGoal.defaultGoal());
+    return ref.collection('settings').doc('learning_goal').snapshots().map(LearningGoal.fromSnapshot);
+  }
+
+  Future<void> saveLearningGoal(LearningGoal goal) async {
+    final ref = _userRef;
+    if (ref == null) return;
+    await ref.collection('settings').doc('learning_goal').set({
+      'type': goal.type.name,
+      'value': goal.value,
+      'updatedAt': FieldValue.serverTimestamp(),
+    }, SetOptions(merge: true));
+  }
+
+  Future<void> recordVocabularyView(String wordId, {String? jlptLevel, String? title}) async {
     final ref = _userRef;
     if (ref == null) return;
     final now = FieldValue.serverTimestamp();
     await ref.collection('vocabulary_history').doc(wordId).set({
       'wordId': wordId,
+      if (title != null) 'title': title,
       if (jlptLevel != null) 'jlptLevel': jlptLevel,
       'lastViewedAt': now,
       'views': FieldValue.increment(1),
@@ -47,13 +78,16 @@ class UserLearningRepository {
     await _incrementStat('vocabularyCount');
   }
 
-  Future<void> recordGrammarStudy(String grammarId, {String? jlptLevel}) async {
+  Future<void> recordGrammarStudy(String grammarId, {String? jlptLevel, String? title}) async {
     final ref = _userRef;
     if (ref == null) return;
+    final now = FieldValue.serverTimestamp();
     await ref.collection('grammar_history').doc(grammarId).set({
       'grammarId': grammarId,
+      if (title != null) 'title': title,
       if (jlptLevel != null) 'jlptLevel': jlptLevel,
-      'studiedAt': FieldValue.serverTimestamp(),
+      'studiedAt': now,
+      'updatedAt': now,
       'attempts': FieldValue.increment(1),
     }, SetOptions(merge: true));
     await _incrementStat('grammarCount');
@@ -70,40 +104,23 @@ class UserLearningRepository {
     final subscriptions = <StreamSubscription<dynamic>>[];
 
     void emitIfReady() {
-      if (summarySnapshot == null || vocabularySnapshot == null || grammarSnapshot == null || controller.isClosed) {
-        return;
-      }
-      controller.add(
-        LearningStatistics.fromSnapshots(
-          summary: summarySnapshot!.data() ?? const {},
-          vocabularyDocs: vocabularySnapshot!.docs,
-          grammarDocs: grammarSnapshot!.docs,
-          totalQuestionsByLevel: totalQuestionsByLevel,
-        ),
-      );
+      if (summarySnapshot == null || vocabularySnapshot == null || grammarSnapshot == null || controller.isClosed) return;
+      controller.add(LearningStatistics.fromSnapshots(
+        summary: summarySnapshot!.data() ?? const {},
+        vocabularyDocs: vocabularySnapshot!.docs,
+        grammarDocs: grammarSnapshot!.docs,
+        totalQuestionsByLevel: totalQuestionsByLevel,
+      ));
     }
 
     controller = StreamController<LearningStatistics>(
       onListen: () {
         subscriptions
-          ..add(ref.collection('statistics').doc('summary').snapshots().listen((snapshot) {
-            summarySnapshot = snapshot;
-            emitIfReady();
-          }, onError: controller.addError))
-          ..add(ref.collection('vocabulary_history').snapshots().listen((snapshot) {
-            vocabularySnapshot = snapshot;
-            emitIfReady();
-          }, onError: controller.addError))
-          ..add(ref.collection('grammar_history').snapshots().listen((snapshot) {
-            grammarSnapshot = snapshot;
-            emitIfReady();
-          }, onError: controller.addError));
+          ..add(ref.collection('statistics').doc('summary').snapshots().listen((snapshot) { summarySnapshot = snapshot; emitIfReady(); }, onError: controller.addError))
+          ..add(ref.collection('vocabulary_history').snapshots().listen((snapshot) { vocabularySnapshot = snapshot; emitIfReady(); }, onError: controller.addError))
+          ..add(ref.collection('grammar_history').snapshots().listen((snapshot) { grammarSnapshot = snapshot; emitIfReady(); }, onError: controller.addError));
       },
-      onCancel: () async {
-        for (final subscription in subscriptions) {
-          await subscription.cancel();
-        }
-      },
+      onCancel: () async { for (final subscription in subscriptions) { await subscription.cancel(); } },
     );
 
     return controller.stream;
@@ -120,10 +137,66 @@ class UserLearningRepository {
   }
 }
 
+class FavoriteEntry {
+  const FavoriteEntry({required this.id, required this.type, required this.title, required this.subtitle, this.jlptLevel});
+
+  factory FavoriteEntry.fromSnapshot(QueryDocumentSnapshot<Map<String, dynamic>> snapshot) {
+    final data = snapshot.data();
+    return FavoriteEntry(
+      id: snapshot.id,
+      type: data['type'] as String? ?? 'vocabulary',
+      title: data['title'] as String? ?? data['itemId'] as String? ?? snapshot.id,
+      subtitle: data['subtitle'] as String? ?? '',
+      jlptLevel: data['jlptLevel'] as String?,
+    );
+  }
+
+  final String id;
+  final String type;
+  final String title;
+  final String subtitle;
+  final String? jlptLevel;
+}
+
+enum LearningGoalType { questions, minutes }
+
+class LearningGoal {
+  const LearningGoal({required this.type, required this.value});
+  factory LearningGoal.defaultGoal() => const LearningGoal(type: LearningGoalType.questions, value: 10);
+  factory LearningGoal.fromSnapshot(DocumentSnapshot<Map<String, dynamic>> snapshot) {
+    final data = snapshot.data();
+    if (data == null) return LearningGoal.defaultGoal();
+    final typeName = data['type'] as String?;
+    return LearningGoal(
+      type: LearningGoalType.values.firstWhere((type) => type.name == typeName, orElse: () => LearningGoalType.questions),
+      value: (data['value'] as num?)?.toInt() ?? 10,
+    );
+  }
+  final LearningGoalType type;
+  final int value;
+
+  @override
+  bool operator ==(Object other) => other is LearningGoal && other.type == type && other.value == value;
+
+  @override
+  int get hashCode => Object.hash(type, value);
+
+  String get label => type == LearningGoalType.minutes ? '$value min' : '$value questions';
+  String get japaneseLabel => type == LearningGoalType.minutes ? '$value分' : '$value問';
+}
+
+class RecentActivityEntry {
+  const RecentActivityEntry({required this.id, required this.type, required this.title, required this.occurredAt});
+  final String id;
+  final String type;
+  final String title;
+  final DateTime occurredAt;
+}
+
 class LearningStatistics {
   const LearningStatistics({
     required this.totalStudyCount,
-    required this.learningStreakDays,
+    required this.learningDays,
     required this.accuracyPercent,
     required this.vocabularyCount,
     required this.grammarCount,
@@ -131,11 +204,12 @@ class LearningStatistics {
     required this.progressByLevel,
     required this.learnedQuestionsByLevel,
     required this.totalQuestionsByLevel,
+    required this.recentActivities,
   });
 
   factory LearningStatistics.empty({Map<String, int> totalQuestionsByLevel = const {}}) => LearningStatistics(
         totalStudyCount: 0,
-        learningStreakDays: 0,
+        learningDays: 0,
         accuracyPercent: 0,
         vocabularyCount: 0,
         grammarCount: 0,
@@ -143,6 +217,7 @@ class LearningStatistics {
         progressByLevel: {for (final level in _jlptLevels) level: 0},
         learnedQuestionsByLevel: {for (final level in _jlptLevels) level: 0},
         totalQuestionsByLevel: {for (final level in _jlptLevels) level: totalQuestionsByLevel[level] ?? 0},
+        recentActivities: const [],
       );
 
   factory LearningStatistics.fromSnapshots({
@@ -152,22 +227,33 @@ class LearningStatistics {
     required Map<String, int> totalQuestionsByLevel,
   }) {
     final learned = {for (final level in _jlptLevels) level: 0};
+    final activities = <RecentActivityEntry>[];
+    final studyDays = <DateTime>{};
     for (final doc in [...vocabularyDocs, ...grammarDocs]) {
-      final level = (doc.data()['jlptLevel'] as String?)?.toUpperCase();
-      if (level != null && learned.containsKey(level)) {
-        learned[level] = learned[level]! + 1;
+      final data = doc.data();
+      final level = (data['jlptLevel'] as String?)?.toUpperCase();
+      if (level != null && learned.containsKey(level)) learned[level] = learned[level]! + 1;
+      final timestamp = (data['updatedAt'] as Timestamp?) ?? (data['lastViewedAt'] as Timestamp?) ?? (data['studiedAt'] as Timestamp?);
+      if (timestamp != null) {
+        final date = timestamp.toDate();
+        studyDays.add(DateTime(date.year, date.month, date.day));
+        final isVocabulary = data.containsKey('wordId');
+        activities.add(RecentActivityEntry(
+          id: doc.id,
+          type: isVocabulary ? 'vocabulary' : 'grammar',
+          title: data['title'] as String? ?? data['wordId'] as String? ?? data['grammarId'] as String? ?? doc.id,
+          occurredAt: date,
+        ));
       }
     }
+    activities.sort((a, b) => b.occurredAt.compareTo(a.occurredAt));
 
     final totals = {for (final level in _jlptLevels) level: totalQuestionsByLevel[level] ?? 0};
-    final progress = {
-      for (final level in _jlptLevels)
-        level: totals[level] == 0 ? 0.0 : (learned[level]! / totals[level]!).clamp(0.0, 1.0).toDouble(),
-    };
+    final progress = {for (final level in _jlptLevels) level: totals[level] == 0 ? 0.0 : (learned[level]! / totals[level]!).clamp(0.0, 1.0).toDouble()};
 
     return LearningStatistics(
       totalStudyCount: (summary['totalStudyCount'] as num?)?.toInt() ?? learned.values.fold(0, (sum, count) => sum + count),
-      learningStreakDays: (summary['learningStreakDays'] as num?)?.toInt() ?? 0,
+      learningDays: (summary['learningDays'] as num?)?.toInt() ?? (summary['learningStreakDays'] as num?)?.toInt() ?? studyDays.length,
       accuracyPercent: (summary['accuracyPercent'] as num?)?.toInt() ?? 0,
       vocabularyCount: vocabularyDocs.length,
       grammarCount: grammarDocs.length,
@@ -175,13 +261,15 @@ class LearningStatistics {
       progressByLevel: progress,
       learnedQuestionsByLevel: learned,
       totalQuestionsByLevel: totals,
+      recentActivities: activities.take(30).toList(growable: false),
     );
   }
 
   static const _jlptLevels = ['N5', 'N4', 'N3', 'N2', 'N1'];
 
-  final int totalStudyCount, learningStreakDays, accuracyPercent, vocabularyCount, grammarCount, studyTimeMinutes;
+  final int totalStudyCount, learningDays, accuracyPercent, vocabularyCount, grammarCount, studyTimeMinutes;
   final Map<String, double> progressByLevel;
   final Map<String, int> learnedQuestionsByLevel;
   final Map<String, int> totalQuestionsByLevel;
+  final List<RecentActivityEntry> recentActivities;
 }

@@ -36,3 +36,13 @@ final statisticsProvider = StreamProvider<LearningStatistics>((ref) {
   return ref.watch(userLearningRepositoryProvider).watchStatistics(totalQuestionsByLevel: totals);
 });
 final studyProgressProvider = statisticsProvider;
+
+final favoriteEntriesProvider = StreamProvider<List<FavoriteEntry>>((ref) {
+  ref.watch(authStateProvider);
+  return ref.watch(userLearningRepositoryProvider).watchFavorites();
+});
+
+final learningGoalProvider = StreamProvider<LearningGoal>((ref) {
+  ref.watch(authStateProvider);
+  return ref.watch(userLearningRepositoryProvider).watchLearningGoal();
+});

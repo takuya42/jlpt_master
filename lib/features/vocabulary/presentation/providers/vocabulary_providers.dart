@@ -89,9 +89,12 @@ Future<void> toggleFavorite(WidgetRef ref, VocabularyWord word) async {
         type: 'vocabulary',
         itemId: word.id,
         isFavorite: !favorites.contains(word.id),
+        title: word.word,
+        subtitle: word.meaning,
+        jlptLevel: word.jlptLevel,
       );
 }
 
 Future<void> recordVocabularyView(WidgetRef ref, VocabularyWord word) {
-  return ref.read(userLearningRepositoryProvider).recordVocabularyView(word.id, jlptLevel: word.jlptLevel);
+  return ref.read(userLearningRepositoryProvider).recordVocabularyView(word.id, jlptLevel: word.jlptLevel, title: word.word);
 }

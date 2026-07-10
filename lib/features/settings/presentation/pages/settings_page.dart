@@ -48,8 +48,8 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
                     padding: const EdgeInsets.symmetric(vertical: 8),
                     child: Column(
                       children: [
-                        const _SettingsTile(icon: Icons.favorite_border, title: 'Favorite', subtitle: 'お気に入り'),
-                        const _SettingsTile(icon: Icons.flag_outlined, title: 'Learning Goal', subtitle: '学習目標'),
+                        _SettingsTile(icon: Icons.favorite_border, title: 'Favorite', subtitle: 'お気に入り', onTap: () => context.go(AppRoute.favorite.path)),
+                        _SettingsTile(icon: Icons.flag_outlined, title: 'Learning Goal', subtitle: '学習目標', onTap: () => context.go(AppRoute.learningGoal.path)),
                         SwitchListTile(
                           contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 6),
                           value: _darkMode,
@@ -57,16 +57,6 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
                           secondary: const Icon(Icons.dark_mode_outlined),
                           title: const Text('Dark Mode', maxLines: 1, overflow: TextOverflow.ellipsis),
                           subtitle: const Text('ダークモード', maxLines: 1, overflow: TextOverflow.ellipsis),
-                        ),
-                        Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 6),
-                          child: AboutListTile(
-                            icon: const Icon(Icons.info_outline),
-                            applicationName: 'JLPT Master',
-                            applicationVersion: '1.0.0',
-                            applicationLegalese: '© 2026 JLPT Master',
-                            child: const Text('About\nこのアプリについて', maxLines: 2, overflow: TextOverflow.ellipsis),
-                          ),
                         ),
                         _SettingsTile(
                           icon: Icons.description_outlined,
