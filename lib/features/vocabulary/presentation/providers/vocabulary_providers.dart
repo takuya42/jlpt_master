@@ -92,6 +92,6 @@ Future<void> toggleFavorite(WidgetRef ref, VocabularyWord word) async {
       );
 }
 
-Future<void> recordVocabularyView(WidgetRef ref, String wordId) {
-  return ref.read(userLearningRepositoryProvider).recordVocabularyView(wordId);
+Future<void> recordVocabularyView(WidgetRef ref, VocabularyWord word) {
+  return ref.read(userLearningRepositoryProvider).recordVocabularyView(word.id, jlptLevel: word.jlptLevel);
 }
