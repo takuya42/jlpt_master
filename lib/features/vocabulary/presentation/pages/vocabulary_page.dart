@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../../app/navigation/app_route.dart';
 import '../../../../shared/presentation/widgets/app_state_views.dart';
+import '../../../../shared/presentation/widgets/premium_button.dart';
 import '../../domain/vocabulary_word.dart';
 import '../providers/vocabulary_providers.dart';
 
@@ -15,6 +16,7 @@ class VocabularyPage extends ConsumerWidget {
     final words = ref.watch(filteredVocabularyWordsProvider);
 
     return Scaffold(
+      appBar: AppBar(actions: const [PremiumButton()]),
       body: SafeArea(
         child: Center(
           child: ConstrainedBox(

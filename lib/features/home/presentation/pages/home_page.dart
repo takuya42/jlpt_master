@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../shared/presentation/widgets/app_state_views.dart';
+import '../../../../shared/presentation/widgets/premium_button.dart';
 import '../../domain/home_content.dart';
 import '../providers/home_content_provider.dart';
 
@@ -14,6 +15,7 @@ class HomePage extends ConsumerWidget {
     final homeContent = ref.watch(homeContentProvider);
 
     return Scaffold(
+      appBar: AppBar(actions: const [PremiumButton()]),
       body: SafeArea(
         child: homeContent.when(
           data: (content) => _HomeContentView(content: content),

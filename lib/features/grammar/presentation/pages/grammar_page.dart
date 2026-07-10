@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../../../../shared/presentation/widgets/premium_button.dart';
+
 class GrammarPage extends StatelessWidget {
   const GrammarPage({super.key});
 
@@ -14,6 +16,7 @@ class GrammarPage extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     return Scaffold(
+      appBar: AppBar(actions: const [PremiumButton()]),
       body: SafeArea(
         child: Center(
           child: ConstrainedBox(

@@ -23,14 +23,15 @@ class MainShell extends StatelessWidget {
     return Scaffold(
       body: child,
       bottomNavigationBar: NavigationBar(
+        height: 82,
         selectedIndex: selectedIndex,
         onDestinationSelected: (index) => context.go(_items[index].route.path),
         destinations: [
           for (final item in _items)
             NavigationDestination(
-              icon: Icon(item.icon),
-              selectedIcon: Icon(item.selectedIcon),
-              label: item.label,
+              icon: _NavigationDestinationContent(icon: item.icon, label: item.label),
+              selectedIcon: _NavigationDestinationContent(icon: item.selectedIcon, label: item.label),
+              label: '',
             ),
         ],
       ),
@@ -46,6 +47,44 @@ class MainShell extends StatelessWidget {
       return location.startsWith(item.route.path);
     });
     return index < 0 ? 0 : index;
+  }
+}
+
+class _NavigationDestinationContent extends StatelessWidget {
+  const _NavigationDestinationContent({required this.icon, required this.label});
+
+  final IconData icon;
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    final iconTheme = IconTheme.of(context);
+    final labels = label.split('\n');
+
+    return SizedBox(
+      width: 72,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(icon),
+          const SizedBox(height: 3),
+          for (final text in labels)
+            Text(
+              text,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                color: iconTheme.color,
+                fontSize: 10.5,
+                fontWeight: FontWeight.w800,
+                height: 1.08,
+              ),
+            ),
+        ],
+      ),
+    );
   }
 }
 
