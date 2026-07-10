@@ -21,6 +21,7 @@ class VocabularyDetailPage extends ConsumerWidget {
             if (data == null) {
               return const _WordNotFoundView();
             }
+            Future.microtask(() => recordVocabularyView(ref, data.id));
             return _VocabularyDetailContent(word: data);
           },
           error: (error, stackTrace) => Center(

@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../features/learning/presentation/providers/learning_providers.dart';
 import '../../../../shared/presentation/widgets/premium_button.dart';
 
-class GrammarPage extends StatelessWidget {
+class GrammarPage extends ConsumerWidget {
   const GrammarPage({super.key});
 
   static const _patterns = [
@@ -13,7 +15,7 @@ class GrammarPage extends StatelessWidget {
   ];
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
     return Scaffold(
       appBar: AppBar(actions: const [PremiumButton()]),
@@ -34,7 +36,7 @@ class GrammarPage extends StatelessWidget {
                     color: theme.colorScheme.tertiaryContainer,
                   );
                 }
-                return _GrammarCard(pattern: _patterns[index - 1]);
+                return _GrammarCard(pattern: _patterns[index - 1], onStudied: () => ref.read(userLearningRepositoryProvider).recordGrammarStudy(_patterns[index - 1].expression));
               },
             ),
           ),
@@ -45,8 +47,9 @@ class GrammarPage extends StatelessWidget {
 }
 
 class _GrammarCard extends StatelessWidget {
-  const _GrammarCard({required this.pattern});
+  const _GrammarCard({required this.pattern, required this.onStudied});
   final _GrammarPattern pattern;
+  final VoidCallback onStudied;
 
   @override
   Widget build(BuildContext context) {
@@ -71,6 +74,8 @@ class _GrammarCard extends StatelessWidget {
           Text('English: ${pattern.translationEn}', style: theme.textTheme.bodyLarge),
           const SizedBox(height: 4),
           Text('日本語: ${pattern.translationJa}', style: theme.textTheme.bodyLarge?.copyWith(color: theme.colorScheme.onSurfaceVariant)),
+          const SizedBox(height: 12),
+          Align(alignment: Alignment.centerRight, child: FilledButton.tonal(onPressed: onStudied, child: const Text('Mark Studied / 学習済み'))),
         ]),
       ),
     );

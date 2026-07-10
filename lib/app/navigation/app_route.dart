@@ -1,6 +1,7 @@
 enum AppRoute {
   home('/', 'Home（ホーム）'),
   login('/login', 'Login（ログイン）'),
+  emailLogin('/login/email', 'Email Login（メールログイン）'),
   register('/register', 'Register（新規登録）'),
   vocabulary('/vocabulary', 'Vocabulary（単語）'),
   vocabularyDetail('/vocabulary/:wordId', 'Vocabulary Detail（単語詳細）'),

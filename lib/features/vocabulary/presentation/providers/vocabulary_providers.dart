@@ -2,6 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../data/google_sheet_vocabulary_repository.dart';
 import '../../data/vocabulary_repository.dart';
+import '../../../../features/learning/presentation/providers/learning_providers.dart';
 import '../../domain/vocabulary_word.dart';
 
 const jlptLevels = ['N5', 'N4', 'N3', 'N2', 'N1'];
@@ -16,7 +17,7 @@ final vocabularyWordsProvider = FutureProvider<List<VocabularyWord>>((ref) async
 
 final vocabularyWordProvider = FutureProvider.family<VocabularyWord?, String>((ref, id) async {
   final word = await ref.watch(vocabularyRepositoryProvider).fetchWordById(id);
-  final favoriteIds = ref.watch(favoriteVocabularyIdsProvider);
+  final favoriteIds = ref.watch(favoriteVocabularyIdsProvider).valueOrNull ?? <String>{};
 
   if (word == null) {
     return null;
@@ -53,33 +54,14 @@ class SelectedJlptLevelNotifier extends Notifier<String> {
   }
 }
 
-final favoriteVocabularyIdsProvider = NotifierProvider<FavoriteVocabularyIdsNotifier, Set<String>>(
-  FavoriteVocabularyIdsNotifier.new,
-);
-
-class FavoriteVocabularyIdsNotifier extends Notifier<Set<String>> {
-  @override
-  Set<String> build() {
-    return const {'n5-001', 'n3-001'};
-  }
-
-  void toggle(String wordId) {
-    final updated = {...state};
-
-    if (updated.contains(wordId)) {
-      updated.remove(wordId);
-    } else {
-      updated.add(wordId);
-    }
-
-    state = updated;
-  }
-}
+final favoriteVocabularyIdsProvider = StreamProvider<Set<String>>((ref) {
+  return ref.watch(userLearningRepositoryProvider).watchFavoriteIds('vocabulary');
+});
 
 final filteredVocabularyWordsProvider = Provider<AsyncValue<List<VocabularyWord>>>((ref) {
   final selectedLevel = ref.watch(selectedJlptLevelProvider);
   final query = ref.watch(vocabularySearchQueryProvider).trim().toLowerCase();
-  final favoriteIds = ref.watch(favoriteVocabularyIdsProvider);
+  final favoriteIds = ref.watch(favoriteVocabularyIdsProvider).valueOrNull ?? <String>{};
   final words = ref.watch(vocabularyWordsProvider);
 
   return words.whenData((items) {
@@ -99,6 +81,15 @@ final filteredVocabularyWordsProvider = Provider<AsyncValue<List<VocabularyWord>
   });
 });
 
-void toggleFavorite(WidgetRef ref, VocabularyWord word) {
-  ref.read(favoriteVocabularyIdsProvider.notifier).toggle(word.id);
+Future<void> toggleFavorite(WidgetRef ref, VocabularyWord word) async {
+  final favorites = ref.read(favoriteVocabularyIdsProvider).valueOrNull ?? <String>{};
+  await ref.read(userLearningRepositoryProvider).setFavorite(
+        type: 'vocabulary',
+        itemId: word.id,
+        isFavorite: !favorites.contains(word.id),
+      );
+}
+
+Future<void> recordVocabularyView(WidgetRef ref, String wordId) {
+  return ref.read(userLearningRepositoryProvider).recordVocabularyView(wordId);
 }
