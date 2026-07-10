@@ -11,7 +11,15 @@ final homeContentProvider = FutureProvider<HomeContent>((ref) async {
   final stats = ref.watch(studyProgressProvider).asData?.value;
   if (stats == null) return content;
   return HomeContent(
-    levels: content.levels,
+    levels: [
+      for (final level in content.levels)
+        JlptLevelCardData(
+          level: level.level,
+          title: level.title,
+          description: level.description,
+          progress: stats.progressByLevel[level.level] ?? 0,
+        ),
+    ],
     learningMenuItems: content.learningMenuItems,
     studyStatus: StudyStatusData(
       studyTimeMinutes: stats.studyTimeMinutes,

@@ -2,17 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../features/learning/presentation/providers/learning_providers.dart';
+import '../../domain/grammar_pattern.dart';
 import '../../../../shared/presentation/widgets/premium_button.dart';
 
 class GrammarPage extends ConsumerWidget {
   const GrammarPage({super.key});
-
-  static const _patterns = [
-    _GrammarPattern('〜てください', 'Please do...', '〜してください', '名前を書いてください。', 'Please write your name.', '名前を書いてください。', 'N5'),
-    _GrammarPattern('〜なければならない', 'Must do...', '〜しなければならない', '薬を飲まなければなりません。', 'I must take medicine.', '薬を飲まなければなりません。', 'N4'),
-    _GrammarPattern('〜ことにする', 'Decide to do...', '〜することに決める', '毎朝走ることにしました。', 'I decided to run every morning.', '毎朝走ることにしました。', 'N3'),
-    _GrammarPattern('〜わけではない', 'It does not mean that...', '〜というわけではない', '嫌いなわけではありません。', 'It does not mean I dislike it.', '嫌いなわけではありません。', 'N2'),
-  ];
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -25,7 +19,7 @@ class GrammarPage extends ConsumerWidget {
             constraints: const BoxConstraints(maxWidth: 980),
             child: ListView.separated(
               padding: const EdgeInsets.fromLTRB(24, 28, 24, 36),
-              itemCount: _patterns.length + 1,
+              itemCount: grammarPatterns.length + 1,
               separatorBuilder: (_, __) => const SizedBox(height: 14),
               itemBuilder: (context, index) {
                 if (index == 0) {
@@ -36,7 +30,7 @@ class GrammarPage extends ConsumerWidget {
                     color: theme.colorScheme.tertiaryContainer,
                   );
                 }
-                return _GrammarCard(pattern: _patterns[index - 1], onStudied: () => ref.read(userLearningRepositoryProvider).recordGrammarStudy(_patterns[index - 1].expression));
+                return _GrammarCard(pattern: grammarPatterns[index - 1], onStudied: () => ref.read(userLearningRepositoryProvider).recordGrammarStudy(grammarPatterns[index - 1].expression, jlptLevel: grammarPatterns[index - 1].level));
               },
             ),
           ),
@@ -48,7 +42,7 @@ class GrammarPage extends ConsumerWidget {
 
 class _GrammarCard extends StatelessWidget {
   const _GrammarCard({required this.pattern, required this.onStudied});
-  final _GrammarPattern pattern;
+  final GrammarPattern pattern;
   final VoidCallback onStudied;
 
   @override
@@ -108,15 +102,4 @@ class _PageHeader extends StatelessWidget {
       ),
     );
   }
-}
-
-class _GrammarPattern {
-  const _GrammarPattern(this.expression, this.meaningEn, this.meaningJa, this.example, this.translationEn, this.translationJa, this.level);
-  final String expression;
-  final String meaningEn;
-  final String meaningJa;
-  final String example;
-  final String translationEn;
-  final String translationJa;
-  final String level;
 }

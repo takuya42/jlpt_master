@@ -21,7 +21,7 @@ class MockHomeRepository implements HomeRepository {
             en: 'Start with daily words and basic grammar.',
             ja: '日常語彙と基本文法から始めましょう。',
           ),
-          progress: 0.64,
+          progress: 0,
         ),
         JlptLevelCardData(
           level: 'N4',
@@ -30,7 +30,7 @@ class MockHomeRepository implements HomeRepository {
             en: 'Build practical reading and listening skills.',
             ja: '実用的な読解・聴解力を伸ばします。',
           ),
-          progress: 0.38,
+          progress: 0,
         ),
         JlptLevelCardData(
           level: 'N3',
@@ -39,7 +39,7 @@ class MockHomeRepository implements HomeRepository {
             en: 'Connect vocabulary, grammar, and real examples.',
             ja: '語彙・文法・実例をつなげて学習します。',
           ),
-          progress: 0.22,
+          progress: 0,
         ),
         JlptLevelCardData(
           level: 'N2',
@@ -48,7 +48,7 @@ class MockHomeRepository implements HomeRepository {
             en: 'Practice longer passages and nuanced grammar.',
             ja: '長文と細かな文法表現を練習します。',
           ),
-          progress: 0.12,
+          progress: 0,
         ),
         JlptLevelCardData(
           level: 'N1',
@@ -57,7 +57,7 @@ class MockHomeRepository implements HomeRepository {
             en: 'Master advanced vocabulary and exam strategy.',
             ja: '高度な語彙と試験戦略を習得します。',
           ),
-          progress: 0.06,
+          progress: 0,
         ),
       ],
       learningMenuItems: [
@@ -75,10 +75,10 @@ class MockHomeRepository implements HomeRepository {
         ),
       ],
       studyStatus: const StudyStatusData(
-        studyTimeMinutes: 45,
-        studyDays: 12,
-        accuracyPercent: 86,
-        goalProgress: 0.72,
+        studyTimeMinutes: 0,
+        studyDays: 0,
+        accuracyPercent: 0,
+        goalProgress: 0,
       ),
       recentHistory: const [
         StudyHistoryItemData(
