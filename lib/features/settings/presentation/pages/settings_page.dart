@@ -13,6 +13,14 @@ class SettingsPage extends StatefulWidget {
 class _SettingsPageState extends State<SettingsPage> {
   bool _darkMode = false;
 
+  void _openTermsOfUse() {
+    // TODO: Open Terms of Use
+  }
+
+  void _openPrivacyPolicy() {
+    // TODO: Open Privacy Policy
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -26,9 +34,7 @@ class _SettingsPageState extends State<SettingsPage> {
               children: [
                 Text(
                   'Settings\n設定',
-                  style: theme.textTheme.headlineMedium?.copyWith(
-                    fontWeight: FontWeight.w900,
-                  ),
+                  style: theme.textTheme.headlineMedium?.copyWith(fontWeight: FontWeight.w900),
                 ),
                 const SizedBox(height: 20),
                 const _AccountCard(),
@@ -40,51 +46,37 @@ class _SettingsPageState extends State<SettingsPage> {
                     padding: const EdgeInsets.symmetric(vertical: 8),
                     child: Column(
                       children: [
-                        const _SettingsTile(
-                          icon: Icons.favorite_border,
-                          title: 'Favorite',
-                          subtitle: 'お気に入り',
-                        ),
-                        const _SettingsTile(
-                          icon: Icons.flag_outlined,
-                          title: 'Learning Goal',
-                          subtitle: '学習目標',
-                        ),
+                        const _SettingsTile(icon: Icons.favorite_border, title: 'Favorite', subtitle: 'お気に入り'),
+                        const _SettingsTile(icon: Icons.flag_outlined, title: 'Learning Goal', subtitle: '学習目標'),
                         SwitchListTile(
-                          contentPadding: const EdgeInsets.symmetric(
-                            horizontal: 20,
-                            vertical: 6,
-                          ),
+                          contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 6),
                           value: _darkMode,
                           onChanged: (value) => setState(() => _darkMode = value),
                           secondary: const Icon(Icons.dark_mode_outlined),
-                          title: const Text(
-                            'Dark Mode',
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                          subtitle: const Text(
-                            'ダークモード',
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
+                          title: const Text('Dark Mode', maxLines: 1, overflow: TextOverflow.ellipsis),
+                          subtitle: const Text('ダークモード', maxLines: 1, overflow: TextOverflow.ellipsis),
                         ),
                         Padding(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 20,
-                            vertical: 6,
-                          ),
+                          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 6),
                           child: AboutListTile(
                             icon: const Icon(Icons.info_outline),
                             applicationName: 'JLPT Master',
                             applicationVersion: '1.0.0',
                             applicationLegalese: '© 2026 JLPT Master',
-                            child: const Text(
-                              'About\nこのアプリについて',
-                              maxLines: 2,
-                              overflow: TextOverflow.ellipsis,
-                            ),
+                            child: const Text('About\nこのアプリについて', maxLines: 2, overflow: TextOverflow.ellipsis),
                           ),
+                        ),
+                        _SettingsTile(
+                          icon: Icons.description_outlined,
+                          title: 'Terms of Use',
+                          subtitle: '利用規約',
+                          onTap: _openTermsOfUse,
+                        ),
+                        _SettingsTile(
+                          icon: Icons.privacy_tip_outlined,
+                          title: 'Privacy Policy',
+                          subtitle: 'プライバシーポリシー',
+                          onTap: _openPrivacyPolicy,
                         ),
                       ],
                     ),
@@ -128,18 +120,12 @@ class _AccountCard extends StatelessWidget {
                   children: [
                     Text(
                       'Account\nアカウント',
-                      style: theme.textTheme.titleLarge?.copyWith(
-                        fontWeight: FontWeight.w900,
-                        height: 1.2,
-                      ),
+                      style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w900, height: 1.2),
                     ),
                     const SizedBox(height: 8),
                     Text(
                       'Sign in to sync your progress across devices.\nログインして学習データを同期しましょう。',
-                      style: theme.textTheme.bodyMedium?.copyWith(
-                        color: colorScheme.onSurfaceVariant,
-                        height: 1.45,
-                      ),
+                      style: theme.textTheme.bodyMedium?.copyWith(color: colorScheme.onSurfaceVariant, height: 1.45),
                     ),
                   ],
                 ),
@@ -181,19 +167,9 @@ class _GoPremiumCard extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      'Go Premium',
-                      style: theme.textTheme.titleLarge?.copyWith(
-                        fontWeight: FontWeight.w900,
-                      ),
-                    ),
+                    Text('Go Premium', style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w900)),
                     const SizedBox(height: 2),
-                    Text(
-                      'プレミアムにアップグレード',
-                      style: theme.textTheme.bodyMedium?.copyWith(
-                        color: colorScheme.onSurfaceVariant,
-                      ),
-                    ),
+                    Text('プレミアムにアップグレード', style: theme.textTheme.bodyMedium?.copyWith(color: colorScheme.onSurfaceVariant)),
                   ],
                 ),
               ),
@@ -207,15 +183,12 @@ class _GoPremiumCard extends StatelessWidget {
 }
 
 class _SettingsTile extends StatelessWidget {
-  const _SettingsTile({
-    required this.icon,
-    required this.title,
-    required this.subtitle,
-  });
+  const _SettingsTile({required this.icon, required this.title, required this.subtitle, this.onTap});
 
   final IconData icon;
   final String title;
   final String subtitle;
+  final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
@@ -226,6 +199,7 @@ class _SettingsTile extends StatelessWidget {
       subtitle: Text(subtitle, maxLines: 1, overflow: TextOverflow.ellipsis),
       trailing: const Icon(Icons.chevron_right_rounded),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+      onTap: onTap,
     );
   }
 }

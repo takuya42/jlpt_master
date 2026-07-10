@@ -52,6 +52,10 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         builder: (context, state) => const LoginPage(),
       ),
       GoRoute(
+        path: AppRoute.register.path,
+        builder: (context, state) => const RegisterPage(),
+      ),
+      GoRoute(
         path: AppRoute.premium.path,
         builder: (context, state) => const PremiumPage(),
       ),
