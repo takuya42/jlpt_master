@@ -229,7 +229,7 @@ class _ThemeModeTile extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final selectedThemeMode = ref.watch(themeModeControllerProvider).valueOrNull ?? ThemeMode.system;
+    final selectedThemeMode = ref.watch(themeModeControllerProvider).asData?.value ?? ThemeMode.system;
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),

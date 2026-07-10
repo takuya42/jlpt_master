@@ -11,7 +11,7 @@ class JlptMasterApp extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final router = ref.watch(appRouterProvider);
-    final themeMode = ref.watch(themeModeControllerProvider).valueOrNull ?? ThemeMode.system;
+    final themeMode = ref.watch(themeModeControllerProvider).asData?.value ?? ThemeMode.system;
 
     return MaterialApp.router(
       title: 'JLPT Master',
