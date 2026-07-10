@@ -1,13 +1,20 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 
-class LoginPage extends StatefulWidget {
+import '../../../app/navigation/app_route.dart';
+
+class LoginPage extends StatelessWidget {
   const LoginPage({super.key});
 
-  @override
-  State<LoginPage> createState() => _LoginPageState();
-}
+  void _handleBack(BuildContext context) {
+    if (context.canPop()) {
+      context.pop();
+      return;
+    }
 
-class _LoginPageState extends State<LoginPage> {
+    context.go(AppRoute.home.path);
+  }
+
   void onGoogleSignIn() {
     // TODO: Implement Google sign-in.
   }
@@ -16,89 +23,35 @@ class _LoginPageState extends State<LoginPage> {
     // TODO: Implement Apple sign-in.
   }
 
-  void onEmailSignIn() {
-    // TODO: Implement email sign-in.
-  }
-
-  void onGuestSignIn() {
-    // TODO: Implement guest sign-in.
-  }
-
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
-
     return Scaffold(
+      extendBodyBehindAppBar: true,
+      appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        scrolledUnderElevation: 0,
+        title: const SizedBox.shrink(),
+        leading: IconButton(
+          tooltip: MaterialLocalizations.of(context).backButtonTooltip,
+          onPressed: () => _handleBack(context),
+          icon: const Icon(Icons.arrow_back_rounded),
+        ),
+      ),
       body: SafeArea(
         child: Center(
           child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 560),
+            constraints: const BoxConstraints(maxWidth: 480),
             child: ListView(
-              padding: const EdgeInsets.fromLTRB(28, 32, 28, 36),
+              padding: const EdgeInsets.fromLTRB(28, 72, 28, 36),
               children: [
-                const _WelcomeHeader(),
+                const _LoginHeader(),
+                const SizedBox(height: 48),
+                _SocialSignInButton.google(onPressed: onGoogleSignIn),
+                const SizedBox(height: 14),
+                _SocialSignInButton.apple(onPressed: onAppleSignIn),
                 const SizedBox(height: 36),
-                _AuthCard(
-                  child: Column(
-                    children: [
-                      _SocialSignInButton.google(onPressed: onGoogleSignIn),
-                      const SizedBox(height: 12),
-                      _SocialSignInButton.apple(onPressed: onAppleSignIn),
-                      const SizedBox(height: 12),
-                      OutlinedButton.icon(
-                        onPressed: onEmailSignIn,
-                        icon: const Icon(Icons.mail_outline_rounded),
-                        label: const _BilingualButtonLabel(
-                          englishLabel: 'Continue with Email',
-                          japaneseLabel: 'メールアドレスで続ける',
-                        ),
-                        style: OutlinedButton.styleFrom(
-                          minimumSize: const Size.fromHeight(56),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(16),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 12),
-                      FilledButton.tonalIcon(
-                        onPressed: onGuestSignIn,
-                        icon: const Icon(Icons.person_outline_rounded),
-                        label: const _BilingualButtonLabel(
-                          englishLabel: 'Continue as Guest',
-                          japaneseLabel: 'ゲストで始める',
-                        ),
-                        style: FilledButton.styleFrom(
-                          minimumSize: const Size.fromHeight(56),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(16),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 28),
                 const _CreateAccountPrompt(),
-                const SizedBox(height: 28),
-                Text(
-                  'By continuing, you agree to our',
-                  textAlign: TextAlign.center,
-                  style: theme.textTheme.bodySmall?.copyWith(
-                    color: colorScheme.onSurfaceVariant,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                const _PolicyLinks(),
-                const SizedBox(height: 12),
-                Text(
-                  '利用を続けることで\n利用規約・プライバシーポリシー\nに同意したものとします。',
-                  textAlign: TextAlign.center,
-                  style: theme.textTheme.bodySmall?.copyWith(
-                    color: colorScheme.onSurfaceVariant,
-                    height: 1.5,
-                  ),
-                ),
               ],
             ),
           ),
@@ -108,8 +61,100 @@ class _LoginPageState extends State<LoginPage> {
   }
 }
 
-class _WelcomeHeader extends StatelessWidget {
-  const _WelcomeHeader();
+class RegisterPage extends StatelessWidget {
+  const RegisterPage({super.key});
+
+  void onCreateAccount() {
+    // TODO: Implement account creation.
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Create Account'),
+        leading: IconButton(
+          tooltip: MaterialLocalizations.of(context).backButtonTooltip,
+          onPressed: () {
+            if (context.canPop()) {
+              context.pop();
+              return;
+            }
+            context.go(AppRoute.login.path);
+          },
+          icon: const Icon(Icons.arrow_back_rounded),
+        ),
+      ),
+      body: SafeArea(
+        child: Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 480),
+            child: ListView(
+              padding: const EdgeInsets.fromLTRB(24, 28, 24, 36),
+              children: [
+                Text(
+                  'Create Account\n新規登録',
+                  textAlign: TextAlign.center,
+                  style: theme.textTheme.headlineMedium?.copyWith(
+                    fontWeight: FontWeight.w900,
+                    height: 1.2,
+                  ),
+                ),
+                const SizedBox(height: 32),
+                const _AuthTextField(
+                  label: 'Display Name',
+                  japaneseLabel: '表示名',
+                  icon: Icons.badge_outlined,
+                  textInputAction: TextInputAction.next,
+                ),
+                const SizedBox(height: 16),
+                const _AuthTextField(
+                  label: 'Email',
+                  japaneseLabel: 'メールアドレス',
+                  icon: Icons.mail_outline_rounded,
+                  keyboardType: TextInputType.emailAddress,
+                  textInputAction: TextInputAction.next,
+                ),
+                const SizedBox(height: 16),
+                const _AuthTextField(
+                  label: 'Password',
+                  japaneseLabel: 'パスワード',
+                  icon: Icons.lock_outline_rounded,
+                  obscureText: true,
+                  textInputAction: TextInputAction.next,
+                ),
+                const SizedBox(height: 16),
+                const _AuthTextField(
+                  label: 'Confirm Password',
+                  japaneseLabel: 'パスワード確認',
+                  icon: Icons.verified_user_outlined,
+                  obscureText: true,
+                  textInputAction: TextInputAction.done,
+                ),
+                const SizedBox(height: 28),
+                FilledButton(
+                  onPressed: onCreateAccount,
+                  style: FilledButton.styleFrom(
+                    minimumSize: const Size.fromHeight(56),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                  ),
+                  child: const Text('Create Account\nアカウントを作成', textAlign: TextAlign.center),
+                ),
+                const SizedBox(height: 36),
+                const _SignInPrompt(),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _LoginHeader extends StatelessWidget {
+  const _LoginHeader();
 
   @override
   Widget build(BuildContext context) {
@@ -117,64 +162,24 @@ class _WelcomeHeader extends StatelessWidget {
     final colorScheme = theme.colorScheme;
 
     return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Container(
-          width: 72,
-          height: 72,
-          decoration: BoxDecoration(
-            color: colorScheme.primaryContainer,
-            borderRadius: BorderRadius.circular(24),
-          ),
-          child: Icon(
-            Icons.school_rounded,
-            color: colorScheme.onPrimaryContainer,
-            size: 36,
-          ),
-        ),
-        const SizedBox(height: 24),
         Text(
           'Welcome to JLPT Master\nJLPT Masterへようこそ',
-          textAlign: TextAlign.center,
-          style: theme.textTheme.headlineSmall?.copyWith(
+          style: theme.textTheme.headlineMedium?.copyWith(
             fontWeight: FontWeight.w900,
-            height: 1.2,
+            height: 1.18,
           ),
         ),
-        const SizedBox(height: 14),
+        const SizedBox(height: 18),
         Text(
           'Learn Japanese with confidence.\n楽しく日本語を学びましょう。',
-          textAlign: TextAlign.center,
-          style: theme.textTheme.bodyLarge?.copyWith(
+          style: theme.textTheme.titleMedium?.copyWith(
             color: colorScheme.onSurfaceVariant,
-            height: 1.5,
+            height: 1.55,
           ),
         ),
       ],
-    );
-  }
-}
-
-class _AuthCard extends StatelessWidget {
-  const _AuthCard({required this.child});
-
-  final Widget child;
-
-  @override
-  Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
-
-    return DecoratedBox(
-      decoration: BoxDecoration(
-        color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.55),
-        borderRadius: BorderRadius.circular(28),
-        border: Border.all(
-          color: colorScheme.outlineVariant.withValues(alpha: 0.55),
-        ),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: child,
-      ),
     );
   }
 }
@@ -190,8 +195,7 @@ class _SocialSignInButton extends StatelessWidget {
     required this.borderColor,
   });
 
-  factory _SocialSignInButton.google({required VoidCallback onPressed}) =>
-      _SocialSignInButton._(
+  factory _SocialSignInButton.google({required VoidCallback onPressed}) => _SocialSignInButton._(
         label: 'Continue with Google',
         japaneseLabel: 'Googleで続ける',
         logo: const _GoogleLogo(),
@@ -201,8 +205,7 @@ class _SocialSignInButton extends StatelessWidget {
         borderColor: const Color(0xFFDADCE0),
       );
 
-  factory _SocialSignInButton.apple({required VoidCallback onPressed}) =>
-      _SocialSignInButton._(
+  factory _SocialSignInButton.apple({required VoidCallback onPressed}) => _SocialSignInButton._(
         label: 'Continue with Apple',
         japaneseLabel: 'Appleで続ける',
         logo: const Icon(Icons.apple, size: 24),
@@ -232,36 +235,47 @@ class _SocialSignInButton extends StatelessWidget {
           borderRadius: BorderRadius.circular(16),
           side: BorderSide(color: borderColor),
         ),
-        textStyle: Theme.of(context).textTheme.titleSmall?.copyWith(
-              fontWeight: FontWeight.w800,
-            ),
       ),
       child: Stack(
         alignment: Alignment.center,
         children: [
           Align(alignment: Alignment.centerLeft, child: logo),
-          _BilingualButtonLabel(
-            englishLabel: label,
-            japaneseLabel: japaneseLabel,
-          ),
+          Text('$label\n$japaneseLabel', textAlign: TextAlign.center),
         ],
       ),
     );
   }
 }
 
-class _BilingualButtonLabel extends StatelessWidget {
-  const _BilingualButtonLabel({
-    required this.englishLabel,
+class _AuthTextField extends StatelessWidget {
+  const _AuthTextField({
+    required this.label,
     required this.japaneseLabel,
+    required this.icon,
+    this.keyboardType,
+    this.obscureText = false,
+    this.textInputAction,
   });
 
-  final String englishLabel;
+  final String label;
   final String japaneseLabel;
+  final IconData icon;
+  final TextInputType? keyboardType;
+  final bool obscureText;
+  final TextInputAction? textInputAction;
 
   @override
   Widget build(BuildContext context) {
-    return Text('$englishLabel\n$japaneseLabel', textAlign: TextAlign.center);
+    return TextField(
+      keyboardType: keyboardType,
+      obscureText: obscureText,
+      textInputAction: textInputAction,
+      decoration: InputDecoration(
+        labelText: '$label / $japaneseLabel',
+        prefixIcon: Icon(icon),
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(16)),
+      ),
+    );
   }
 }
 
@@ -270,42 +284,42 @@ class _CreateAccountPrompt extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
+    final colorScheme = Theme.of(context).colorScheme;
 
     return Column(
       children: [
         Text(
-          'Don\'t have an account?',
-          style: theme.textTheme.bodyMedium?.copyWith(
-            color: colorScheme.onSurfaceVariant,
-          ),
+          'Don\'t have an account?\nアカウントをお持ちでないですか？',
+          textAlign: TextAlign.center,
+          style: TextStyle(color: colorScheme.onSurfaceVariant, height: 1.45),
         ),
-        TextButton(onPressed: () {}, child: const Text('Create Account')),
-        const SizedBox(height: 4),
-        Text(
-          'アカウントをお持ちでないですか？',
-          style: theme.textTheme.bodyMedium?.copyWith(
-            color: colorScheme.onSurfaceVariant,
-          ),
+        TextButton(
+          onPressed: () => context.go(AppRoute.register.path),
+          child: const Text('Create Account\n新規登録', textAlign: TextAlign.center),
         ),
-        TextButton(onPressed: () {}, child: const Text('新規登録')),
       ],
     );
   }
 }
 
-class _PolicyLinks extends StatelessWidget {
-  const _PolicyLinks();
+class _SignInPrompt extends StatelessWidget {
+  const _SignInPrompt();
 
   @override
   Widget build(BuildContext context) {
-    return Wrap(
-      alignment: WrapAlignment.center,
-      spacing: 8,
+    final colorScheme = Theme.of(context).colorScheme;
+
+    return Column(
       children: [
-        TextButton(onPressed: () {}, child: const Text('Terms of Use')),
-        TextButton(onPressed: () {}, child: const Text('Privacy Policy')),
+        Text(
+          'Already have an account?\nすでにアカウントをお持ちですか？',
+          textAlign: TextAlign.center,
+          style: TextStyle(color: colorScheme.onSurfaceVariant, height: 1.45),
+        ),
+        TextButton(
+          onPressed: () => context.go(AppRoute.login.path),
+          child: const Text('Sign In\nログイン', textAlign: TextAlign.center),
+        ),
       ],
     );
   }
@@ -321,7 +335,7 @@ class _GoogleLogo extends StatelessWidget {
       style: TextStyle(
         color: Color(0xFF4285F4),
         fontSize: 24,
-        fontWeight: FontWeight.w800,
+        fontWeight: FontWeight.w900,
         letterSpacing: -1,
       ),
     );
