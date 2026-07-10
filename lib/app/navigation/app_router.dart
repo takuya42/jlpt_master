@@ -2,6 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../features/auth/presentation/auth_page.dart';
+import '../../features/auth/presentation/providers/auth_providers.dart';
 import '../../features/grammar/presentation/pages/grammar_page.dart';
 import '../../features/home/presentation/pages/home_page.dart';
 import '../../features/premium/presentation/pages/premium_page.dart';
@@ -13,8 +14,19 @@ import '../../features/vocabulary/presentation/pages/vocabulary_page.dart';
 import 'app_route.dart';
 
 final appRouterProvider = Provider<GoRouter>((ref) {
+  final authState = ref.watch(authStateProvider);
   return GoRouter(
     initialLocation: AppRoute.home.path,
+    redirect: (context, state) {
+      final user = authState.valueOrNull;
+      final isAuthRoute = state.matchedLocation == AppRoute.login.path ||
+          state.matchedLocation == AppRoute.emailLogin.path ||
+          state.matchedLocation == AppRoute.register.path;
+      if (authState.isLoading) return null;
+      if (user == null && !isAuthRoute) return AppRoute.login.path;
+      if (user != null && isAuthRoute) return AppRoute.home.path;
+      return null;
+    },
     routes: [
       ShellRoute(
         builder: (context, state, child) => MainShell(child: child),
@@ -50,6 +62,10 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: AppRoute.login.path,
         builder: (context, state) => const LoginPage(),
+      ),
+      GoRoute(
+        path: AppRoute.emailLogin.path,
+        builder: (context, state) => const EmailLoginPage(),
       ),
       GoRoute(
         path: AppRoute.register.path,
