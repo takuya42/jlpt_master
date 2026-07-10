@@ -24,10 +24,6 @@ final appRouterProvider = Provider<GoRouter>((ref) {
             builder: (context, state) => const HomePage(),
           ),
           GoRoute(
-            path: AppRoute.login.path,
-            builder: (context, state) => const AuthPage(),
-          ),
-          GoRoute(
             path: AppRoute.vocabulary.path,
             builder: (context, state) => const VocabularyPage(),
           ),
@@ -50,6 +46,10 @@ final appRouterProvider = Provider<GoRouter>((ref) {
             builder: (context, state) => const SettingsPage(),
           ),
         ],
+      ),
+      GoRoute(
+        path: AppRoute.login.path,
+        builder: (context, state) => const LoginPage(),
       ),
       GoRoute(
         path: AppRoute.premium.path,

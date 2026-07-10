@@ -12,7 +12,6 @@ class PremiumPage extends StatelessWidget {
     _PremiumFeature('JLPT N5〜N1', 'N5〜N1すべて学習可能', Icons.school_rounded),
     _PremiumFeature('Detailed Explanations', '詳しい解説', Icons.tips_and_updates_rounded),
     _PremiumFeature('Study Statistics', '学習記録', Icons.analytics_rounded),
-    _PremiumFeature('No Ads', '広告なし', Icons.block_rounded),
     _PremiumFeature('Future Updates', '今後のアップデート', Icons.update_rounded),
   ];
 
