@@ -1,7 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../auth/presentation/providers/auth_providers.dart';
-import '../../../grammar/domain/grammar_pattern.dart';
+import '../../../grammar/data/google_sheet_grammar_repository.dart';
 import '../../../vocabulary/data/google_sheet_vocabulary_repository.dart';
 import '../../data/user_learning_repository.dart';
 
@@ -20,8 +20,9 @@ final learningQuestionTotalsProvider = FutureProvider<Map<String, int>>((ref) as
     totals[word.jlptLevel] = (totals[word.jlptLevel] ?? 0) + 1;
   }
 
-  for (final pattern in grammarPatterns) {
-    totals[pattern.level] = (totals[pattern.level] ?? 0) + 1;
+  final patterns = await GoogleSheetGrammarRepository().fetchPatterns();
+  for (final pattern in patterns) {
+    totals[pattern.jlpt] = (totals[pattern.jlpt] ?? 0) + 1;
   }
 
   return totals;
