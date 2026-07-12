@@ -1,7 +1,7 @@
 import 'dart:convert';
-import 'dart:developer' as developer;
 
 import 'package:csv/csv.dart';
+import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 
 import '../domain/grammar_pattern.dart';
@@ -30,9 +30,8 @@ class GoogleSheetGrammarRepository implements GrammarRepository {
 
   @override
   Future<List<GrammarPattern>> fetchPatterns() async {
-    developer.log(
-      'Fetching Grammar CSV from $_csvUri',
-      name: 'GoogleSheetGrammarRepository',
+    debugPrint(
+      'GoogleSheetGrammarRepository.fetchPatterns(): HTTP開始 $_csvUri',
     );
 
     try {
@@ -40,6 +39,10 @@ class GoogleSheetGrammarRepository implements GrammarRepository {
       final response = client == null
           ? await http.get(_csvUri)
           : await client.get(_csvUri);
+      debugPrint('GoogleSheetGrammarRepository.fetchPatterns(): HTTP終了');
+      debugPrint(
+        'GoogleSheetGrammarRepository.fetchPatterns(): statusCode=${response.statusCode}',
+      );
 
       if (response.statusCode < 200 || response.statusCode >= 300) {
         throw GrammarRepositoryException(
@@ -48,10 +51,16 @@ class GoogleSheetGrammarRepository implements GrammarRepository {
       }
 
       final csvText = utf8.decode(response.bodyBytes);
+      debugPrint('GoogleSheetGrammarRepository.fetchPatterns(): CSV取得完了');
+      debugPrint(
+        'GoogleSheetGrammarRepository.fetchPatterns(): CSV文字数=${csvText.length}',
+      );
+      debugPrint(
+        'GoogleSheetGrammarRepository.fetchPatterns(): response.body.substring(0, 300)=${response.body.substring(0, response.body.length < 300 ? response.body.length : 300)}',
+      );
       final patterns = _parseCsv(csvText);
-      developer.log(
-        'GrammarRepository.fetchPatterns() returned ${patterns.length} patterns',
-        name: 'GoogleSheetGrammarRepository',
+      debugPrint(
+        'GoogleSheetGrammarRepository.fetchPatterns(): GrammarPattern件数=${patterns.length}',
       );
 
       if (patterns.isEmpty) {
@@ -62,12 +71,10 @@ class GoogleSheetGrammarRepository implements GrammarRepository {
 
       return patterns;
     } catch (error, stackTrace) {
-      developer.log(
-        'Failed to fetch Grammar CSV from $_csvUri',
-        name: 'GoogleSheetGrammarRepository',
-        error: error,
-        stackTrace: stackTrace,
+      debugPrint(
+        'GoogleSheetGrammarRepository.fetchPatterns(): exception=$error',
       );
+      debugPrint(stackTrace.toString());
       rethrow;
     }
   }
@@ -90,15 +97,18 @@ class GoogleSheetGrammarRepository implements GrammarRepository {
       shouldParseNumbers: false,
     ).convert(csvText);
 
-    developer.log(
-      'CSV rows.length: ${rows.length}',
-      name: 'GoogleSheetGrammarRepository',
+    debugPrint(
+      'GoogleSheetGrammarRepository.fetchPatterns(): rows.length=${rows.length}',
     );
+    if (rows.length == 1) {
+      debugPrint(
+        'GoogleSheetGrammarRepository.fetchPatterns(): rows.first=${rows.first}',
+      );
+    }
 
     if (rows.isEmpty) {
-      developer.log(
-        'Parsed grammarPatterns.length: 0',
-        name: 'GoogleSheetGrammarRepository',
+      debugPrint(
+        'GoogleSheetGrammarRepository.fetchPatterns(): GrammarPattern件数=0',
       );
       return const [];
     }
@@ -132,9 +142,8 @@ class GoogleSheetGrammarRepository implements GrammarRepository {
       );
     }).toList(growable: false);
 
-    developer.log(
-      'Parsed grammarPatterns.length: ${grammarPatterns.length}',
-      name: 'GoogleSheetGrammarRepository',
+    debugPrint(
+      'GoogleSheetGrammarRepository.fetchPatterns(): parsed GrammarPattern件数=${grammarPatterns.length}',
     );
 
     return grammarPatterns;

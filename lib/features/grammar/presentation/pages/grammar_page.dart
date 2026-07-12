@@ -1,5 +1,4 @@
-import 'dart:developer' as developer;
-
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -23,18 +22,24 @@ class GrammarPage extends ConsumerWidget {
           child: ConstrainedBox(
             constraints: const BoxConstraints(maxWidth: 980),
             child: patterns.when(
-              loading: () => const Center(child: CircularProgressIndicator()),
-              error: (error, stackTrace) => Center(
-                child: Padding(
-                  padding: const EdgeInsets.all(24),
-                  child: Text('Failed to load grammar data.\n$error'),
-                ),
-              ),
-              data: (items) {
-                developer.log(
-                  'GrammarPage UI display count: ${items.length}',
-                  name: 'GrammarPage',
+              loading: () {
+                debugPrint('GrammarPage: AsyncValue loading');
+                return const Center(child: CircularProgressIndicator());
+              },
+              error: (error, stackTrace) {
+                debugPrint('GrammarPage: AsyncValue error=$error');
+                debugPrint(stackTrace.toString());
+                return Center(
+                  child: Padding(
+                    padding: const EdgeInsets.all(24),
+                    child: Text('Failed to load grammar data.\n$error'),
+                  ),
                 );
+              },
+              data: (items) {
+                debugPrint('GrammarPage: AsyncValue data');
+                debugPrint('GrammarPage: patterns.length=${items.length}');
+                debugPrint('GrammarPage: UI表示件数=${items.length}');
                 return ListView.separated(
                   padding: const EdgeInsets.fromLTRB(24, 28, 24, 36),
                   itemCount: items.length + 1,

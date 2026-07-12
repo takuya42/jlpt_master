@@ -1,5 +1,4 @@
-import 'dart:developer' as developer;
-
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../features/auth/presentation/providers/auth_providers.dart';
@@ -14,17 +13,16 @@ final grammarRepositoryProvider = Provider<GrammarRepository>((ref) {
   return GoogleSheetGrammarRepository();
 });
 
-final grammarPatternsProvider = FutureProvider<List<GrammarPattern>>((ref) async {
+final grammarPatternsProvider =
+    FutureProvider<List<GrammarPattern>>((ref) async {
+  debugPrint('grammarPatternsProvider: 開始');
   final repository = ref.watch(grammarRepositoryProvider);
-  developer.log(
-    'grammarPatternsProvider using ${repository.runtimeType}',
-    name: 'grammarPatternsProvider',
+  debugPrint(
+    'grammarPatternsProvider: Repository呼び出し ${repository.runtimeType}',
   );
   final patterns = await repository.fetchPatterns();
-  developer.log(
-    'grammarPatternsProvider loaded ${patterns.length} patterns',
-    name: 'grammarPatternsProvider',
-  );
+  debugPrint('grammarPatternsProvider: Repository終了');
+  debugPrint('grammarPatternsProvider: 取得件数=${patterns.length}');
   return patterns;
 });
 
