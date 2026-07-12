@@ -14,14 +14,8 @@ class GoogleSheetGrammarRepository implements GrammarRepository {
   })  : _client = client,
         _csvUri = csvUri ?? _defaultCsvUri;
 
-  static const String spreadsheetId =
-      '1vl_IRVwh7FWgcT-C8fTQltTQWwx8ejRJG9HnCctW0BU';
-  static const String grammarSheetName = 'Grammar';
-
-  // The Grammar sheet is selected explicitly by name so the exported CSV always
-  // matches the Grammar tab even if Google Sheets regenerates numeric gids.
   static const String csvUrl =
-      'https://docs.google.com/spreadsheets/d/$spreadsheetId/gviz/tq?tqx=out:csv&sheet=$grammarSheetName';
+      'https://docs.google.com/spreadsheets/d/e/2PACX-1vRmRT1zho5hgMAfNv7mDeukWnAh2dLC87TjNTOZJh1p7KzB7c1KjxmnqQQE5ZZ5lwvDVjpJryPccLFr/pub?gid=0&single=true&output=csv';
 
   static final Uri _defaultCsvUri = Uri.parse(csvUrl);
 
@@ -60,12 +54,15 @@ class GoogleSheetGrammarRepository implements GrammarRepository {
       );
       final patterns = _parseCsv(csvText);
       debugPrint(
-        'GoogleSheetGrammarRepository.fetchPatterns(): GrammarPattern件数=${patterns.length}',
+        'GoogleSheetGrammarRepository.fetchPatterns(): patterns.length=${patterns.length}',
       );
 
       if (patterns.isEmpty) {
-        throw GrammarRepositoryException(
-          'GrammarRepository.fetchPatterns() returned 0 patterns from $_csvUri.',
+        debugPrint(
+          'GoogleSheetGrammarRepository.fetchPatterns(): patterns.length=0 のためCSV内容を出力します',
+        );
+        debugPrint(
+          'GoogleSheetGrammarRepository.fetchPatterns(): csvText=$csvText',
         );
       }
 
@@ -93,9 +90,7 @@ class GoogleSheetGrammarRepository implements GrammarRepository {
   }
 
   List<GrammarPattern> _parseCsv(String csvText) {
-    final rows = const CsvToListConverter(
-      shouldParseNumbers: false,
-    ).convert(csvText);
+    final rows = const CsvToListConverter().convert(csvText);
 
     debugPrint(
       'GoogleSheetGrammarRepository.fetchPatterns(): rows.length=${rows.length}',
@@ -162,7 +157,8 @@ class GoogleSheetGrammarRepository implements GrammarRepository {
     return grammarPatterns;
   }
 
-  String _csvValue(List<dynamic> row, int index) => row[index].toString().trim();
+  String _csvValue(List<dynamic> row, int index) =>
+      row[index].toString().trim();
 }
 
 class GrammarRepositoryException implements Exception {
