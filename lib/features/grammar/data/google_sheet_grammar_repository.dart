@@ -100,7 +100,7 @@ class GoogleSheetGrammarRepository implements GrammarRepository {
     debugPrint(
       'GoogleSheetGrammarRepository.fetchPatterns(): rows.length=${rows.length}',
     );
-    if (rows.length == 1) {
+    if (rows.isNotEmpty) {
       debugPrint(
         'GoogleSheetGrammarRepository.fetchPatterns(): rows.first=${rows.first}',
       );
@@ -110,54 +110,59 @@ class GoogleSheetGrammarRepository implements GrammarRepository {
       debugPrint(
         'GoogleSheetGrammarRepository.fetchPatterns(): GrammarPattern件数=0',
       );
+      debugPrint(
+        'GoogleSheetGrammarRepository.fetchPatterns(): rows.length=0, 成功件数=0, スキップ件数=0',
+      );
       return const [];
     }
 
-    final headers = rows.first
-        .map((header) => header.toString().trim())
-        .toList(growable: false);
+    final grammarPatterns = <GrammarPattern>[];
+    var skippedCount = 0;
 
-    final grammarPatterns = rows
-        .skip(1)
-        .where((row) => row.any((cell) => cell.toString().trim().isNotEmpty))
-        .map((row) {
-      final record = <String, String>{};
-
-      for (var index = 0; index < headers.length; index++) {
-        final value = index < row.length ? row[index].toString().trim() : '';
-        record[headers[index]] = value;
+    for (final row in rows.skip(1)) {
+      if (row.length < 10) {
+        skippedCount++;
+        continue;
       }
 
-      return GrammarPattern(
-        id: _requiredValue(record, 'id'),
-        jlpt: _requiredValue(record, 'jlpt').toUpperCase(),
-        grammar: _requiredValue(record, 'grammar'),
-        meaningEn: record['meaning_en'] ?? '',
-        meaningJa: record['meaning_ja'] ?? '',
-        explanationEn: record['explanation_en'] ?? '',
-        explanationJa: record['explanation_ja'] ?? '',
-        exampleJp: record['example_jp'] ?? '',
-        exampleEn: record['example_en'] ?? '',
-        exampleJa: record['example_ja'] ?? '',
+      final grammar = _csvValue(row, 2);
+      if (grammar.isEmpty) {
+        skippedCount++;
+        continue;
+      }
+
+      grammarPatterns.add(
+        GrammarPattern(
+          id: _csvValue(row, 0),
+          jlpt: _csvValue(row, 1).toUpperCase(),
+          grammar: grammar,
+          meaningEn: _csvValue(row, 3),
+          meaningJa: _csvValue(row, 4),
+          explanationEn: _csvValue(row, 5),
+          explanationJa: _csvValue(row, 6),
+          exampleJp: _csvValue(row, 7),
+          exampleEn: _csvValue(row, 8),
+          exampleJa: _csvValue(row, 9),
+        ),
       );
-    }).toList(growable: false);
+    }
 
     debugPrint(
-      'GoogleSheetGrammarRepository.fetchPatterns(): parsed GrammarPattern件数=${grammarPatterns.length}',
+      'GoogleSheetGrammarRepository.fetchPatterns(): パース成功件数=${grammarPatterns.length}',
+    );
+    if (grammarPatterns.isNotEmpty) {
+      debugPrint(
+        'GoogleSheetGrammarRepository.fetchPatterns(): first GrammarPattern=${grammarPatterns.first}',
+      );
+    }
+    debugPrint(
+      'GoogleSheetGrammarRepository.fetchPatterns(): rows.length=${rows.length}, 成功件数=${grammarPatterns.length}, スキップ件数=$skippedCount',
     );
 
     return grammarPatterns;
   }
 
-  String _requiredValue(Map<String, String> record, String columnName) {
-    final value = record[columnName]?.trim() ?? '';
-    if (value.isEmpty) {
-      throw GrammarRepositoryException(
-        'Grammar CSV is missing required "$columnName" value.',
-      );
-    }
-    return value;
-  }
+  String _csvValue(List<dynamic> row, int index) => row[index].toString().trim();
 }
 
 class GrammarRepositoryException implements Exception {
