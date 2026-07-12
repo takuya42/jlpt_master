@@ -1,18 +1,34 @@
-class GrammarPattern {
-  const GrammarPattern(this.expression, this.meaningEn, this.meaningJa, this.example, this.translationEn, this.translationJa, this.level);
+import 'package:flutter/foundation.dart';
 
-  final String expression;
+@immutable
+class GrammarPattern {
+  const GrammarPattern({
+    required this.id,
+    required this.jlpt,
+    required this.grammar,
+    required this.meaningEn,
+    required this.meaningJa,
+    required this.explanationEn,
+    required this.explanationJa,
+    required this.exampleJp,
+    required this.exampleEn,
+    required this.exampleJa,
+  });
+
+  final String id;
+  final String jlpt;
+  final String grammar;
   final String meaningEn;
   final String meaningJa;
-  final String example;
-  final String translationEn;
-  final String translationJa;
-  final String level;
-}
+  final String explanationEn;
+  final String explanationJa;
+  final String exampleJp;
+  final String exampleEn;
+  final String exampleJa;
 
-const grammarPatterns = [
-  GrammarPattern('〜てください', 'Please do...', '〜してください', '名前を書いてください。', 'Please write your name.', '名前を書いてください。', 'N5'),
-  GrammarPattern('〜なければならない', 'Must do...', '〜しなければならない', '薬を飲まなければなりません。', 'I must take medicine.', '薬を飲まなければなりません。', 'N4'),
-  GrammarPattern('〜ことにする', 'Decide to do...', '〜することに決める', '毎朝走ることにしました。', 'I decided to run every morning.', '毎朝走ることにしました。', 'N3'),
-  GrammarPattern('〜わけではない', 'It does not mean that...', '〜というわけではない', '嫌いなわけではありません。', 'It does not mean I dislike it.', '嫌いなわけではありません。', 'N2'),
-];
+  String get expression => grammar;
+  String get level => jlpt;
+  String get example => exampleJp;
+  String get translationEn => exampleEn;
+  String get translationJa => exampleJa;
+}
