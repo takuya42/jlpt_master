@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:developer' as developer;
 
 import 'package:csv/csv.dart';
 import 'package:http/http.dart' as http;
@@ -13,8 +14,14 @@ class GoogleSheetGrammarRepository implements GrammarRepository {
   })  : _client = client,
         _csvUri = csvUri ?? _defaultCsvUri;
 
+  static const String spreadsheetId =
+      '1vl_IRVwh7FWgcT-C8fTQltTQWwx8ejRJG9HnCctW0BU';
+  static const String grammarSheetName = 'Grammar';
+
+  // The Grammar sheet is selected explicitly by name so the exported CSV always
+  // matches the Grammar tab even if Google Sheets regenerates numeric gids.
   static const String csvUrl =
-      'https://docs.google.com/spreadsheets/d/1vl_IRVwh7FWgcT-C8fTQltTQWwx8ejRJG9HnCctW0BU/gviz/tq?tqx=out:csv&sheet=Grammar';
+      'https://docs.google.com/spreadsheets/d/$spreadsheetId/gviz/tq?tqx=out:csv&sheet=$grammarSheetName';
 
   static final Uri _defaultCsvUri = Uri.parse(csvUrl);
 
@@ -23,19 +30,46 @@ class GoogleSheetGrammarRepository implements GrammarRepository {
 
   @override
   Future<List<GrammarPattern>> fetchPatterns() async {
-    final client = _client;
-    final response = client == null
-        ? await http.get(_csvUri)
-        : await client.get(_csvUri);
+    developer.log(
+      'Fetching Grammar CSV from $_csvUri',
+      name: 'GoogleSheetGrammarRepository',
+    );
 
-    if (response.statusCode < 200 || response.statusCode >= 300) {
-      throw GrammarRepositoryException(
-        'Failed to load grammar CSV. Status code: ${response.statusCode}',
+    try {
+      final client = _client;
+      final response = client == null
+          ? await http.get(_csvUri)
+          : await client.get(_csvUri);
+
+      if (response.statusCode < 200 || response.statusCode >= 300) {
+        throw GrammarRepositoryException(
+          'Failed to load grammar CSV from $_csvUri. Status code: ${response.statusCode}',
+        );
+      }
+
+      final csvText = utf8.decode(response.bodyBytes);
+      final patterns = _parseCsv(csvText);
+      developer.log(
+        'GrammarRepository.fetchPatterns() returned ${patterns.length} patterns',
+        name: 'GoogleSheetGrammarRepository',
       );
-    }
 
-    final csvText = utf8.decode(response.bodyBytes);
-    return _parseCsv(csvText);
+      if (patterns.isEmpty) {
+        throw GrammarRepositoryException(
+          'GrammarRepository.fetchPatterns() returned 0 patterns from $_csvUri.',
+        );
+      }
+
+      return patterns;
+    } catch (error, stackTrace) {
+      developer.log(
+        'Failed to fetch Grammar CSV from $_csvUri',
+        name: 'GoogleSheetGrammarRepository',
+        error: error,
+        stackTrace: stackTrace,
+      );
+      rethrow;
+    }
   }
 
   @override
@@ -56,7 +90,16 @@ class GoogleSheetGrammarRepository implements GrammarRepository {
       shouldParseNumbers: false,
     ).convert(csvText);
 
+    developer.log(
+      'CSV rows.length: ${rows.length}',
+      name: 'GoogleSheetGrammarRepository',
+    );
+
     if (rows.isEmpty) {
+      developer.log(
+        'Parsed grammarPatterns.length: 0',
+        name: 'GoogleSheetGrammarRepository',
+      );
       return const [];
     }
 
@@ -64,7 +107,7 @@ class GoogleSheetGrammarRepository implements GrammarRepository {
         .map((header) => header.toString().trim())
         .toList(growable: false);
 
-    return rows
+    final grammarPatterns = rows
         .skip(1)
         .where((row) => row.any((cell) => cell.toString().trim().isNotEmpty))
         .map((row) {
@@ -88,6 +131,13 @@ class GoogleSheetGrammarRepository implements GrammarRepository {
         exampleJa: record['example_ja'] ?? '',
       );
     }).toList(growable: false);
+
+    developer.log(
+      'Parsed grammarPatterns.length: ${grammarPatterns.length}',
+      name: 'GoogleSheetGrammarRepository',
+    );
+
+    return grammarPatterns;
   }
 
   String _requiredValue(Map<String, String> record, String columnName) {

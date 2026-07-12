@@ -1,3 +1,5 @@
+import 'dart:developer' as developer;
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -28,28 +30,34 @@ class GrammarPage extends ConsumerWidget {
                   child: Text('Failed to load grammar data.\n$error'),
                 ),
               ),
-              data: (items) => ListView.separated(
-                padding: const EdgeInsets.fromLTRB(24, 28, 24, 36),
-                itemCount: items.length + 1,
-                separatorBuilder: (_, __) => const SizedBox(height: 14),
-                itemBuilder: (context, index) {
-                  if (index == 0) {
-                    return _PageHeader(
-                      title: 'Grammar\n文法',
-                      subtitle: 'Study each pattern with English and Japanese example sentences.\n文型を英語訳・日本語訳つきの例文で確認しましょう。',
-                      icon: Icons.subject_outlined,
-                      color: theme.colorScheme.tertiaryContainer,
+              data: (items) {
+                developer.log(
+                  'GrammarPage UI display count: ${items.length}',
+                  name: 'GrammarPage',
+                );
+                return ListView.separated(
+                  padding: const EdgeInsets.fromLTRB(24, 28, 24, 36),
+                  itemCount: items.length + 1,
+                  separatorBuilder: (_, __) => const SizedBox(height: 14),
+                  itemBuilder: (context, index) {
+                    if (index == 0) {
+                      return _PageHeader(
+                        title: 'Grammar\n文法',
+                        subtitle: 'Study each pattern with English and Japanese example sentences.\n文型を英語訳・日本語訳つきの例文で確認しましょう。',
+                        icon: Icons.subject_outlined,
+                        color: theme.colorScheme.tertiaryContainer,
+                      );
+                    }
+                    final pattern = items[index - 1];
+                    return _GrammarCard(
+                      pattern: pattern,
+                      isFavorite: favoriteIds.contains(pattern.id),
+                      onFavorite: () => toggleGrammarFavorite(ref, pattern),
+                      onStudied: () => recordGrammarStudy(ref, pattern),
                     );
-                  }
-                  final pattern = items[index - 1];
-                  return _GrammarCard(
-                    pattern: pattern,
-                    isFavorite: favoriteIds.contains(pattern.id),
-                    onFavorite: () => toggleGrammarFavorite(ref, pattern),
-                    onStudied: () => recordGrammarStudy(ref, pattern),
-                  );
-                },
-              ),
+                  },
+                );
+              },
             ),
           ),
         ),
