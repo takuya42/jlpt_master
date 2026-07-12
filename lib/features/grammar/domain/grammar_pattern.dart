@@ -31,4 +31,12 @@ class GrammarPattern {
   String get example => exampleJp;
   String get translationEn => exampleEn;
   String get translationJa => exampleJa;
+
+  @override
+  String toString() {
+    return 'GrammarPattern(id: $id, jlpt: $jlpt, grammar: $grammar, '
+        'meaningEn: $meaningEn, meaningJa: $meaningJa, '
+        'explanationEn: $explanationEn, explanationJa: $explanationJa, '
+        'exampleJp: $exampleJp, exampleEn: $exampleEn, exampleJa: $exampleJa)';
+  }
 }
