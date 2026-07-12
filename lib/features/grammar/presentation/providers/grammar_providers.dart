@@ -1,3 +1,5 @@
+import 'dart:developer' as developer;
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../features/auth/presentation/providers/auth_providers.dart';
@@ -13,7 +15,17 @@ final grammarRepositoryProvider = Provider<GrammarRepository>((ref) {
 });
 
 final grammarPatternsProvider = FutureProvider<List<GrammarPattern>>((ref) async {
-  return ref.watch(grammarRepositoryProvider).fetchPatterns();
+  final repository = ref.watch(grammarRepositoryProvider);
+  developer.log(
+    'grammarPatternsProvider using ${repository.runtimeType}',
+    name: 'grammarPatternsProvider',
+  );
+  final patterns = await repository.fetchPatterns();
+  developer.log(
+    'grammarPatternsProvider loaded ${patterns.length} patterns',
+    name: 'grammarPatternsProvider',
+  );
+  return patterns;
 });
 
 final grammarPatternProvider = FutureProvider.family<GrammarPattern?, String>((ref, id) async {
