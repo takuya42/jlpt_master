@@ -151,12 +151,6 @@ class _GrammarDetailContent extends ConsumerWidget {
                 Text('English', style: theme.textTheme.labelMedium?.copyWith(color: colorScheme.onSurfaceVariant, fontWeight: FontWeight.w800)),
                 const SizedBox(height: 4),
                 Text(pattern.exampleEn, style: theme.textTheme.bodyLarge?.copyWith(color: colorScheme.onSurfaceVariant)),
-                if (pattern.exampleJa.isNotEmpty) ...[
-                  const SizedBox(height: 12),
-                  Text('日本語訳', style: theme.textTheme.labelMedium?.copyWith(color: colorScheme.onSurfaceVariant, fontWeight: FontWeight.w800)),
-                  const SizedBox(height: 4),
-                  Text(pattern.exampleJa, style: theme.textTheme.bodyLarge?.copyWith(color: colorScheme.onSurfaceVariant)),
-                ],
               ],
             ),
           ],
