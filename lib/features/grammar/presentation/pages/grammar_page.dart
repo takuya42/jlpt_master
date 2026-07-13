@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../../../shared/presentation/widgets/app_state_views.dart';
+import '../../../../app/navigation/app_route.dart';
 import '../../../../shared/presentation/widgets/premium_button.dart';
 import '../../domain/grammar_pattern.dart';
 import '../providers/grammar_providers.dart';
+import '../widgets/grammar_studied_toggle.dart';
 
 class GrammarPage extends ConsumerWidget {
   const GrammarPage({super.key});
@@ -160,10 +163,7 @@ class _GrammarCard extends ConsumerWidget {
     final colorScheme = theme.colorScheme;
     final favoriteIds =
         ref.watch(favoriteGrammarIdsProvider).asData?.value ?? <String>{};
-    final studiedIds =
-        ref.watch(studiedGrammarIdsProvider).asData?.value ?? <String>{};
     final isFavorite = favoriteIds.contains(pattern.id);
-    final isStudied = studiedIds.contains(pattern.id);
 
     return Card(
       color: Colors.white,
@@ -173,8 +173,11 @@ class _GrammarCard extends ConsumerWidget {
         borderRadius: BorderRadius.circular(24),
         side: BorderSide(color: colorScheme.outlineVariant.withValues(alpha: 0.5)),
       ),
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(14, 12, 10, 12),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(24),
+        onTap: () => context.go(AppRoute.grammarDetailPath(pattern.id)),
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(14, 12, 10, 12),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           mainAxisSize: MainAxisSize.min,
@@ -267,41 +270,10 @@ class _GrammarCard extends ConsumerWidget {
               style: theme.textTheme.bodyMedium
                   ?.copyWith(color: colorScheme.onSurfaceVariant),
             ),
-            const SizedBox(height: 8),
-            Text(
-              '日本語訳',
-              style: theme.textTheme.labelMedium?.copyWith(
-                color: colorScheme.onSurfaceVariant,
-                fontWeight: FontWeight.w800,
-              ),
-            ),
-            const SizedBox(height: 3),
-            Text(
-              pattern.exampleJa,
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-              style: theme.textTheme.bodyMedium
-                  ?.copyWith(color: colorScheme.onSurfaceVariant),
-            ),
             const SizedBox(height: 10),
-            Row(
-              children: [
-                if (isStudied)
-                  _StudiedLabel()
-                else
-                  FilledButton.tonalIcon(
-                    onPressed: () => recordGrammarStudy(ref, pattern),
-                    icon: const Icon(Icons.check_rounded, size: 18),
-                    label: const Text('Mark Studied'),
-                  ),
-                const Spacer(),
-                TextButton(
-                  onPressed: () {},
-                  child: const Text('View Details'),
-                ),
-              ],
-            ),
+            GrammarStudiedToggle(pattern: pattern),
           ],
+        ),
         ),
       ),
     );
@@ -319,21 +291,6 @@ class _Badge extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
       decoration: BoxDecoration(color: theme.colorScheme.primary, borderRadius: BorderRadius.circular(999)),
       child: Text(label, style: theme.textTheme.labelSmall?.copyWith(color: theme.colorScheme.onPrimary, fontWeight: FontWeight.w900)),
-    );
-  }
-}
-
-class _StudiedLabel extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Icon(Icons.check_circle_rounded, size: 20, color: Colors.green.shade700),
-        const SizedBox(width: 6),
-        Text('Studied', style: theme.textTheme.labelLarge?.copyWith(color: Colors.green.shade700, fontWeight: FontWeight.w900)),
-      ],
     );
   }
 }

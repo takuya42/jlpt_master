@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../features/auth/presentation/auth_page.dart';
 import '../../features/favorite/presentation/pages/favorite_page.dart';
+import '../../features/grammar/presentation/pages/grammar_detail_page.dart';
 import '../../features/grammar/presentation/pages/grammar_page.dart';
 import '../../features/home/presentation/pages/home_page.dart';
 import '../../features/learning/presentation/pages/learning_goal_page.dart';
@@ -38,6 +39,12 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           GoRoute(
             path: AppRoute.grammar.path,
             builder: (context, state) => const GrammarPage(),
+          ),
+          GoRoute(
+            path: AppRoute.grammarDetail.path,
+            builder: (context, state) => GrammarDetailPage(
+              grammarId: state.pathParameters['grammarId'] ?? '',
+            ),
           ),
           GoRoute(
             path: AppRoute.statistics.path,

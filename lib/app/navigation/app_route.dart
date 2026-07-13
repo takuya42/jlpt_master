@@ -6,6 +6,7 @@ enum AppRoute {
   vocabulary('/vocabulary', 'Vocabulary（単語）'),
   vocabularyDetail('/vocabulary/:wordId', 'Vocabulary Detail（単語詳細）'),
   grammar('/grammar', 'Grammar（文法）'),
+  grammarDetail('/grammar/:grammarId', 'Grammar Detail（文法詳細）'),
   statistics('/statistics', 'Statistics（学習記録）'),
   settings('/settings', 'Settings（設定）'),
   favorite('/favorite', 'Favorite（お気に入り）'),
@@ -18,4 +19,5 @@ enum AppRoute {
   final String label;
 
   static String vocabularyDetailPath(String wordId) => '/vocabulary/$wordId';
+  static String grammarDetailPath(String grammarId) => '/grammar/$grammarId';
 }
