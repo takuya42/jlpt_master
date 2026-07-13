@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:csv/csv.dart';
 import 'package:http/http.dart' as http;
 
 import '../domain/vocabulary_word.dart';
@@ -9,19 +10,18 @@ class GoogleSheetVocabularyRepository implements VocabularyRepository {
   GoogleSheetVocabularyRepository({
     http.Client? client,
     String? spreadsheetId,
-    String? apiKey,
+    Uri Function(String sheetName)? csvUriBuilder,
   })  : _client = client,
         _spreadsheetId = spreadsheetId ?? _defaultSpreadsheetId,
-        _apiKey = apiKey ?? _defaultApiKey;
+        _csvUriBuilder = csvUriBuilder;
 
   static const String _defaultSpreadsheetId =
       '1vl_IRVwh7FWgcT-C8fTQltTQWwx8ejRJG9HnCctW0BU';
-  static const String _defaultApiKey = 'AIzaSyBJUdsHFsKKcgpnJJH81Qks5dessKJIWQo';
   static const List<String> _jlptSheets = ['N5', 'N4', 'N3', 'N2', 'N1'];
 
   final http.Client? _client;
   final String _spreadsheetId;
-  final String _apiKey;
+  final Uri Function(String sheetName)? _csvUriBuilder;
 
   @override
   Future<List<VocabularyWord>> fetchWords({String? jlpt}) async {
@@ -45,7 +45,10 @@ class GoogleSheetVocabularyRepository implements VocabularyRepository {
   }
 
   @override
-  Future<VocabularyWord?> fetchRandomWord({String? excludeWordId, String? jlpt}) async {
+  Future<VocabularyWord?> fetchRandomWord({
+    String? excludeWordId,
+    String? jlpt,
+  }) async {
     final words = await fetchWords(jlpt: jlpt);
     if (words.isEmpty) {
       return null;
@@ -70,28 +73,32 @@ class GoogleSheetVocabularyRepository implements VocabularyRepository {
       );
     }
 
-    final uri = Uri.https(
-      'sheets.googleapis.com',
-      '/v4/spreadsheets/$_spreadsheetId/values/$sheetName',
-      {'key': _apiKey},
-    );
+    final uri = _csvUriBuilder?.call(sheetName) ?? _publishedCsvUri(sheetName);
     final client = _client;
     final response =
         client == null ? await http.get(uri) : await client.get(uri);
 
     if (response.statusCode < 200 || response.statusCode >= 300) {
       throw Exception(
-        'Failed to load vocabulary from Google Sheets API sheet=$sheetName. '
+        'Failed to load vocabulary CSV sheet=$sheetName. '
         'Status code: ${response.statusCode}',
       );
     }
 
-    final payload =
-        jsonDecode(utf8.decode(response.bodyBytes)) as Map<String, dynamic>;
-    final values = (payload['values'] as List<dynamic>? ?? const [])
-        .map((row) => (row as List<dynamic>).cast<dynamic>())
-        .toList(growable: false);
-    return _parseRows(values, fallbackJlpt: sheetName);
+    final csvText = utf8.decode(response.bodyBytes);
+    final rows = const CsvToListConverter().convert(csvText);
+    return _parseRows(rows, fallbackJlpt: sheetName);
+  }
+
+  Uri _publishedCsvUri(String sheetName) {
+    return Uri.https(
+      'docs.google.com',
+      '/spreadsheets/d/$_spreadsheetId/gviz/tq',
+      {
+        'tqx': 'out:csv',
+        'sheet': sheetName,
+      },
+    );
   }
 
   List<VocabularyWord> _parseRows(
@@ -149,7 +156,7 @@ class GoogleSheetVocabularyRepository implements VocabularyRepository {
     final value = record[columnName]?.trim() ?? '';
     if (value.isEmpty) {
       throw Exception(
-        'Vocabulary Google Sheets row is missing required "$columnName" value.',
+        'Vocabulary CSV row is missing required "$columnName" value.',
       );
     }
     return value;
