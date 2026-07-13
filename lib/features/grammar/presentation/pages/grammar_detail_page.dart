@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../app/navigation/app_route.dart';
+import '../../../notes/presentation/pages/notes_page.dart';
 import '../../domain/grammar_pattern.dart';
 import '../providers/grammar_providers.dart';
 import '../widgets/grammar_studied_toggle.dart';
@@ -98,6 +99,11 @@ class _GrammarDetailContent extends ConsumerWidget {
                             ],
                           ),
                         ),
+                        FilledButton.tonal(
+                          onPressed: () => showMemoBottomSheet(context),
+                          child: const Text('📝 Memo'),
+                        ),
+                        const SizedBox(width: 8),
                         IconButton.filledTonal(
                           tooltip: isFavorite ? 'Favorite / お気に入り解除' : 'Favorite / お気に入り追加',
                           onPressed: () => toggleGrammarFavorite(ref, pattern),

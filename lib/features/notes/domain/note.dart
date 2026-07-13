@@ -5,81 +5,46 @@ import 'package:flutter/foundation.dart';
 class Note {
   const Note({
     required this.id,
-    required this.type,
-    required this.itemId,
-    required this.title,
-    required this.jlptLevel,
     required this.memo,
+    required this.createdAt,
     required this.updatedAt,
   });
 
-  factory Note.empty({NoteType type = NoteType.vocabulary}) => Note(
-        id: '',
-        type: type,
-        itemId: '',
-        title: '',
-        jlptLevel: 'N5',
+  factory Note.empty({String id = defaultNoteId}) => Note(
+        id: id,
         memo: '',
+        createdAt: DateTime.now(),
         updatedAt: DateTime.now(),
       );
 
-  factory Note.fromSnapshot(QueryDocumentSnapshot<Map<String, dynamic>> snapshot) {
-    final data = snapshot.data();
+  factory Note.fromSnapshot(DocumentSnapshot<Map<String, dynamic>> snapshot) {
+    final data = snapshot.data() ?? const <String, dynamic>{};
     return Note(
-      id: snapshot.id,
-      type: NoteTypeX.fromValue(data['type'] as String?),
-      itemId: data['itemId'] as String? ?? '',
-      title: data['title'] as String? ?? '',
-      jlptLevel: data['jlptLevel'] as String? ?? 'N5',
+      id: data['id'] as String? ?? snapshot.id,
       memo: data['memo'] as String? ?? '',
+      createdAt: (data['createdAt'] as Timestamp?)?.toDate() ?? DateTime.fromMillisecondsSinceEpoch(0),
       updatedAt: (data['updatedAt'] as Timestamp?)?.toDate() ?? DateTime.fromMillisecondsSinceEpoch(0),
     );
   }
 
+  static const defaultNoteId = 'main';
+
   final String id;
-  final NoteType type;
-  final String itemId;
-  final String title;
-  final String jlptLevel;
   final String memo;
+  final DateTime createdAt;
   final DateTime updatedAt;
 
   Note copyWith({
     String? id,
-    NoteType? type,
-    String? itemId,
-    String? title,
-    String? jlptLevel,
     String? memo,
+    DateTime? createdAt,
     DateTime? updatedAt,
   }) {
     return Note(
       id: id ?? this.id,
-      type: type ?? this.type,
-      itemId: itemId ?? this.itemId,
-      title: title ?? this.title,
-      jlptLevel: jlptLevel ?? this.jlptLevel,
       memo: memo ?? this.memo,
+      createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
     );
   }
-}
-
-enum NoteType { vocabulary, grammar }
-
-extension NoteTypeX on NoteType {
-  String get value => switch (this) {
-        NoteType.vocabulary => 'vocabulary',
-        NoteType.grammar => 'grammar',
-      };
-
-  String get label => switch (this) {
-        NoteType.vocabulary => 'Vocabulary',
-        NoteType.grammar => 'Grammar',
-      };
-
-  static NoteType fromValue(String? value) => switch (value) {
-        'grammar' => NoteType.grammar,
-        _ => NoteType.vocabulary,
-      };
 }
