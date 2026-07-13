@@ -536,7 +536,23 @@ class _VocabularyQuizCard extends ConsumerWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  Text('📖 Vocabulary Quest', textAlign: TextAlign.center, style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w900, letterSpacing: 1.2, color: const Color(0xFF64748B))),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Icon(Icons.menu_book_rounded, size: 22, color: Color(0xFF64748B)),
+                      const SizedBox(width: 8),
+                      Text(
+                        'Vocabulary Quest',
+                        textAlign: TextAlign.center,
+                        style: theme.textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.w900,
+                          letterSpacing: 1.2,
+                          color: const Color(0xFF64748B),
+                        ),
+                      ),
+                    ],
+                  ),
                   const SizedBox(height: 10),
                   Text(
                     word.meaningEn.trim().isNotEmpty ? word.meaningEn.trim() : word.meaning,
