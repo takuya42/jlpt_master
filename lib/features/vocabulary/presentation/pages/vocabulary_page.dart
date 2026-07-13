@@ -214,11 +214,99 @@ class _LuxuryQuizBackground extends StatelessWidget {
           const Positioned(top: -110, left: -70, child: _BlurGlow(size: 250, color: Color(0x889F7AEA))),
           const Positioned(top: 120, right: -120, child: _BlurGlow(size: 320, color: Color(0x77F6AD55))),
           const Positioned(bottom: -130, left: 40, child: _BlurGlow(size: 300, color: Color(0x6686E7D4))),
+          const Positioned.fill(child: _GlobalLearningBackdrop()),
           BackdropFilter(filter: ImageFilter.blur(sigmaX: 18, sigmaY: 18), child: child),
         ],
       ),
     );
   }
+}
+
+
+class _GlobalLearningBackdrop extends StatelessWidget {
+  const _GlobalLearningBackdrop();
+
+  @override
+  Widget build(BuildContext context) => CustomPaint(painter: _GlobalLearningPainter());
+}
+
+class _GlobalLearningPainter extends CustomPainter {
+  @override
+  void paint(Canvas canvas, Size size) {
+    final ink = const Color(0xFF0F172A);
+    final gold = const Color(0xFFF59E0B);
+    final blue = const Color(0xFF2563EB);
+    final globeCenter = Offset(size.width * 0.72, size.height * 0.34);
+    final globeRadius = math.min(size.width, size.height) * 0.34;
+
+    final globePaint = Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1.2
+      ..color = blue.withOpacity(0.09);
+    canvas.drawCircle(globeCenter, globeRadius, globePaint);
+    for (final factor in const [-0.66, -0.34, 0.0, 0.34, 0.66]) {
+      canvas.drawOval(
+        Rect.fromCenter(center: globeCenter, width: globeRadius * 2, height: globeRadius * 2 * math.cos(factor.abs())),
+        globePaint..color = blue.withOpacity(0.055 + (1 - factor.abs()) * 0.035),
+      );
+      canvas.drawLine(
+        Offset(globeCenter.dx - globeRadius, globeCenter.dy + globeRadius * factor),
+        Offset(globeCenter.dx + globeRadius, globeCenter.dy + globeRadius * factor),
+        globePaint..color = ink.withOpacity(0.05),
+      );
+    }
+    for (final factor in const [-0.62, -0.28, 0.28, 0.62]) {
+      canvas.drawOval(
+        Rect.fromCenter(center: globeCenter, width: globeRadius * 2 * math.cos(factor.abs()), height: globeRadius * 2),
+        globePaint..color = blue.withOpacity(0.06),
+      );
+    }
+
+    final orbitPaint = Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1.4
+      ..strokeCap = StrokeCap.round
+      ..color = ink.withOpacity(0.08);
+    final orbit = Path()
+      ..moveTo(size.width * 0.08, size.height * 0.28)
+      ..cubicTo(size.width * 0.28, size.height * 0.08, size.width * 0.58, size.height * 0.22, size.width * 0.88, size.height * 0.12)
+      ..cubicTo(size.width * 0.72, size.height * 0.42, size.width * 0.38, size.height * 0.48, size.width * 0.16, size.height * 0.66);
+    _drawDashedPath(canvas, orbit, orbitPaint, dash: 10, gap: 9);
+
+    final planePoint = Offset(size.width * 0.58, size.height * 0.22);
+    canvas.save();
+    canvas.translate(planePoint.dx, planePoint.dy);
+    canvas.rotate(-0.35);
+    final planePainter = TextPainter(text: TextSpan(text: '✈', style: TextStyle(fontSize: 30, color: ink.withOpacity(0.1))), textDirection: TextDirection.ltr)..layout();
+    planePainter.paint(canvas, Offset.zero);
+    canvas.restore();
+
+    final glowPaint = Paint()..maskFilter = const MaskFilter.blur(BlurStyle.normal, 34);
+    canvas.drawCircle(Offset(size.width * 0.22, size.height * 0.18), 72, glowPaint..color = gold.withOpacity(0.09));
+    canvas.drawCircle(Offset(size.width * 0.78, size.height * 0.72), 96, glowPaint..color = blue.withOpacity(0.08));
+
+    final starPainter = TextPainter(textDirection: TextDirection.ltr);
+    for (var i = 0; i < 24; i++) {
+      final x = (math.sin(i * 12.989) * 43758.5453).abs() % 1 * size.width;
+      final y = (math.sin(i * 78.233) * 24634.6345).abs() % 1 * size.height;
+      starPainter.text = TextSpan(text: i % 3 == 0 ? '✦' : '•', style: TextStyle(fontSize: i % 3 == 0 ? 12 : 8, color: ink.withOpacity(i % 3 == 0 ? 0.09 : 0.07)));
+      starPainter.layout();
+      starPainter.paint(canvas, Offset(x, y));
+    }
+  }
+
+  void _drawDashedPath(Canvas canvas, Path path, Paint paint, {required double dash, required double gap}) {
+    for (final metric in path.computeMetrics()) {
+      var distance = 0.0;
+      while (distance < metric.length) {
+        canvas.drawPath(metric.extractPath(distance, math.min(distance + dash, metric.length)), paint);
+        distance += dash + gap;
+      }
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }
 
 class _BlurGlow extends StatelessWidget {
@@ -307,14 +395,14 @@ class _VocabularyCardStack extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final width = MediaQuery.sizeOf(context).width;
-    final cardHeight = width > 700 ? 570.0 : 540.0;
+    final cardHeight = width > 700 ? 560.0 : 532.0;
     return SizedBox(
-      height: cardHeight + 56,
+      height: cardHeight + 52,
       child: Stack(
         alignment: Alignment.center,
         clipBehavior: Clip.none,
         children: [
-          for (var i = 3; i >= 1; i--) _BackCard(index: i, liftProgress: (dragOffset.dx.abs() / 180).clamp(0, 1).toDouble()),
+          for (var i = 2; i >= 1; i--) _BackCard(index: i, height: cardHeight, liftProgress: (dragOffset.dx.abs() / 180).clamp(0, 1).toDouble()),
           AnimatedBuilder(
             animation: Listenable.merge([entranceController, resultController, shakeController, swipeController]),
             child: _VocabularyQuizCard(state: state, answerController: answerController, dragProgress: (dragOffset.dx.abs() / 180).clamp(0, 1).toDouble()),
@@ -353,24 +441,40 @@ class _VocabularyCardStack extends StatelessWidget {
 }
 
 class _BackCard extends StatelessWidget {
-  const _BackCard({required this.index, required this.liftProgress});
+  const _BackCard({required this.index, required this.height, required this.liftProgress});
   final int index;
+  final double height;
   final double liftProgress;
 
   @override
   Widget build(BuildContext context) {
+    final baseOffset = Offset(18.0 * index, 18.0 * index);
+    final promotedOffset = index == 1 ? Offset.zero : const Offset(18, 18);
+    final baseScale = index == 1 ? 0.97 : 0.94;
+    final promotedScale = index == 1 ? 1.0 : 0.97;
+    final t = Curves.easeOutCubic.transform(liftProgress);
+    final offset = Offset.lerp(baseOffset, promotedOffset, t)!;
+    final scale = lerpDouble(baseScale, promotedScale, t)!;
+    final opacity = lerpDouble(index == 1 ? 0.72 : 0.56, index == 1 ? 0.88 : 0.72, t)!;
     return Transform.translate(
-      offset: Offset(index.isOdd ? -10.0 * index : 10.0 * index, (20.0 * index) - (10 * liftProgress * (4 - index))),
-      child: Transform.rotate(
-        angle: (index.isOdd ? -1 : 1) * index * 0.018,
-        child: Transform.scale(
-          scale: 1 - index * 0.045 + liftProgress * 0.025 * (4 - index),
-          child: Opacity(
-            opacity: 0.72 - index * 0.12,
-            child: Container(
-              height: 510,
-              margin: const EdgeInsets.symmetric(horizontal: 14),
-              decoration: BoxDecoration(borderRadius: BorderRadius.circular(32), color: Colors.white, boxShadow: const [BoxShadow(color: Color(0x1F334155), blurRadius: 36, offset: Offset(0, 22))]),
+      offset: offset,
+      child: Transform.scale(
+        scale: scale,
+        child: Opacity(
+          opacity: opacity,
+          child: Container(
+            height: height,
+            margin: const EdgeInsets.symmetric(horizontal: 6),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(36),
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: index == 1
+                    ? const [Color(0xFFFBFDFF), Color(0xFFF7F0FF)]
+                    : const [Color(0xFFF8FAFC), Color(0xFFFFF6E8)],
+              ),
+              boxShadow: [BoxShadow(color: const Color(0xFF334155).withOpacity(index == 1 ? 0.12 : 0.08), blurRadius: index == 1 ? 30 : 22, offset: Offset(0, index == 1 ? 18 : 14))],
             ),
           ),
         ),
@@ -395,10 +499,10 @@ class _VocabularyQuizCard extends ConsumerWidget {
 
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 6),
-      constraints: const BoxConstraints(maxWidth: 620, minHeight: 520),
+      constraints: const BoxConstraints(maxWidth: 620, minHeight: 520, maxHeight: 560),
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(32),
-        gradient: const LinearGradient(begin: Alignment.topLeft, end: Alignment.bottomRight, colors: [Colors.white, Color(0xFFFFFCF8)]),
+        borderRadius: BorderRadius.circular(36),
+        gradient: LinearGradient(begin: Alignment.topLeft, end: Alignment.bottomRight, colors: [Colors.white.withOpacity(0.94), const Color(0xFFFFFCF8).withOpacity(0.82), const Color(0xFFF8FBFF).withOpacity(0.88)]),
         border: Border.all(color: Colors.white.withOpacity(0.9), width: 1.4),
         boxShadow: [
           BoxShadow(color: const Color(0x24334155).withOpacity(0.14 + dragProgress * 0.08), blurRadius: 44 + dragProgress * 18, offset: Offset(0, 28 + dragProgress * 8)),
@@ -406,26 +510,29 @@ class _VocabularyQuizCard extends ConsumerWidget {
         ],
       ),
       child: ClipRRect(
-        borderRadius: BorderRadius.circular(32),
+        borderRadius: BorderRadius.circular(36),
         child: Stack(
           children: [
-            Positioned(top: -60, right: -80, child: Container(width: 180, height: 180, decoration: BoxDecoration(shape: BoxShape.circle, color: const Color(0xFFFFF1D6).withOpacity(0.8)))),
-            Positioned(top: 0, left: 0, right: 0, height: 120, child: DecoratedBox(decoration: BoxDecoration(gradient: LinearGradient(colors: [Colors.white.withOpacity(0.9), Colors.white.withOpacity(0)])))),
+            Positioned(top: -36, right: -46, child: Container(width: 128, height: 128, decoration: BoxDecoration(shape: BoxShape.circle, color: const Color(0xFFFFF1D6).withOpacity(0.8)))),
+            Positioned(top: 0, left: 0, right: 0, height: 108, child: DecoratedBox(decoration: BoxDecoration(gradient: LinearGradient(colors: [Colors.white.withOpacity(0.9), Colors.white.withOpacity(0)])))),
             Padding(
-              padding: const EdgeInsets.fromLTRB(28, 28, 28, 26),
+              padding: const EdgeInsets.fromLTRB(28, 24, 28, 24),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  Text('Vocabulary Quest', textAlign: TextAlign.center, style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w900, letterSpacing: 1.2, color: const Color(0xFF64748B))),
-                  const SizedBox(height: 30),
-                  Hero(tag: 'vocabulary-${word.id}', child: Material(color: Colors.transparent, child: Text(word.word, textAlign: TextAlign.center, style: theme.textTheme.displayMedium?.copyWith(fontWeight: FontWeight.w900, color: const Color(0xFF0F172A), letterSpacing: -1.4)))),
+                  Text('✨ Vocabulary Quest', textAlign: TextAlign.center, style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w900, letterSpacing: 1.2, color: const Color(0xFF64748B))),
+                  const SizedBox(height: 24),
+                  Hero(tag: 'vocabulary-${word.id}', child: Material(color: Colors.transparent, child: Text(word.word, textAlign: TextAlign.center, style: theme.textTheme.displayMedium?.copyWith(fontSize: 64, fontWeight: FontWeight.w900, color: const Color(0xFF0F172A), letterSpacing: -1.4)))),
                   if (word.reading.isNotEmpty) ...[
                     const SizedBox(height: 8),
-                    Text(word.reading, textAlign: TextAlign.center, style: theme.textTheme.titleLarge?.copyWith(color: colorScheme.onSurfaceVariant, fontWeight: FontWeight.w700)),
+                    Text(word.reading, textAlign: TextAlign.center, style: theme.textTheme.titleLarge?.copyWith(fontSize: 26, color: colorScheme.onSurfaceVariant, fontWeight: FontWeight.w700)),
                   ],
                   const Spacer(),
-                  _GlassTextField(controller: answerController, enabled: !isAnswered, onChanged: (value) => ref.read(vocabularyQuizProvider.notifier).updateAnswer(value), onSubmitted: (_) { if (!isAnswered) ref.read(vocabularyQuizProvider.notifier).checkAnswer(); }),
-                  const SizedBox(height: 18),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 28),
+                    child: _GlassTextField(controller: answerController, enabled: !isAnswered, onChanged: (value) => ref.read(vocabularyQuizProvider.notifier).updateAnswer(value), onSubmitted: (_) { if (!isAnswered) ref.read(vocabularyQuizProvider.notifier).checkAnswer(); }),
+                  ),
+                  const SizedBox(height: 16),
                   PageTransitionSwitcher(
                     duration: const Duration(milliseconds: 360),
                     reverse: !isAnswered,
@@ -529,7 +636,7 @@ class _PressScaleButtonState extends State<_PressScaleButton> {
   @override
   Widget build(BuildContext context) {
     return AnimatedScale(
-      scale: _pressed ? 0.96 : 1,
+      scale: _pressed ? 0.965 : 1,
       duration: const Duration(milliseconds: 110),
       curve: Curves.easeOut,
       child: GestureDetector(
@@ -539,9 +646,12 @@ class _PressScaleButtonState extends State<_PressScaleButton> {
         child: AnimatedOpacity(
           opacity: widget.enabled ? 1 : 0.45,
           duration: const Duration(milliseconds: 180),
-          child: Container(
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 130),
+            curve: Curves.easeOutCubic,
             height: 58,
-            decoration: BoxDecoration(borderRadius: BorderRadius.circular(22), gradient: const LinearGradient(colors: [Color(0xFF111827), Color(0xFF334155)]), boxShadow: const [BoxShadow(color: Color(0x44111827), blurRadius: 22, offset: Offset(0, 12))]),
+            transform: Matrix4.translationValues(0, _pressed ? 3 : 0, 0),
+            decoration: BoxDecoration(borderRadius: BorderRadius.circular(22), gradient: const LinearGradient(begin: Alignment.topLeft, end: Alignment.bottomRight, colors: [Color(0xFF111827), Color(0xFF334155), Color(0xFF7C3AED)]), boxShadow: [BoxShadow(color: const Color(0xFF111827).withOpacity(_pressed ? 0.18 : 0.32), blurRadius: _pressed ? 10 : 24, offset: Offset(0, _pressed ? 5 : 14))]),
             child: Row(mainAxisAlignment: MainAxisAlignment.center, children: [Icon(widget.icon, color: Colors.white), const SizedBox(width: 10), Text(widget.label, style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w900))]),
           ),
         ),
