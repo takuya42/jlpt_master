@@ -56,8 +56,15 @@ class _VocabularyPageState extends ConsumerState<VocabularyPage> with TickerProv
   @override
   Widget build(BuildContext context) {
     ref.listen(vocabularyQuizProvider, (previous, next) {
-      final previousState = previous?.valueOrNull;
-      final nextState = next.valueOrNull;
+      VocabularyQuizState? previousState;
+      if (previous != null && previous.hasValue) {
+        previousState = previous.value;
+      }
+
+      VocabularyQuizState? nextState;
+      if (next.hasValue) {
+        nextState = next.value;
+      }
       if (previousState?.word?.id != nextState?.word?.id) {
         _answerController.clear();
         _resultController.reset();
