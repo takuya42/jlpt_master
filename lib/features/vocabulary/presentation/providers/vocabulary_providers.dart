@@ -7,6 +7,7 @@ import '../../../../features/learning/presentation/providers/learning_providers.
 import '../../domain/vocabulary_word.dart';
 
 const jlptLevels = ['N5', 'N4', 'N3', 'N2', 'N1'];
+const vocabularyJlptLevels = ['All', ...jlptLevels];
 
 class VocabularyQuizState {
   const VocabularyQuizState({this.word, this.answer = '', this.isCorrect});
@@ -31,7 +32,10 @@ final vocabularyQuizProvider = AsyncNotifierProvider<VocabularyQuizNotifier, Voc
 class VocabularyQuizNotifier extends AsyncNotifier<VocabularyQuizState> {
   @override
   Future<VocabularyQuizState> build() async {
-    final word = await ref.watch(vocabularyRepositoryProvider).fetchRandomWord();
+    final selectedLevel = ref.watch(selectedVocabularyJlptProvider);
+    final word = await ref
+        .watch(vocabularyRepositoryProvider)
+        .fetchRandomWord(jlpt: selectedLevel == 'All' ? null : selectedLevel);
     return VocabularyQuizState(word: word);
   }
 
@@ -68,9 +72,11 @@ class VocabularyQuizNotifier extends AsyncNotifier<VocabularyQuizState> {
     final previousWordId = state.hasValue ? state.value?.word?.id : null;
     state = const AsyncLoading();
     state = await AsyncValue.guard(() async {
-      final word = await ref
-          .read(vocabularyRepositoryProvider)
-          .fetchRandomWord(excludeWordId: previousWordId);
+      final selectedLevel = ref.read(selectedVocabularyJlptProvider);
+      final word = await ref.read(vocabularyRepositoryProvider).fetchRandomWord(
+            excludeWordId: previousWordId,
+            jlpt: selectedLevel == 'All' ? null : selectedLevel,
+          );
       return VocabularyQuizState(word: word);
     });
   }
@@ -120,6 +126,22 @@ class SelectedJlptLevelNotifier extends Notifier<String> {
 
   void selectLevel(String level) {
     if (jlptLevels.contains(level)) {
+      state = level;
+    }
+  }
+}
+
+
+final selectedVocabularyJlptProvider = NotifierProvider<SelectedVocabularyJlptNotifier, String>(
+  SelectedVocabularyJlptNotifier.new,
+);
+
+class SelectedVocabularyJlptNotifier extends Notifier<String> {
+  @override
+  String build() => 'N5';
+
+  void selectLevel(String level) {
+    if (vocabularyJlptLevels.contains(level)) {
       state = level;
     }
   }

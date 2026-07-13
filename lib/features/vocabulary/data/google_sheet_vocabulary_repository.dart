@@ -51,17 +51,16 @@ class GoogleSheetVocabularyRepository implements VocabularyRepository {
   }
 
   @override
-  Future<VocabularyWord?> fetchRandomWord({String? excludeWordId}) async {
+  Future<VocabularyWord?> fetchRandomWord({String? excludeWordId, String? jlpt}) async {
     final words = await fetchWords();
     if (words.isEmpty) {
       return null;
     }
 
-    final pool = excludeWordId == null
-        ? words
-        : words
-            .where((word) => word.id != excludeWordId)
-            .toList(growable: false);
+    final pool = words
+        .where((word) => jlpt == null || word.jlptLevel == jlpt)
+        .where((word) => excludeWordId == null || word.id != excludeWordId)
+        .toList(growable: false);
     if (pool.isEmpty) {
       return null;
     }
