@@ -9,7 +9,7 @@ import '../../features/home/presentation/pages/home_page.dart';
 import '../../features/learning/presentation/pages/learning_goal_page.dart';
 import '../../features/premium/presentation/pages/premium_page.dart';
 import '../../features/settings/presentation/pages/settings_page.dart';
-import '../../features/statistics/presentation/statistics_page.dart';
+import '../../features/notes/presentation/pages/notes_page.dart';
 import '../../features/shell/presentation/main_shell.dart';
 import '../../features/vocabulary/presentation/pages/vocabulary_detail_page.dart';
 import '../../features/vocabulary/presentation/pages/vocabulary_page.dart';
@@ -47,8 +47,8 @@ final appRouterProvider = Provider<GoRouter>((ref) {
             ),
           ),
           GoRoute(
-            path: AppRoute.statistics.path,
-            builder: (context, state) => const StatisticsPage(),
+            path: AppRoute.notes.path,
+            builder: (context, state) => const NotesPage(),
           ),
           GoRoute(
             path: AppRoute.settings.path,

@@ -28,7 +28,7 @@ final learningQuestionTotalsProvider = FutureProvider<Map<String, int>>((ref) as
   return totals;
 });
 
-final statisticsProvider = StreamProvider<LearningStatistics>((ref) {
+final learningStatisticsProvider = StreamProvider<LearningStatistics>((ref) {
   ref.watch(authStateProvider);
   final totals = ref.watch(learningQuestionTotalsProvider).asData?.value;
   if (totals == null) {
@@ -36,7 +36,7 @@ final statisticsProvider = StreamProvider<LearningStatistics>((ref) {
   }
   return ref.watch(userLearningRepositoryProvider).watchStatistics(totalQuestionsByLevel: totals);
 });
-final studyProgressProvider = statisticsProvider;
+final studyProgressProvider = learningStatisticsProvider;
 
 final favoriteEntriesProvider = StreamProvider<List<FavoriteEntry>>((ref) {
   ref.watch(authStateProvider);
