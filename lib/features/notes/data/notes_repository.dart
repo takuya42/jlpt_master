@@ -17,32 +17,27 @@ class NotesRepository {
     return _firestore.collection('users').doc(uid).collection('notes');
   }
 
-  Stream<List<Note>> watchNotes() {
+  Stream<Note> watchNote({String noteId = Note.defaultNoteId}) {
     final ref = _notesRef;
-    if (ref == null) return Stream.value(const <Note>[]);
-    return ref.orderBy('updatedAt', descending: true).snapshots().map(
-          (snapshot) => snapshot.docs.map(Note.fromSnapshot).toList(growable: false),
-        );
+    if (ref == null) return Stream.value(Note.empty(id: noteId));
+    return ref.doc(noteId).snapshots().map((snapshot) {
+      if (!snapshot.exists) return Note.empty(id: noteId);
+      return Note.fromSnapshot(snapshot);
+    });
   }
 
-  Future<void> saveNote(Note note) async {
+  Future<void> saveMemo(String memo, {String noteId = Note.defaultNoteId}) async {
     final ref = _notesRef;
     if (ref == null) return;
-    final doc = note.id.isEmpty ? ref.doc() : ref.doc(note.id);
-    await doc.set({
-      'id': doc.id,
-      'type': note.type.value,
-      'itemId': note.itemId.trim().isEmpty ? doc.id : note.itemId.trim(),
-      'title': note.title.trim(),
-      'jlptLevel': note.jlptLevel,
-      'memo': note.memo.trim(),
-      'updatedAt': FieldValue.serverTimestamp(),
-    }, SetOptions(merge: true));
-  }
-
-  Future<void> deleteNote(String noteId) async {
-    final ref = _notesRef;
-    if (ref == null || noteId.isEmpty) return;
-    await ref.doc(noteId).delete();
+    final doc = ref.doc(noteId);
+    await _firestore.runTransaction((transaction) async {
+      final snapshot = await transaction.get(doc);
+      transaction.set(doc, {
+        'id': doc.id,
+        'memo': memo,
+        if (!snapshot.exists) 'createdAt': FieldValue.serverTimestamp(),
+        'updatedAt': FieldValue.serverTimestamp(),
+      }, SetOptions(merge: true));
+    });
   }
 }

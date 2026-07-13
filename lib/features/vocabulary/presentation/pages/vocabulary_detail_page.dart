@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../domain/vocabulary_word.dart';
+import '../../../notes/presentation/pages/notes_page.dart';
 import '../providers/vocabulary_providers.dart';
 
 class VocabularyDetailPage extends ConsumerWidget {
@@ -79,6 +80,11 @@ class _VocabularyDetailContent extends ConsumerWidget {
                             ],
                           ),
                         ),
+                        FilledButton.tonal(
+                          onPressed: () => showMemoBottomSheet(context),
+                          child: const Text('📝 Memo'),
+                        ),
+                        const SizedBox(width: 8),
                         IconButton.filledTonal(
                           tooltip: word.isFavorite ? 'Favorite / お気に入り解除' : 'Favorite / お気に入り追加',
                           onPressed: () => toggleFavorite(ref, word),
