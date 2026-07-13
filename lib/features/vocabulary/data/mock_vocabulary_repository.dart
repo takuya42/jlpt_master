@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import '../domain/vocabulary_word.dart';
 import 'vocabulary_repository.dart';
 
@@ -124,5 +126,22 @@ class MockVocabularyRepository implements VocabularyRepository {
       if (word.id == id) return word;
     }
     return null;
+  }
+
+  @override
+  Future<VocabularyWord?> fetchRandomWord({
+    String? excludeWordId,
+    String? jlpt,
+  }) async {
+    final pool = _words
+        .where((word) => excludeWordId == null || word.id != excludeWordId)
+        .where((word) => jlpt == null || word.jlptLevel == jlpt)
+        .toList(growable: false);
+
+    if (pool.isEmpty) {
+      return null;
+    }
+
+    return pool[Random().nextInt(pool.length)];
   }
 }
