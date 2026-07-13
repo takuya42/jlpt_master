@@ -10,40 +10,47 @@ class FirestoreVocabularyRepository implements VocabularyRepository {
       : _firestore = firestore ?? FirebaseFirestore.instance,
         _random = random ?? Random();
 
+  static const _collectionNames = ['Vocabulary', 'vocabulary'];
+
   final FirebaseFirestore _firestore;
   final Random _random;
 
-  CollectionReference<Map<String, dynamic>> get _collection => _firestore.collection('Vocabulary');
+  CollectionReference<Map<String, dynamic>> _collection(String name) => _firestore.collection(name);
 
   @override
   Future<List<VocabularyWord>> fetchWords() async {
-    final snapshot = await _collection.get();
-    return snapshot.docs.map(_wordFromSnapshot).toList(growable: false);
+    for (final collectionName in _collectionNames) {
+      final snapshot = await _collection(collectionName).get();
+      if (snapshot.docs.isNotEmpty) {
+        return snapshot.docs.map(_wordFromSnapshot).toList(growable: false);
+      }
+    }
+    return const [];
   }
 
   @override
   Future<VocabularyWord?> fetchWordById(String id) async {
-    final snapshot = await _collection.doc(id).get();
-    if (!snapshot.exists) {
-      return null;
+    for (final collectionName in _collectionNames) {
+      final snapshot = await _collection(collectionName).doc(id).get();
+      if (snapshot.exists) {
+        return _wordFromSnapshot(snapshot);
+      }
     }
-    return _wordFromSnapshot(snapshot);
+    return null;
   }
 
   @override
   Future<VocabularyWord?> fetchRandomWord({String? excludeWordId, String? jlpt}) async {
-    final query = jlpt == null ? _collection : _collection.where('jlpt', isEqualTo: jlpt);
-    final snapshot = await query.get();
-    final words = snapshot.docs.map(_wordFromSnapshot).toList(growable: false);
+    final words = await fetchWords();
     if (words.isEmpty) {
       return null;
     }
 
-    final pool = excludeWordId == null
-        ? words
-        : words
-            .where((word) => word.id != excludeWordId)
-            .toList(growable: false);
+    final normalizedJlpt = _normalizeJlpt(jlpt);
+    final pool = words
+        .where((word) => normalizedJlpt == null || word.jlptLevel == normalizedJlpt)
+        .where((word) => excludeWordId == null || word.id != excludeWordId)
+        .toList(growable: false);
     if (pool.isEmpty) {
       return null;
     }
@@ -54,14 +61,14 @@ class FirestoreVocabularyRepository implements VocabularyRepository {
     final data = snapshot.data() ?? const <String, dynamic>{};
     return VocabularyWord(
       id: (data['id'] as String?)?.trim().isNotEmpty == true ? (data['id'] as String).trim() : snapshot.id,
-      word: _stringValue(data, ['word', 'japanese', 'meaning_ja']),
-      reading: _stringValue(data, ['reading', 'kana'], required: false),
-      meaning: _stringValue(data, ['meaning_en', 'meaning', 'english']),
-      partOfSpeech: _stringValue(data, ['part_of_speech', 'partOfSpeech'], required: false),
-      jlptLevel: _stringValue(data, ['jlpt', 'jlptLevel'], required: false).toUpperCase(),
+      word: _stringValue(data, ['word', 'japanese', 'meaning_ja', 'vocabulary']),
+      reading: _stringValue(data, ['reading', 'kana', 'hiragana'], required: false),
+      meaning: _stringValue(data, ['meaning_en', 'meaning', 'english', 'translation']),
+      partOfSpeech: _stringValue(data, ['part_of_speech', 'partOfSpeech', 'pos'], required: false),
+      jlptLevel: _normalizeJlpt(_stringValue(data, ['jlpt', 'jlptLevel', 'level', 'JLPT_Level'], required: false)) ?? '',
       isFavorite: false,
-      exampleSentence: _stringValue(data, ['example_jp', 'exampleSentence'], required: false),
-      exampleMeaning: _stringValue(data, ['example_en', 'exampleMeaning'], required: false),
+      exampleSentence: _stringValue(data, ['example_jp', 'exampleSentence', 'example'], required: false),
+      exampleMeaning: _stringValue(data, ['example_en', 'exampleMeaning', 'example_translation'], required: false),
     );
   }
 
@@ -78,5 +85,13 @@ class FirestoreVocabularyRepository implements VocabularyRepository {
     throw Exception(
       'Vocabulary document is missing required "${keys.first}" value.',
     );
+  }
+
+  String? _normalizeJlpt(String? value) {
+    final normalized = value?.trim().toUpperCase().replaceFirst(RegExp(r'^JLPT[-_\s]*'), '') ?? '';
+    if (normalized.isEmpty) {
+      return null;
+    }
+    return normalized.startsWith('N') ? normalized : 'N$normalized';
   }
 }

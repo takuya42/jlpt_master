@@ -138,7 +138,7 @@ final selectedVocabularyJlptProvider = NotifierProvider<SelectedVocabularyJlptNo
 
 class SelectedVocabularyJlptNotifier extends Notifier<String> {
   @override
-  String build() => 'N5';
+  String build() => 'All';
 
   void selectLevel(String level) {
     if (vocabularyJlptLevels.contains(level)) {
@@ -153,14 +153,14 @@ final favoriteVocabularyIdsProvider = StreamProvider<Set<String>>((ref) {
 });
 
 final filteredVocabularyWordsProvider = Provider<AsyncValue<List<VocabularyWord>>>((ref) {
-  final selectedLevel = ref.watch(selectedJlptLevelProvider);
+  final selectedLevel = ref.watch(selectedVocabularyJlptProvider);
   final query = ref.watch(vocabularySearchQueryProvider).trim().toLowerCase();
   final favoriteIds = ref.watch(favoriteVocabularyIdsProvider).asData?.value ?? <String>{};
   final words = ref.watch(vocabularyWordsProvider);
 
   return words.whenData((items) {
     return items
-        .where((word) => word.jlptLevel == selectedLevel)
+        .where((word) => selectedLevel == 'All' || word.jlptLevel == selectedLevel)
         .where((word) {
           if (query.isEmpty) {
             return true;
