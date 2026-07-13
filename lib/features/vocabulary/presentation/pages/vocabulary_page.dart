@@ -3,6 +3,8 @@ import 'dart:ui';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:animations/animations.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../shared/presentation/widgets/app_state_views.dart';
@@ -22,6 +24,10 @@ class _VocabularyPageState extends ConsumerState<VocabularyPage> with TickerProv
   late final AnimationController _resultController;
   late final AnimationController _shakeController;
   late final AnimationController _confettiController;
+  late final AnimationController _swipeController;
+  Offset _dragOffset = Offset.zero;
+  bool _isSwipingAway = false;
+  Animation<Offset>? _settleAnimation;
 
   @override
   void initState() {
@@ -30,6 +36,13 @@ class _VocabularyPageState extends ConsumerState<VocabularyPage> with TickerProv
     _resultController = AnimationController(vsync: this, duration: const Duration(milliseconds: 780));
     _shakeController = AnimationController(vsync: this, duration: const Duration(milliseconds: 520));
     _confettiController = AnimationController(vsync: this, duration: const Duration(milliseconds: 900));
+    _swipeController = AnimationController(vsync: this, duration: const Duration(milliseconds: 460))
+      ..addListener(() {
+        final animation = _settleAnimation;
+        if (animation != null && mounted) {
+          setState(() => _dragOffset = animation.value);
+        }
+      });
   }
 
   @override
@@ -39,6 +52,7 @@ class _VocabularyPageState extends ConsumerState<VocabularyPage> with TickerProv
     _resultController.dispose();
     _shakeController.dispose();
     _confettiController.dispose();
+    _swipeController.dispose();
     super.dispose();
   }
 
@@ -50,6 +64,43 @@ class _VocabularyPageState extends ConsumerState<VocabularyPage> with TickerProv
     } else {
       HapticFeedback.heavyImpact();
       _shakeController.forward(from: 0);
+    }
+  }
+
+  void _handleCardDragStart(DragStartDetails details) {
+    final state = ref.read(vocabularyQuizProvider).valueOrNull;
+    if (state?.isCorrect == null || _isSwipingAway) return;
+    _swipeController.stop();
+  }
+
+  void _handleCardDragUpdate(DragUpdateDetails details) {
+    final state = ref.read(vocabularyQuizProvider).valueOrNull;
+    if (state?.isCorrect == null || _isSwipingAway) return;
+    setState(() => _dragOffset += details.delta);
+  }
+
+  void _handleCardDragEnd(DragEndDetails details) {
+    final state = ref.read(vocabularyQuizProvider).valueOrNull;
+    if (state?.isCorrect == null || _isSwipingAway) return;
+
+    final width = MediaQuery.sizeOf(context).width;
+    final velocityX = details.velocity.pixelsPerSecond.dx;
+    final shouldAdvance = _dragOffset.dx.abs() > width * 0.18 || velocityX.abs() > 640;
+
+    if (shouldAdvance) {
+      final direction = (_dragOffset.dx == 0 ? velocityX : _dragOffset.dx).sign == 0 ? 1.0 : (_dragOffset.dx == 0 ? velocityX : _dragOffset.dx).sign;
+      final begin = _dragOffset;
+      final end = Offset(direction * (width + 260), _dragOffset.dy + details.velocity.pixelsPerSecond.dy.clamp(-360.0, 360.0) * 0.18);
+      _settleAnimation = Tween<Offset>(begin: begin, end: end).chain(CurveTween(curve: Curves.easeOutCubic)).animate(_swipeController);
+      _isSwipingAway = true;
+      _swipeController.forward(from: 0).whenComplete(() {
+        if (!mounted) return;
+        HapticFeedback.lightImpact();
+        ref.read(vocabularyQuizProvider.notifier).nextQuestion();
+      });
+    } else {
+      _settleAnimation = Tween<Offset>(begin: _dragOffset, end: Offset.zero).chain(CurveTween(curve: Curves.easeOutBack)).animate(_swipeController);
+      _swipeController.forward(from: 0);
     }
   }
 
@@ -70,6 +121,10 @@ class _VocabularyPageState extends ConsumerState<VocabularyPage> with TickerProv
         _resultController.reset();
         _shakeController.reset();
         _cardEntranceController.forward(from: 0);
+        _settleAnimation = null;
+        _swipeController.reset();
+        _dragOffset = Offset.zero;
+        _isSwipingAway = false;
       }
       final wasUnanswered = previousState?.isCorrect == null;
       final isAnswered = nextState?.isCorrect != null;
@@ -113,6 +168,11 @@ class _VocabularyPageState extends ConsumerState<VocabularyPage> with TickerProv
                               resultController: _resultController,
                               shakeController: _shakeController,
                               confettiController: _confettiController,
+                              swipeController: _swipeController,
+                              dragOffset: _dragOffset,
+                              onDragStart: _handleCardDragStart,
+                              onDragUpdate: _handleCardDragUpdate,
+                              onDragEnd: _handleCardDragEnd,
                             ),
                       error: (error, stackTrace) => AppErrorView(
                         title: 'Could not load Vocabulary Quiz / 単語クイズを読み込めません',
@@ -215,7 +275,19 @@ class _VocabularyLevelFilters extends ConsumerWidget {
 }
 
 class _VocabularyCardStack extends StatelessWidget {
-  const _VocabularyCardStack({required this.state, required this.answerController, required this.entranceController, required this.resultController, required this.shakeController, required this.confettiController});
+  const _VocabularyCardStack({
+    required this.state,
+    required this.answerController,
+    required this.entranceController,
+    required this.resultController,
+    required this.shakeController,
+    required this.confettiController,
+    required this.swipeController,
+    required this.dragOffset,
+    required this.onDragStart,
+    required this.onDragUpdate,
+    required this.onDragEnd,
+  });
 
   final VocabularyQuizState state;
   final TextEditingController answerController;
@@ -223,6 +295,11 @@ class _VocabularyCardStack extends StatelessWidget {
   final AnimationController resultController;
   final AnimationController shakeController;
   final AnimationController confettiController;
+  final AnimationController swipeController;
+  final Offset dragOffset;
+  final GestureDragStartCallback onDragStart;
+  final GestureDragUpdateCallback onDragUpdate;
+  final GestureDragEndCallback onDragEnd;
 
   @override
   Widget build(BuildContext context) {
@@ -234,18 +311,33 @@ class _VocabularyCardStack extends StatelessWidget {
         alignment: Alignment.center,
         clipBehavior: Clip.none,
         children: [
-          for (var i = 3; i >= 1; i--) _BackCard(index: i),
+          for (var i = 3; i >= 1; i--) _BackCard(index: i, liftProgress: (dragOffset.dx.abs() / 180).clamp(0, 1).toDouble()),
           AnimatedBuilder(
-            animation: Listenable.merge([entranceController, resultController, shakeController]),
-            child: _VocabularyQuizCard(state: state, answerController: answerController),
+            animation: Listenable.merge([entranceController, resultController, shakeController, swipeController]),
+            child: _VocabularyQuizCard(state: state, answerController: answerController, dragProgress: (dragOffset.dx.abs() / 180).clamp(0, 1).toDouble()),
             builder: (context, child) {
               final entrance = Curves.easeOutBack.transform(entranceController.value);
               final pop = math.sin(resultController.value * math.pi) * 0.045;
               final lift = state.isCorrect == true ? -18.0 * Curves.easeOutCubic.transform(resultController.value) : 0.0;
               final shake = state.isCorrect == false ? math.sin(shakeController.value * math.pi * 8) * 10 * (1 - shakeController.value) : 0.0;
-              return Transform.translate(
-                offset: Offset(44 * (1 - entrance) + shake, 34 * (1 - entrance) + lift),
-                child: Transform.scale(scale: 0.9 + 0.1 * entrance + pop, child: Opacity(opacity: entrance.clamp(0, 1).toDouble(), child: child)),
+              final dragProgress = (dragOffset.dx.abs() / 180).clamp(0, 1).toDouble();
+              final rotation = (dragOffset.dx / math.max(width, 1) * 0.28).clamp(-0.14, 0.14);
+              final card = Opacity(
+                opacity: entrance.clamp(0, 1).toDouble(),
+                child: Transform.translate(
+                  offset: Offset(44 * (1 - entrance) + shake, 34 * (1 - entrance) + lift) + dragOffset,
+                  child: Transform.rotate(
+                    angle: rotation,
+                    child: Transform.scale(scale: 0.9 + 0.1 * entrance + pop - dragProgress * 0.015, child: child),
+                  ),
+                ),
+              );
+              return GestureDetector(
+                behavior: HitTestBehavior.translucent,
+                onHorizontalDragStart: state.isCorrect != null ? onDragStart : null,
+                onHorizontalDragUpdate: state.isCorrect != null ? onDragUpdate : null,
+                onHorizontalDragEnd: state.isCorrect != null ? onDragEnd : null,
+                child: card,
               );
             },
           ),
@@ -258,17 +350,18 @@ class _VocabularyCardStack extends StatelessWidget {
 }
 
 class _BackCard extends StatelessWidget {
-  const _BackCard({required this.index});
+  const _BackCard({required this.index, required this.liftProgress});
   final int index;
+  final double liftProgress;
 
   @override
   Widget build(BuildContext context) {
     return Transform.translate(
-      offset: Offset(index.isOdd ? -10.0 * index : 10.0 * index, 20.0 * index),
+      offset: Offset(index.isOdd ? -10.0 * index : 10.0 * index, (20.0 * index) - (10 * liftProgress * (4 - index))),
       child: Transform.rotate(
         angle: (index.isOdd ? -1 : 1) * index * 0.018,
         child: Transform.scale(
-          scale: 1 - index * 0.045,
+          scale: 1 - index * 0.045 + liftProgress * 0.025 * (4 - index),
           child: Opacity(
             opacity: 0.72 - index * 0.12,
             child: Container(
@@ -284,10 +377,11 @@ class _BackCard extends StatelessWidget {
 }
 
 class _VocabularyQuizCard extends ConsumerWidget {
-  const _VocabularyQuizCard({required this.state, required this.answerController});
+  const _VocabularyQuizCard({required this.state, required this.answerController, required this.dragProgress});
 
   final VocabularyQuizState state;
   final TextEditingController answerController;
+  final double dragProgress;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -303,7 +397,10 @@ class _VocabularyQuizCard extends ConsumerWidget {
         borderRadius: BorderRadius.circular(32),
         gradient: const LinearGradient(begin: Alignment.topLeft, end: Alignment.bottomRight, colors: [Colors.white, Color(0xFFFFFCF8)]),
         border: Border.all(color: Colors.white.withOpacity(0.9), width: 1.4),
-        boxShadow: const [BoxShadow(color: Color(0x24334155), blurRadius: 44, offset: Offset(0, 28)), BoxShadow(color: Color(0x18FFFFFF), blurRadius: 8, offset: Offset(-4, -4))],
+        boxShadow: [
+          BoxShadow(color: const Color(0x24334155).withOpacity(0.14 + dragProgress * 0.08), blurRadius: 44 + dragProgress * 18, offset: Offset(0, 28 + dragProgress * 8)),
+          const BoxShadow(color: Color(0x18FFFFFF), blurRadius: 8, offset: Offset(-4, -4)),
+        ],
       ),
       child: ClipRRect(
         borderRadius: BorderRadius.circular(32),
@@ -326,8 +423,10 @@ class _VocabularyQuizCard extends ConsumerWidget {
                   const Spacer(),
                   _GlassTextField(controller: answerController, enabled: !isAnswered, onChanged: (value) => ref.read(vocabularyQuizProvider.notifier).updateAnswer(value), onSubmitted: (_) { if (!isAnswered) ref.read(vocabularyQuizProvider.notifier).checkAnswer(); }),
                   const SizedBox(height: 18),
-                  AnimatedSwitcher(
+                  PageTransitionSwitcher(
                     duration: const Duration(milliseconds: 360),
+                    reverse: !isAnswered,
+                    transitionBuilder: (child, animation, secondaryAnimation) => FadeScaleTransition(animation: animation, child: child),
                     child: !isAnswered
                         ? _PressScaleButton(key: const ValueKey('check'), enabled: state.answer.trim().isNotEmpty, label: 'Check Answer', icon: Icons.auto_awesome, onPressed: () => ref.read(vocabularyQuizProvider.notifier).checkAnswer())
                         : Column(
@@ -339,7 +438,7 @@ class _VocabularyQuizCard extends ConsumerWidget {
                               const SizedBox(height: 4),
                               Text(word.meaning, textAlign: TextAlign.center, style: theme.textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.w900)),
                               const SizedBox(height: 18),
-                              _PressScaleButton(label: 'Next Quest', icon: Icons.arrow_forward_rounded, onPressed: () => ref.read(vocabularyQuizProvider.notifier).nextQuestion()),
+                              const _SwipeForNextHint(),
                             ],
                           ),
                   ),
@@ -349,6 +448,45 @@ class _VocabularyQuizCard extends ConsumerWidget {
           ],
         ),
       ),
+    );
+  }
+}
+
+class _SwipeForNextHint extends StatelessWidget {
+  const _SwipeForNextHint();
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Semantics(
+      label: 'Swipe for next',
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(999),
+          color: const Color(0xFF0F172A).withOpacity(0.06),
+          border: Border.all(color: Colors.white.withOpacity(0.86)),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Icon(Icons.swipe_rounded, size: 20, color: Color(0xFF475569)),
+            const SizedBox(width: 8),
+            Text(
+              '→ Swipe for next',
+              style: theme.textTheme.labelLarge?.copyWith(
+                color: const Color(0xFF475569),
+                fontWeight: FontWeight.w900,
+                letterSpacing: 0.2,
+              ),
+            ),
+          ],
+        ),
+      )
+          .animate()
+          .fadeIn(duration: 360.ms, curve: Curves.easeOutCubic)
+          .slideY(begin: 0.18, end: 0, duration: 360.ms, curve: Curves.easeOutCubic),
     );
   }
 }
