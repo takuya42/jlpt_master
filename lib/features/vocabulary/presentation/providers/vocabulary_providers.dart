@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../data/firestore_vocabulary_repository.dart';
@@ -16,7 +17,12 @@ class VocabularyQuizState {
   final String answer;
   final bool? isCorrect;
 
-  VocabularyQuizState copyWith({VocabularyWord? word, String? answer, bool? isCorrect, bool clearResult = false}) {
+  VocabularyQuizState copyWith({
+    VocabularyWord? word,
+    String? answer,
+    bool? isCorrect,
+    bool clearResult = false,
+  }) {
     return VocabularyQuizState(
       word: word ?? this.word,
       answer: answer ?? this.answer,
@@ -25,18 +31,29 @@ class VocabularyQuizState {
   }
 }
 
-final vocabularyQuizProvider = AsyncNotifierProvider<VocabularyQuizNotifier, VocabularyQuizState>(
+final vocabularyQuizProvider =
+    AsyncNotifierProvider<VocabularyQuizNotifier, VocabularyQuizState>(
   VocabularyQuizNotifier.new,
 );
 
 class VocabularyQuizNotifier extends AsyncNotifier<VocabularyQuizState> {
   @override
   Future<VocabularyQuizState> build() async {
+    debugPrint('vocabularyQuizProvider build start');
     final selectedLevel = ref.watch(selectedVocabularyJlptProvider);
-    final word = await ref
-        .watch(vocabularyRepositoryProvider)
-        .fetchRandomWord(jlpt: selectedLevel == 'All' ? null : selectedLevel);
-    return VocabularyQuizState(word: word);
+    try {
+      final word = await ref
+          .read(vocabularyRepositoryProvider)
+          .fetchRandomWord(jlpt: selectedLevel == 'All' ? null : selectedLevel);
+      debugPrint('Quiz created');
+      debugPrint('Provider completed');
+      return VocabularyQuizState(word: word);
+    } on Object catch (error, stackTrace) {
+      debugPrint('vocabularyQuizProvider failed: $error');
+      debugPrintStack(stackTrace: stackTrace);
+      debugPrint('Provider completed');
+      return const VocabularyQuizState();
+    }
   }
 
   void updateAnswer(String answer) {
@@ -71,14 +88,21 @@ class VocabularyQuizNotifier extends AsyncNotifier<VocabularyQuizState> {
   Future<void> nextQuestion() async {
     final previousWordId = state.hasValue ? state.value?.word?.id : null;
     state = const AsyncLoading();
-    state = await AsyncValue.guard(() async {
+    try {
       final selectedLevel = ref.read(selectedVocabularyJlptProvider);
       final word = await ref.read(vocabularyRepositoryProvider).fetchRandomWord(
             excludeWordId: previousWordId,
             jlpt: selectedLevel == 'All' ? null : selectedLevel,
           );
-      return VocabularyQuizState(word: word);
-    });
+      debugPrint('Quiz created');
+      debugPrint('Provider completed');
+      state = AsyncData(VocabularyQuizState(word: word));
+    } on Object catch (error, stackTrace) {
+      debugPrint('vocabularyQuizProvider nextQuestion failed: $error');
+      debugPrintStack(stackTrace: stackTrace);
+      debugPrint('Provider completed');
+      state = const AsyncData(VocabularyQuizState());
+    }
   }
 
   String _normalize(String value) => value.trim().toLowerCase();
@@ -89,12 +113,24 @@ final vocabularyRepositoryProvider = Provider<VocabularyRepository>((ref) {
 });
 
 final vocabularyWordsProvider = FutureProvider<List<VocabularyWord>>((ref) async {
-  return ref.watch(vocabularyRepositoryProvider).fetchWords();
+  debugPrint('vocabularyWordsProvider start');
+  try {
+    final words = await ref.read(vocabularyRepositoryProvider).fetchWords();
+    debugPrint('vocabularyWordsProvider completed ${words.length}');
+    return words;
+  } on Object catch (error, stackTrace) {
+    debugPrint('vocabularyWordsProvider failed: $error');
+    debugPrintStack(stackTrace: stackTrace);
+    debugPrint('vocabularyWordsProvider completed 0');
+    return const [];
+  }
 });
 
-final vocabularyWordProvider = FutureProvider.family<VocabularyWord?, String>((ref, id) async {
+final vocabularyWordProvider =
+    FutureProvider.family<VocabularyWord?, String>((ref, id) async {
   final word = await ref.watch(vocabularyRepositoryProvider).fetchWordById(id);
-  final favoriteIds = ref.watch(favoriteVocabularyIdsProvider).asData?.value ?? <String>{};
+  final favoriteIds =
+      ref.watch(favoriteVocabularyIdsProvider).asData?.value ?? <String>{};
 
   if (word == null) {
     return null;
@@ -131,8 +167,8 @@ class SelectedJlptLevelNotifier extends Notifier<String> {
   }
 }
 
-
-final selectedVocabularyJlptProvider = NotifierProvider<SelectedVocabularyJlptNotifier, String>(
+final selectedVocabularyJlptProvider =
+    NotifierProvider<SelectedVocabularyJlptNotifier, String>(
   SelectedVocabularyJlptNotifier.new,
 );
 
@@ -152,14 +188,17 @@ final favoriteVocabularyIdsProvider = StreamProvider<Set<String>>((ref) {
   return ref.watch(userLearningRepositoryProvider).watchFavoriteIds('vocabulary');
 });
 
-final filteredVocabularyWordsProvider = Provider<AsyncValue<List<VocabularyWord>>>((ref) {
+final filteredVocabularyWordsProvider =
+    Provider<AsyncValue<List<VocabularyWord>>>((ref) {
+  debugPrint('filteredVocabularyWordsProvider start');
   final selectedLevel = ref.watch(selectedVocabularyJlptProvider);
   final query = ref.watch(vocabularySearchQueryProvider).trim().toLowerCase();
-  final favoriteIds = ref.watch(favoriteVocabularyIdsProvider).asData?.value ?? <String>{};
+  final favoriteIds =
+      ref.watch(favoriteVocabularyIdsProvider).asData?.value ?? <String>{};
   final words = ref.watch(vocabularyWordsProvider);
 
   return words.whenData((items) {
-    return items
+    final filtered = items
         .where((word) => selectedLevel == 'All' || word.jlptLevel == selectedLevel)
         .where((word) {
           if (query.isEmpty) {
@@ -172,6 +211,8 @@ final filteredVocabularyWordsProvider = Provider<AsyncValue<List<VocabularyWord>
         })
         .map((word) => word.copyWith(isFavorite: favoriteIds.contains(word.id)))
         .toList(growable: false);
+    debugPrint('Filtered ${filtered.length}');
+    return filtered;
   });
 });
 
@@ -188,5 +229,9 @@ Future<void> toggleFavorite(WidgetRef ref, VocabularyWord word) async {
 }
 
 Future<void> recordVocabularyView(WidgetRef ref, VocabularyWord word) {
-  return ref.read(userLearningRepositoryProvider).recordVocabularyView(word.id, jlptLevel: word.jlptLevel, title: word.word);
+  return ref.read(userLearningRepositoryProvider).recordVocabularyView(
+        word.id,
+        jlptLevel: word.jlptLevel,
+        title: word.word,
+      );
 }
