@@ -70,14 +70,14 @@ class _VocabularyPageState extends ConsumerState<VocabularyPage> with TickerProv
   void _handleCardDragStart(DragStartDetails details) {
     final asyncState = ref.read(vocabularyQuizProvider);
     final state = asyncState.hasValue ? asyncState.value : null;
-    if (state?.word == null || _isSwipingAway) return;
+    if (state?.word == null || state?.nextWord == null || _isSwipingAway) return;
     _swipeController.stop();
   }
 
   void _handleCardDragUpdate(DragUpdateDetails details) {
     final asyncState = ref.read(vocabularyQuizProvider);
     final state = asyncState.hasValue ? asyncState.value : null;
-    if (state?.word == null || _isSwipingAway) return;
+    if (state?.word == null || state?.nextWord == null || _isSwipingAway) return;
     final nextDx = math.max(0.0, _dragOffset.dx + details.delta.dx);
     setState(() => _dragOffset = Offset(nextDx, _dragOffset.dy + details.delta.dy * 0.35));
   }
@@ -85,7 +85,7 @@ class _VocabularyPageState extends ConsumerState<VocabularyPage> with TickerProv
   void _handleCardDragEnd(DragEndDetails details) {
     final asyncState = ref.read(vocabularyQuizProvider);
     final state = asyncState.hasValue ? asyncState.value : null;
-    if (state?.word == null || _isSwipingAway) return;
+    if (state?.word == null || state?.nextWord == null || _isSwipingAway) return;
 
     final width = MediaQuery.sizeOf(context).width;
     final velocityX = details.velocity.pixelsPerSecond.dx;
@@ -182,7 +182,7 @@ class _VocabularyPageState extends ConsumerState<VocabularyPage> with TickerProv
                         message: error.toString(),
                         onRetry: () => ref.invalidate(vocabularyQuizProvider),
                       ),
-                      loading: () => const AppLoadingView(message: 'Loading Vocabulary Quiz\n単語クイズを読み込み中'),
+                      loading: () => const SizedBox(height: 500),
                     ),
                   ],
                 ),
