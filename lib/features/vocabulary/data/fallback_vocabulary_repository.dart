@@ -14,7 +14,7 @@ class FallbackVocabularyRepository implements VocabularyRepository {
   final VocabularyRepository _fallback;
 
   @override
-  Future<List<VocabularyWord>> fetchWords() async {
+  Future<List<VocabularyWord>> fetchWords({String? jlpt}) async {
     debugPrint(
       'FallbackVocabularyRepository.fetchWords primary=${_primary.runtimeType}',
     );

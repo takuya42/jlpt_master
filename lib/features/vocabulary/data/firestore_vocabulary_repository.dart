@@ -21,7 +21,7 @@ class FirestoreVocabularyRepository implements VocabularyRepository {
       _firestore.collection(name);
 
   @override
-  Future<List<VocabularyWord>> fetchWords() async {
+  Future<List<VocabularyWord>> fetchWords({String? jlpt}) async {
     debugPrint('fetchWords start');
     for (final collectionName in _collectionNames) {
       try {

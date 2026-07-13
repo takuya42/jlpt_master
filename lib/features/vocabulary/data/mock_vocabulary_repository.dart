@@ -118,7 +118,7 @@ class MockVocabularyRepository implements VocabularyRepository {
   ];
 
   @override
-  Future<List<VocabularyWord>> fetchWords() async => _words;
+  Future<List<VocabularyWord>> fetchWords({String? jlpt}) async => _words;
 
   @override
   Future<VocabularyWord?> fetchWordById(String id) async {
