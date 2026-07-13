@@ -31,8 +31,10 @@ class FirestoreVocabularyRepository implements VocabularyRepository {
   }
 
   @override
-  Future<VocabularyWord?> fetchRandomWord({String? excludeWordId}) async {
-    final words = await fetchWords();
+  Future<VocabularyWord?> fetchRandomWord({String? excludeWordId, String? jlpt}) async {
+    final query = jlpt == null ? _collection : _collection.where('jlpt', isEqualTo: jlpt);
+    final snapshot = await query.get();
+    final words = snapshot.docs.map(_wordFromSnapshot).toList(growable: false);
     if (words.isEmpty) {
       return null;
     }
