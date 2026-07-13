@@ -1,7 +1,7 @@
 import '../domain/vocabulary_word.dart';
 
 abstract interface class VocabularyRepository {
-  Future<List<VocabularyWord>> fetchWords();
+  Future<List<VocabularyWord>> fetchWords({String? jlpt});
 
   Future<VocabularyWord?> fetchWordById(String id);
 
