@@ -90,6 +90,26 @@ class UserLearningRepository {
     await _incrementStat('vocabularyCount');
   }
 
+  Future<void> setGrammarStudied(String grammarId, {required bool isStudied, String? jlptLevel, String? title}) async {
+    final ref = _userRef;
+    if (ref == null) return;
+    final doc = ref.collection('grammar_history').doc(grammarId);
+    if (!isStudied) {
+      await doc.delete();
+      return;
+    }
+    final now = FieldValue.serverTimestamp();
+    await doc.set({
+      'grammarId': grammarId,
+      if (title != null) 'title': title,
+      if (jlptLevel != null) 'jlptLevel': jlptLevel,
+      'studiedAt': now,
+      'updatedAt': now,
+      'attempts': FieldValue.increment(1),
+    }, SetOptions(merge: true));
+    await _incrementStat('grammarCount');
+  }
+
   Future<void> recordGrammarStudy(String grammarId, {String? jlptLevel, String? title}) async {
     final ref = _userRef;
     if (ref == null) return;

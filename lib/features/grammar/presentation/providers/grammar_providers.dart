@@ -102,6 +102,16 @@ Future<void> toggleGrammarFavorite(WidgetRef ref, GrammarPattern pattern) async 
       );
 }
 
+Future<void> toggleGrammarStudied(WidgetRef ref, GrammarPattern pattern) async {
+  final studiedIds = ref.read(studiedGrammarIdsProvider).asData?.value ?? <String>{};
+  await ref.read(userLearningRepositoryProvider).setGrammarStudied(
+        pattern.id,
+        isStudied: !studiedIds.contains(pattern.id),
+        jlptLevel: pattern.jlpt,
+        title: pattern.grammar,
+      );
+}
+
 Future<void> recordGrammarStudy(WidgetRef ref, GrammarPattern pattern) {
   return ref.read(userLearningRepositoryProvider).recordGrammarStudy(
         pattern.id,
