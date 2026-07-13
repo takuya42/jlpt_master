@@ -28,7 +28,7 @@ class GoogleSheetVocabularyRepository implements VocabularyRepository {
         : await client.get(_csvUri);
 
     if (response.statusCode < 200 || response.statusCode >= 300) {
-      throw VocabularyRepositoryException(
+      throw Exception(
         'Failed to load vocabulary CSV. Status code: ${response.statusCode}',
       );
     }
@@ -48,6 +48,25 @@ class GoogleSheetVocabularyRepository implements VocabularyRepository {
     }
 
     return null;
+  }
+
+  @override
+  Future<VocabularyWord?> fetchRandomWord({String? excludeWordId}) async {
+    final words = await fetchWords();
+    if (words.isEmpty) {
+      return null;
+    }
+
+    final pool = excludeWordId == null
+        ? words
+        : words
+            .where((word) => word.id != excludeWordId)
+            .toList(growable: false);
+    if (pool.isEmpty) {
+      return null;
+    }
+    pool.shuffle();
+    return pool.first;
   }
 
   List<VocabularyWord> _parseCsv(String csvText) {
@@ -91,7 +110,7 @@ class GoogleSheetVocabularyRepository implements VocabularyRepository {
   String _requiredValue(Map<String, String> record, String columnName) {
     final value = record[columnName]?.trim() ?? '';
     if (value.isEmpty) {
-      throw VocabularyRepositoryException(
+      throw Exception(
         'Vocabulary CSV is missing required "$columnName" value.',
       );
     }
@@ -113,13 +132,4 @@ class GoogleSheetVocabularyRepository implements VocabularyRepository {
     }
     return record['example_ja']?.trim() ?? '';
   }
-}
-
-class VocabularyRepositoryException implements Exception {
-  const VocabularyRepositoryException(this.message);
-
-  final String message;
-
-  @override
-  String toString() => message;
 }

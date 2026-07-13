@@ -10,8 +10,14 @@ abstract interface class VocabularyRepository {
     if (words.isEmpty) {
       return null;
     }
-    final candidates = words.where((word) => word.id != excludeWordId).toList(growable: false);
-    final pool = candidates.isEmpty ? words : candidates;
+    final pool = excludeWordId == null
+        ? words
+        : words
+            .where((word) => word.id != excludeWordId)
+            .toList(growable: false);
+    if (pool.isEmpty) {
+      return null;
+    }
     pool.shuffle();
     return pool.first;
   }

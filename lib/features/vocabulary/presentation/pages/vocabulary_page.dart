@@ -24,8 +24,8 @@ class _VocabularyPageState extends ConsumerState<VocabularyPage> {
   @override
   Widget build(BuildContext context) {
     ref.listen(vocabularyQuizProvider, (previous, next) {
-      final previousWordId = previous?.valueOrNull?.word?.id;
-      final nextWordId = next.valueOrNull?.word?.id;
+      final previousWordId = previous?.value?.word?.id;
+      final nextWordId = next.value?.word?.id;
       if (previousWordId != nextWordId) {
         _answerController.clear();
       }
