@@ -119,13 +119,6 @@ class _GrammarFilters extends ConsumerWidget {
       children: [
         SearchBar(
           leading: const Icon(Icons.search, size: 22),
-          trailing: [
-            IconButton(
-              tooltip: 'Filter / 絞り込み',
-              onPressed: () {},
-              icon: const Icon(Icons.tune_rounded),
-            ),
-          ],
           hintText: 'Search grammar / 文法を検索',
           onChanged: (value) =>
               ref.read(grammarSearchQueryProvider.notifier).setQuery(value),

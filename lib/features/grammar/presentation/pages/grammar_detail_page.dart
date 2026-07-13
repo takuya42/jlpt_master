@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
+import '../../../../app/navigation/app_route.dart';
 import '../../domain/grammar_pattern.dart';
 import '../providers/grammar_providers.dart';
 import '../widgets/grammar_studied_toggle.dart';
@@ -15,7 +17,10 @@ class GrammarDetailPage extends ConsumerWidget {
     final pattern = ref.watch(grammarPatternProvider(grammarId));
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Grammar Detail / 文法詳細')),
+      appBar: AppBar(
+        leading: BackButton(onPressed: () => context.go(AppRoute.grammar.path)),
+        title: const Text('Grammar Detail\n文法詳細'),
+      ),
       body: SafeArea(
         child: pattern.when(
           data: (data) => data == null
@@ -47,12 +52,16 @@ class _GrammarDetailContent extends ConsumerWidget {
       child: ConstrainedBox(
         constraints: const BoxConstraints(maxWidth: 840),
         child: ListView(
-          padding: const EdgeInsets.all(20),
+          padding: const EdgeInsets.all(24),
           children: [
             Card(
-              elevation: 3,
+              elevation: 0,
+              color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.42),
               shadowColor: colorScheme.shadow.withValues(alpha: 0.14),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(24),
+                side: BorderSide(color: colorScheme.outlineVariant),
+              ),
               child: Padding(
                 padding: const EdgeInsets.all(24),
                 child: Column(
@@ -65,9 +74,25 @@ class _GrammarDetailContent extends ConsumerWidget {
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text(pattern.grammar, style: theme.textTheme.displaySmall?.copyWith(fontWeight: FontWeight.w900)),
+                              Text(
+                                'Grammar',
+                                style: theme.textTheme.labelLarge?.copyWith(
+                                  color: colorScheme.primary,
+                                  fontWeight: FontWeight.w900,
+                                ),
+                              ),
                               const SizedBox(height: 8),
-                              Text(pattern.meaningEn, style: theme.textTheme.headlineSmall?.copyWith(color: colorScheme.primary)),
+                              Text(pattern.grammar, style: theme.textTheme.displaySmall?.copyWith(fontWeight: FontWeight.w900)),
+                              const SizedBox(height: 20),
+                              Text(
+                                'Meaning',
+                                style: theme.textTheme.labelLarge?.copyWith(
+                                  color: colorScheme.primary,
+                                  fontWeight: FontWeight.w900,
+                                ),
+                              ),
+                              const SizedBox(height: 8),
+                              Text(pattern.meaningEn, style: theme.textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.w800)),
                               const SizedBox(height: 4),
                               Text(pattern.meaningJa, style: theme.textTheme.titleMedium?.copyWith(color: colorScheme.onSurfaceVariant)),
                             ],
@@ -77,7 +102,18 @@ class _GrammarDetailContent extends ConsumerWidget {
                           tooltip: isFavorite ? 'Favorite / お気に入り解除' : 'Favorite / お気に入り追加',
                           onPressed: () => toggleGrammarFavorite(ref, pattern),
                           iconSize: 28,
-                          icon: Icon(isFavorite ? Icons.favorite : Icons.favorite_border),
+                          icon: AnimatedSwitcher(
+                            duration: const Duration(milliseconds: 220),
+                            transitionBuilder: (child, animation) => ScaleTransition(
+                              scale: animation,
+                              child: FadeTransition(opacity: animation, child: child),
+                            ),
+                            child: Icon(
+                              isFavorite ? Icons.favorite : Icons.favorite_border,
+                              key: ValueKey(isFavorite),
+                              color: isFavorite ? colorScheme.error : null,
+                            ),
+                          ),
                         ),
                       ],
                     ),
@@ -96,26 +132,61 @@ class _GrammarDetailContent extends ConsumerWidget {
               ),
             ),
             const SizedBox(height: 16),
-            Card(
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-              child: Padding(
-                padding: const EdgeInsets.all(20),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text('Example', style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800)),
-                    const SizedBox(height: 12),
-                    Text('日本語', style: theme.textTheme.labelMedium?.copyWith(color: colorScheme.onSurfaceVariant, fontWeight: FontWeight.w800)),
-                    const SizedBox(height: 4),
-                    Text(pattern.exampleJp, style: theme.textTheme.titleLarge),
-                    const SizedBox(height: 12),
-                    Text('English', style: theme.textTheme.labelMedium?.copyWith(color: colorScheme.onSurfaceVariant, fontWeight: FontWeight.w800)),
-                    const SizedBox(height: 4),
-                    Text(pattern.exampleEn, style: theme.textTheme.bodyLarge?.copyWith(color: colorScheme.onSurfaceVariant)),
-                  ],
-                ),
-              ),
+            _SectionCard(
+              title: 'Explanation',
+              children: [
+                Text(pattern.explanationEn, style: theme.textTheme.bodyLarge),
+                const SizedBox(height: 12),
+                Text(pattern.explanationJa, style: theme.textTheme.bodyLarge?.copyWith(color: colorScheme.onSurfaceVariant)),
+              ],
             ),
+            const SizedBox(height: 16),
+            _SectionCard(
+              title: 'Example',
+              children: [
+                Text('日本語', style: theme.textTheme.labelMedium?.copyWith(color: colorScheme.onSurfaceVariant, fontWeight: FontWeight.w800)),
+                const SizedBox(height: 4),
+                Text(pattern.exampleJp, style: theme.textTheme.titleLarge),
+                const SizedBox(height: 12),
+                Text('English', style: theme.textTheme.labelMedium?.copyWith(color: colorScheme.onSurfaceVariant, fontWeight: FontWeight.w800)),
+                const SizedBox(height: 4),
+                Text(pattern.exampleEn, style: theme.textTheme.bodyLarge?.copyWith(color: colorScheme.onSurfaceVariant)),
+                if (pattern.exampleJa.isNotEmpty) ...[
+                  const SizedBox(height: 12),
+                  Text('日本語訳', style: theme.textTheme.labelMedium?.copyWith(color: colorScheme.onSurfaceVariant, fontWeight: FontWeight.w800)),
+                  const SizedBox(height: 4),
+                  Text(pattern.exampleJa, style: theme.textTheme.bodyLarge?.copyWith(color: colorScheme.onSurfaceVariant)),
+                ],
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _SectionCard extends StatelessWidget {
+  const _SectionCard({required this.title, required this.children});
+
+  final String title;
+  final List<Widget> children;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
+    return Card(
+      elevation: 0,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+      child: Padding(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(title, style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w900)),
+            const SizedBox(height: 12),
+            ...children,
           ],
         ),
       ),
