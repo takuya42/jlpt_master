@@ -89,8 +89,9 @@ class GoogleSheetVocabularyRepository implements VocabularyRepository {
     debugPrint('Loading: $sheetName');
     debugPrint('URL: $uri');
     final client = _client;
-    final response =
-        client == null ? await http.get(uri) : await client.get(uri);
+    final response = client == null
+        ? await http.get(uri)
+        : await client.get(uri);
     debugPrint('Status: ${response.statusCode}');
 
     if (response.statusCode < 200 || response.statusCode >= 300) {
@@ -101,9 +102,7 @@ class GoogleSheetVocabularyRepository implements VocabularyRepository {
     }
 
     final csvText = utf8.decode(response.bodyBytes);
-    final rows = const CsvToListConverter().convert(csvText);
-    debugPrint('Rows: ${rows.length}');
-    final words = _parseRows(rows, fallbackJlpt: sheetName);
+    final words = _parseCsv(csvText, fallbackJlpt: sheetName);
     debugPrint('Words: ${words.length}');
     return words;
   }
@@ -119,10 +118,13 @@ class GoogleSheetVocabularyRepository implements VocabularyRepository {
     );
   }
 
-  List<VocabularyWord> _parseRows(
-    List<List<dynamic>> rows, {
+  List<VocabularyWord> _parseCsv(
+    String csvText, {
     required String fallbackJlpt,
   }) {
+    final rows = const CsvToListConverter().convert(csvText);
+    debugPrint('Rows: ${rows.length}');
+
     if (rows.isEmpty) {
       return const [];
     }
