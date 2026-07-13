@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../../app/navigation/app_route.dart';
 import '../../../../shared/presentation/widgets/app_state_views.dart';
 import '../../../../shared/presentation/widgets/premium_button.dart';
 import '../../domain/home_content.dart';
@@ -46,26 +47,9 @@ class _HomeContentView extends StatelessWidget {
           children: [
             _TodayGoalCard(status: content.studyStatus),
             const SizedBox(height: 18),
-            _ProgressCard(levels: content.levels),
+            const _ContinueLearningSection(),
             const SizedBox(height: 18),
-            _SectionCard(
-              icon: Icons.play_circle_outline_rounded,
-              title: 'Continue Learning',
-              subtitle: '学習を続ける',
-              child: Column(
-                children: [
-                  for (final item in content.learningMenuItems)
-                    ListTile(
-                      contentPadding: EdgeInsets.zero,
-                      leading: CircleAvatar(child: Icon(item.icon)),
-                      title: Text(item.title.en, maxLines: 1, overflow: TextOverflow.ellipsis),
-                      subtitle: Text(item.title.ja, maxLines: 1, overflow: TextOverflow.ellipsis),
-                      trailing: const Icon(Icons.chevron_right_rounded),
-                      onTap: () => context.go(item.routePath),
-                    ),
-                ],
-              ),
-            ),
+            _ProgressCard(levels: content.levels),
             const SizedBox(height: 18),
             _SectionCard(
               icon: Icons.history_rounded,
@@ -78,7 +62,11 @@ class _HomeContentView extends StatelessWidget {
                       contentPadding: EdgeInsets.zero,
                       leading: CircleAvatar(child: Icon(item.icon)),
                       title: Text(item.title.en, maxLines: 1, overflow: TextOverflow.ellipsis),
-                      subtitle: Text('${item.title.ja}・${item.completedAtLabel}・Accuracy 正答率 ${item.accuracyPercent}%', maxLines: 1, overflow: TextOverflow.ellipsis),
+                      subtitle: Text(
+                        '${item.title.ja}・${item.completedAtLabel}・Accuracy 正答率 ${item.accuracyPercent}%',
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
                     ),
                 ],
               ),
@@ -102,25 +90,76 @@ class _TodayGoalCard extends StatelessWidget {
         padding: const EdgeInsets.all(24),
         child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
           Row(children: [
-            CircleAvatar(backgroundColor: theme.colorScheme.primaryContainer, child: const Icon(Icons.flag_outlined)),
+            CircleAvatar(
+              backgroundColor: theme.colorScheme.primaryContainer,
+              child: const Icon(Icons.flag_outlined),
+            ),
             const SizedBox(width: 14),
-            Expanded(child: Text('Today\'s Goal\n今日の目標', style: theme.textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.w900))),
+            Expanded(
+              child: Text(
+                'Today\'s Goal\n今日の目標',
+                style: theme.textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.w900),
+              ),
+            ),
           ]),
           const SizedBox(height: 18),
-          Wrap(spacing: 12, runSpacing: 12, children: [
-            _GoalMetric(icon: Icons.timer_outlined, label: 'Study Time', japaneseLabel: '学習時間', value: '${status.studyTimeMinutes} min'),
-            _GoalMetric(icon: Icons.calendar_month_outlined, label: 'Learning Days', japaneseLabel: '学習日数', value: '${status.studyDays} days'),
-            _GoalMetric(icon: Icons.insights_outlined, label: 'Accuracy', japaneseLabel: '正答率', value: '${status.accuracyPercent}%'),
-          ]),
+          LayoutBuilder(
+            builder: (context, constraints) {
+              const spacing = 12.0;
+              final metricWidth = (constraints.maxWidth - spacing) / 2;
+
+              return Column(
+                children: [
+                  Row(
+                    children: [
+                      SizedBox(
+                        width: metricWidth,
+                        child: _GoalMetric(
+                          icon: Icons.timer_outlined,
+                          label: 'Study Time',
+                          japaneseLabel: '学習時間',
+                          value: '${status.studyTimeMinutes} min',
+                        ),
+                      ),
+                      const SizedBox(width: spacing),
+                      SizedBox(
+                        width: metricWidth,
+                        child: _GoalMetric(
+                          icon: Icons.calendar_month_outlined,
+                          label: 'Learning Days',
+                          japaneseLabel: '学習日数',
+                          value: '${status.studyDays} days',
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: spacing),
+                  SizedBox(
+                    width: double.infinity,
+                    child: _GoalMetric(
+                      icon: Icons.insights_outlined,
+                      label: 'Accuracy',
+                      japaneseLabel: '正答率',
+                      value: '${status.accuracyPercent}%',
+                    ),
+                  ),
+                ],
+              );
+            },
+          ),
         ]),
       ),
     );
   }
 }
 
-
 class _GoalMetric extends StatelessWidget {
-  const _GoalMetric({required this.icon, required this.label, required this.japaneseLabel, required this.value});
+  const _GoalMetric({
+    required this.icon,
+    required this.label,
+    required this.japaneseLabel,
+    required this.value,
+  });
 
   final IconData icon;
   final String label;
@@ -130,22 +169,111 @@ class _GoalMetric extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    return SizedBox(
-      width: 190,
-      child: DecoratedBox(
-        decoration: BoxDecoration(
-          color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.45),
-          borderRadius: BorderRadius.circular(18),
-        ),
+    return Card.filled(
+      margin: EdgeInsets.zero,
+      color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.45),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          Icon(icon, color: theme.colorScheme.primary),
+          const SizedBox(height: 12),
+          Text(value, style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w900)),
+          const SizedBox(height: 4),
+          Text(
+            label,
+            style: theme.textTheme.labelLarge?.copyWith(fontWeight: FontWeight.w800),
+          ),
+          Text(
+            japaneseLabel,
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: theme.colorScheme.onSurfaceVariant,
+            ),
+          ),
+        ]),
+      ),
+    );
+  }
+}
+
+class _ContinueLearningSection extends StatelessWidget {
+  const _ContinueLearningSection();
+
+  @override
+  Widget build(BuildContext context) {
+    return _SectionCard(
+      icon: Icons.play_circle_outline_rounded,
+      title: 'Continue Learning',
+      subtitle: '学習を続ける',
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          const spacing = 12.0;
+          final useTwoColumns = constraints.maxWidth >= 560;
+          final cardWidth = useTwoColumns
+              ? (constraints.maxWidth - spacing) / 2
+              : constraints.maxWidth;
+          final cards = [
+            SizedBox(
+              width: cardWidth,
+              child: _ContinueLearningTile(
+                emoji: '📖',
+                title: 'Vocabulary',
+                routePath: AppRoute.vocabulary.path,
+              ),
+            ),
+            SizedBox(
+              width: cardWidth,
+              child: _ContinueLearningTile(
+                emoji: '📝',
+                title: 'Grammar',
+                routePath: AppRoute.grammar.path,
+              ),
+            ),
+          ];
+
+          return Wrap(spacing: spacing, runSpacing: spacing, children: cards);
+        },
+      ),
+    );
+  }
+}
+
+class _ContinueLearningTile extends StatelessWidget {
+  const _ContinueLearningTile({
+    required this.emoji,
+    required this.title,
+    required this.routePath,
+  });
+
+  final String emoji;
+  final String title;
+  final String routePath;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
+    return Card.filled(
+      margin: EdgeInsets.zero,
+      clipBehavior: Clip.antiAlias,
+      child: InkWell(
+        onTap: () => context.go(routePath),
         child: Padding(
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.all(18),
           child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            Icon(icon, color: theme.colorScheme.primary),
-            const SizedBox(height: 12),
-            Text(value, style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w900)),
-            const SizedBox(height: 4),
-            Text(label, style: theme.textTheme.labelLarge?.copyWith(fontWeight: FontWeight.w800)),
-            Text(japaneseLabel, style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurfaceVariant)),
+            Text(emoji, style: theme.textTheme.headlineMedium),
+            const SizedBox(height: 14),
+            Text(
+              title,
+              style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w900),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'Continue Learning →',
+              style: theme.textTheme.labelLarge?.copyWith(
+                color: theme.colorScheme.primary,
+                fontWeight: FontWeight.w800,
+              ),
+            ),
           ]),
         ),
       ),
