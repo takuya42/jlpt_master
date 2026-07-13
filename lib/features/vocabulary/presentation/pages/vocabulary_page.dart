@@ -68,19 +68,22 @@ class _VocabularyPageState extends ConsumerState<VocabularyPage> with TickerProv
   }
 
   void _handleCardDragStart(DragStartDetails details) {
-    final state = ref.read(vocabularyQuizProvider).valueOrNull;
+    final asyncState = ref.read(vocabularyQuizProvider);
+    final state = asyncState.hasValue ? asyncState.value : null;
     if (state?.isCorrect == null || _isSwipingAway) return;
     _swipeController.stop();
   }
 
   void _handleCardDragUpdate(DragUpdateDetails details) {
-    final state = ref.read(vocabularyQuizProvider).valueOrNull;
+    final asyncState = ref.read(vocabularyQuizProvider);
+    final state = asyncState.hasValue ? asyncState.value : null;
     if (state?.isCorrect == null || _isSwipingAway) return;
     setState(() => _dragOffset += details.delta);
   }
 
   void _handleCardDragEnd(DragEndDetails details) {
-    final state = ref.read(vocabularyQuizProvider).valueOrNull;
+    final asyncState = ref.read(vocabularyQuizProvider);
+    final state = asyncState.hasValue ? asyncState.value : null;
     if (state?.isCorrect == null || _isSwipingAway) return;
 
     final width = MediaQuery.sizeOf(context).width;
