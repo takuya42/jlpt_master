@@ -117,22 +117,31 @@ class _GrammarFilters extends ConsumerWidget {
         SearchBar(
           leading: const Icon(Icons.search, size: 22),
           trailing: [
-            IconButton(tooltip: 'Filter / 絞り込み', onPressed: () {}, icon: const Icon(Icons.tune_rounded)),
+            IconButton(
+              tooltip: 'Filter / 絞り込み',
+              onPressed: () {},
+              icon: const Icon(Icons.tune_rounded),
+            ),
           ],
           hintText: 'Search grammar / 文法を検索',
-          onChanged: (value) => ref.read(grammarSearchQueryProvider.notifier).setQuery(value),
+          onChanged: (value) =>
+              ref.read(grammarSearchQueryProvider.notifier).setQuery(value),
         ),
         const SizedBox(height: 14),
-        Wrap(
-          spacing: 8,
-          runSpacing: 8,
+        Row(
           children: [
-            for (final level in grammarJlptLevels)
-              FilterChip(
-                label: Text(level),
-                selected: selectedLevel == level,
-                onSelected: (_) => ref.read(selectedGrammarJlptLevelProvider.notifier).selectLevel(level),
+            for (final level in grammarJlptLevels) ...[
+              Expanded(
+                child: FilterChip(
+                  label: Center(child: Text(level, maxLines: 1)),
+                  selected: selectedLevel == level,
+                  onSelected: (_) => ref
+                      .read(selectedGrammarJlptLevelProvider.notifier)
+                      .selectLevel(level),
+                ),
               ),
+              if (level != grammarJlptLevels.last) const SizedBox(width: 8),
+            ],
           ],
         ),
       ],
@@ -149,8 +158,10 @@ class _GrammarCard extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
-    final favoriteIds = ref.watch(favoriteGrammarIdsProvider).asData?.value ?? <String>{};
-    final studiedIds = ref.watch(studiedGrammarIdsProvider).asData?.value ?? <String>{};
+    final favoriteIds =
+        ref.watch(favoriteGrammarIdsProvider).asData?.value ?? <String>{};
+    final studiedIds =
+        ref.watch(studiedGrammarIdsProvider).asData?.value ?? <String>{};
     final isFavorite = favoriteIds.contains(pattern.id);
     final isStudied = studiedIds.contains(pattern.id);
 
@@ -163,7 +174,7 @@ class _GrammarCard extends ConsumerWidget {
         side: BorderSide(color: colorScheme.outlineVariant.withValues(alpha: 0.5)),
       ),
       child: Padding(
-        padding: const EdgeInsets.fromLTRB(18, 14, 12, 14),
+        padding: const EdgeInsets.fromLTRB(14, 12, 10, 12),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           mainAxisSize: MainAxisSize.min,
@@ -176,7 +187,12 @@ class _GrammarCard extends ConsumerWidget {
                 IconButton(
                   tooltip: isFavorite ? 'Favorite / お気に入り解除' : 'Favorite / お気に入り追加',
                   onPressed: () => toggleGrammarFavorite(ref, pattern),
-                  icon: Icon(isFavorite ? Icons.favorite : Icons.favorite_border, color: isFavorite ? colorScheme.error : colorScheme.onSurfaceVariant),
+                  icon: Icon(
+                    isFavorite ? Icons.favorite : Icons.favorite_border,
+                    color: isFavorite
+                        ? colorScheme.error
+                        : colorScheme.onSurfaceVariant,
+                  ),
                 ),
               ],
             ),
@@ -184,23 +200,90 @@ class _GrammarCard extends ConsumerWidget {
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Text(pattern.grammar, textAlign: TextAlign.center, style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w900)),
+                  Text(
+                    pattern.grammar,
+                    textAlign: TextAlign.center,
+                    style: theme.textTheme.titleLarge
+                        ?.copyWith(fontWeight: FontWeight.w900),
+                  ),
                   const SizedBox(height: 3),
-                  Text(pattern.meaningEn, textAlign: TextAlign.center, style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w800, color: colorScheme.onSurfaceVariant)),
+                  Text(
+                    pattern.meaningEn,
+                    textAlign: TextAlign.center,
+                    style: theme.textTheme.titleSmall?.copyWith(
+                      fontWeight: FontWeight.w800,
+                      color: colorScheme.onSurfaceVariant,
+                    ),
+                  ),
                   const SizedBox(height: 3),
-                  Text(pattern.meaningJa, textAlign: TextAlign.center, style: theme.textTheme.bodyMedium?.copyWith(color: colorScheme.onSurfaceVariant)),
+                  Text(
+                    pattern.meaningJa,
+                    textAlign: TextAlign.center,
+                    style: theme.textTheme.bodyMedium
+                        ?.copyWith(color: colorScheme.onSurfaceVariant),
+                  ),
                 ],
               ),
             ),
-            const SizedBox(height: 10),
+            const SizedBox(height: 8),
             Divider(height: 1, color: colorScheme.outlineVariant.withValues(alpha: 0.7)),
+            const SizedBox(height: 8),
+            Text(
+              'Example',
+              style: theme.textTheme.labelLarge?.copyWith(
+                color: colorScheme.primary,
+                fontWeight: FontWeight.w900,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              '日本語',
+              style: theme.textTheme.labelMedium?.copyWith(
+                color: colorScheme.onSurfaceVariant,
+                fontWeight: FontWeight.w800,
+              ),
+            ),
+            const SizedBox(height: 3),
+            Text(
+              pattern.exampleJp,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              style: theme.textTheme.titleMedium
+                  ?.copyWith(fontWeight: FontWeight.w800),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'English',
+              style: theme.textTheme.labelMedium?.copyWith(
+                color: colorScheme.onSurfaceVariant,
+                fontWeight: FontWeight.w800,
+              ),
+            ),
+            const SizedBox(height: 3),
+            Text(
+              pattern.exampleEn,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              style: theme.textTheme.bodyMedium
+                  ?.copyWith(color: colorScheme.onSurfaceVariant),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              '日本語訳',
+              style: theme.textTheme.labelMedium?.copyWith(
+                color: colorScheme.onSurfaceVariant,
+                fontWeight: FontWeight.w800,
+              ),
+            ),
+            const SizedBox(height: 3),
+            Text(
+              pattern.exampleJa,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              style: theme.textTheme.bodyMedium
+                  ?.copyWith(color: colorScheme.onSurfaceVariant),
+            ),
             const SizedBox(height: 10),
-            Text('Example', style: theme.textTheme.labelLarge?.copyWith(color: colorScheme.primary, fontWeight: FontWeight.w900)),
-            const SizedBox(height: 5),
-            Text(pattern.exampleJp, maxLines: 2, overflow: TextOverflow.ellipsis, style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800)),
-            const SizedBox(height: 4),
-            Text('🇺🇸 ${pattern.exampleEn}', maxLines: 2, overflow: TextOverflow.ellipsis, style: theme.textTheme.bodyMedium?.copyWith(color: colorScheme.onSurfaceVariant)),
-            const SizedBox(height: 12),
             Row(
               children: [
                 if (isStudied)
@@ -212,7 +295,10 @@ class _GrammarCard extends ConsumerWidget {
                     label: const Text('Mark Studied'),
                   ),
                 const Spacer(),
-                TextButton(onPressed: () {}, child: const Text('Learn')),
+                TextButton(
+                  onPressed: () {},
+                  child: const Text('View Details'),
+                ),
               ],
             ),
           ],
