@@ -37,8 +37,14 @@ class FirestoreVocabularyRepository implements VocabularyRepository {
       return null;
     }
 
-    final candidates = words.where((word) => word.id != excludeWordId).toList(growable: false);
-    final pool = candidates.isEmpty ? words : candidates;
+    final pool = excludeWordId == null
+        ? words
+        : words
+            .where((word) => word.id != excludeWordId)
+            .toList(growable: false);
+    if (pool.isEmpty) {
+      return null;
+    }
     return pool[_random.nextInt(pool.length)];
   }
 
@@ -67,6 +73,8 @@ class FirestoreVocabularyRepository implements VocabularyRepository {
     if (!required) {
       return '';
     }
-    throw VocabularyRepositoryException('Vocabulary document is missing required "${keys.first}" value.');
+    throw Exception(
+      'Vocabulary document is missing required "${keys.first}" value.',
+    );
   }
 }

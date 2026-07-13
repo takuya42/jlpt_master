@@ -36,7 +36,10 @@ class VocabularyQuizNotifier extends AsyncNotifier<VocabularyQuizState> {
   }
 
   void updateAnswer(String answer) {
-    final current = state.valueOrNull;
+    if (!state.hasValue) {
+      return;
+    }
+    final current = state.value;
     if (current == null) {
       return;
     }
@@ -44,7 +47,10 @@ class VocabularyQuizNotifier extends AsyncNotifier<VocabularyQuizState> {
   }
 
   Future<void> checkAnswer() async {
-    final current = state.valueOrNull;
+    if (!state.hasValue) {
+      return;
+    }
+    final current = state.value;
     final word = current?.word;
     if (current == null || word == null) {
       return;
@@ -59,10 +65,12 @@ class VocabularyQuizNotifier extends AsyncNotifier<VocabularyQuizState> {
   }
 
   Future<void> nextQuestion() async {
-    final previousWordId = state.valueOrNull?.word?.id;
+    final previousWordId = state.hasValue ? state.value?.word?.id : null;
     state = const AsyncLoading();
     state = await AsyncValue.guard(() async {
-      final word = await ref.read(vocabularyRepositoryProvider).fetchRandomWord(excludeWordId: previousWordId);
+      final word = await ref
+          .read(vocabularyRepositoryProvider)
+          .fetchRandomWord(excludeWordId: previousWordId);
       return VocabularyQuizState(word: word);
     });
   }
