@@ -7,7 +7,7 @@ import '../../data/google_sheet_grammar_repository.dart';
 import '../../data/grammar_repository.dart';
 import '../../domain/grammar_pattern.dart';
 
-const grammarJlptLevels = ['N5', 'N4', 'N3', 'N2', 'N1'];
+const grammarJlptLevels = ['All', 'N5', 'N4', 'N3', 'N2', 'N1'];
 
 final grammarRepositoryProvider = Provider<GrammarRepository>((ref) {
   return GoogleSheetGrammarRepository();
@@ -49,7 +49,7 @@ final selectedGrammarJlptLevelProvider = NotifierProvider<SelectedGrammarJlptLev
 
 class SelectedGrammarJlptLevelNotifier extends Notifier<String> {
   @override
-  String build() => 'N5';
+  String build() => 'All';
 
   void selectLevel(String level) {
     if (grammarJlptLevels.contains(level)) {
@@ -63,6 +63,11 @@ final favoriteGrammarIdsProvider = StreamProvider<Set<String>>((ref) {
   return ref.watch(userLearningRepositoryProvider).watchFavoriteIds('grammar');
 });
 
+final studiedGrammarIdsProvider = StreamProvider<Set<String>>((ref) {
+  ref.watch(authStateProvider);
+  return ref.watch(userLearningRepositoryProvider).watchStudiedGrammarIds();
+});
+
 final filteredGrammarPatternsProvider = Provider<AsyncValue<List<GrammarPattern>>>((ref) {
   final selectedLevel = ref.watch(selectedGrammarJlptLevelProvider);
   final query = ref.watch(grammarSearchQueryProvider).trim().toLowerCase();
@@ -70,7 +75,7 @@ final filteredGrammarPatternsProvider = Provider<AsyncValue<List<GrammarPattern>
 
   return patterns.whenData((items) {
     return items
-        .where((pattern) => pattern.jlpt == selectedLevel)
+        .where((pattern) => selectedLevel == 'All' || pattern.jlpt == selectedLevel)
         .where((pattern) {
           if (query.isEmpty) {
             return true;
