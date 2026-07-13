@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:csv/csv.dart';
+import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 
 import '../domain/vocabulary_word.dart';
@@ -27,8 +28,19 @@ class GoogleSheetVocabularyRepository implements VocabularyRepository {
   Future<List<VocabularyWord>> fetchWords({String? jlpt}) async {
     final levels =
         jlpt == null || jlpt == 'All' ? _jlptSheets : [jlpt.toUpperCase()];
-    final wordsBySheet = await Future.wait(levels.map(_fetchSheetWords));
-    return wordsBySheet.expand((words) => words).toList(growable: false);
+    final all = <VocabularyWord>[];
+
+    for (final sheet in levels) {
+      try {
+        final words = await _fetchSheetWords(sheet);
+        all.addAll(words);
+      } catch (e, st) {
+        debugPrint('Sheet $sheet failed: $e');
+        debugPrintStack(stackTrace: st);
+      }
+    }
+
+    return all;
   }
 
   @override
@@ -74,9 +86,12 @@ class GoogleSheetVocabularyRepository implements VocabularyRepository {
     }
 
     final uri = _csvUriBuilder?.call(sheetName) ?? _publishedCsvUri(sheetName);
+    debugPrint('Loading: $sheetName');
+    debugPrint('URL: $uri');
     final client = _client;
     final response =
         client == null ? await http.get(uri) : await client.get(uri);
+    debugPrint('Status: ${response.statusCode}');
 
     if (response.statusCode < 200 || response.statusCode >= 300) {
       throw Exception(
@@ -87,7 +102,10 @@ class GoogleSheetVocabularyRepository implements VocabularyRepository {
 
     final csvText = utf8.decode(response.bodyBytes);
     final rows = const CsvToListConverter().convert(csvText);
-    return _parseRows(rows, fallbackJlpt: sheetName);
+    debugPrint('Rows: ${rows.length}');
+    final words = _parseRows(rows, fallbackJlpt: sheetName);
+    debugPrint('Words: ${words.length}');
+    return words;
   }
 
   Uri _publishedCsvUri(String sheetName) {
@@ -112,6 +130,7 @@ class GoogleSheetVocabularyRepository implements VocabularyRepository {
     final headers = rows.first
         .map((header) => header.toString().trim())
         .toList(growable: false);
+    debugPrint(headers.toString());
 
     return rows
         .skip(1)
@@ -123,6 +142,7 @@ class GoogleSheetVocabularyRepository implements VocabularyRepository {
         final value = index < row.length ? row[index].toString().trim() : '';
         record[headers[index]] = value;
       }
+      debugPrint(record.toString());
 
       final jlpt = (record['jlpt']?.trim().isNotEmpty ?? false)
           ? record['jlpt']!.trim().toUpperCase()
