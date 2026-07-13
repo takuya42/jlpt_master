@@ -11,18 +11,22 @@ class GoogleSheetVocabularyRepository implements VocabularyRepository {
   GoogleSheetVocabularyRepository({
     http.Client? client,
     String? spreadsheetId,
-    Uri Function(String sheetName)? csvUriBuilder,
+    Uri? csvUri,
   })  : _client = client,
         _spreadsheetId = spreadsheetId ?? _defaultSpreadsheetId,
-        _csvUriBuilder = csvUriBuilder;
+        _csvUri = csvUri ?? _defaultCsvUri;
 
   static const String _defaultSpreadsheetId =
       '1vl_IRVwh7FWgcT-C8fTQltTQWwx8ejRJG9HnCctW0BU';
   static const List<String> _jlptSheets = ['N5', 'N4', 'N3', 'N2', 'N1'];
+  static const String csvUrl =
+      'https://docs.google.com/spreadsheets/d/$_defaultSpreadsheetId/export?format=csv&gid=0';
+
+  static final Uri _defaultCsvUri = Uri.parse(csvUrl);
 
   final http.Client? _client;
   final String _spreadsheetId;
-  final Uri Function(String sheetName)? _csvUriBuilder;
+  final Uri _csvUri;
 
   @override
   Future<List<VocabularyWord>> fetchWords({String? jlpt}) async {
@@ -85,7 +89,7 @@ class GoogleSheetVocabularyRepository implements VocabularyRepository {
       );
     }
 
-    final uri = _csvUriBuilder?.call(sheetName) ?? _publishedCsvUri(sheetName);
+    final uri = _publishedCsvUri(sheetName);
     debugPrint('Loading: $sheetName');
     debugPrint('URL: $uri');
     final client = _client;
@@ -108,13 +112,12 @@ class GoogleSheetVocabularyRepository implements VocabularyRepository {
   }
 
   Uri _publishedCsvUri(String sheetName) {
-    return Uri.https(
-      'docs.google.com',
-      '/spreadsheets/d/$_spreadsheetId/gviz/tq',
-      {
-        'tqx': 'out:csv',
-        'sheet': sheetName,
-      },
+    if (sheetName == 'N5') {
+      return _csvUri;
+    }
+
+    return Uri.parse(
+      'https://docs.google.com/spreadsheets/d/$_spreadsheetId/export?format=csv&sheet=$sheetName',
     );
   }
 
