@@ -1,7 +1,9 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../data/fallback_vocabulary_repository.dart';
 import '../../data/firestore_vocabulary_repository.dart';
+import '../../data/mock_vocabulary_repository.dart';
 import '../../data/vocabulary_repository.dart';
 import '../../../../features/auth/presentation/providers/auth_providers.dart';
 import '../../../../features/learning/presentation/providers/learning_providers.dart';
@@ -109,13 +111,24 @@ class VocabularyQuizNotifier extends AsyncNotifier<VocabularyQuizState> {
 }
 
 final vocabularyRepositoryProvider = Provider<VocabularyRepository>((ref) {
-  return FirestoreVocabularyRepository();
+  final repository = FallbackVocabularyRepository(
+    primary: FirestoreVocabularyRepository(),
+    fallback: MockVocabularyRepository(),
+  );
+  debugPrint(
+    'vocabularyRepositoryProvider using ${repository.runtimeType}: '
+    'primary=FirestoreVocabularyRepository fallback=MockVocabularyRepository',
+  );
+  return repository;
 });
 
 final vocabularyWordsProvider = FutureProvider<List<VocabularyWord>>((ref) async {
   debugPrint('vocabularyWordsProvider start');
   try {
-    final words = await ref.read(vocabularyRepositoryProvider).fetchWords();
+    final repository = ref.read(vocabularyRepositoryProvider);
+    debugPrint('vocabularyWordsProvider repository=${repository.runtimeType}');
+    final words = await repository.fetchWords();
+    debugPrint('vocabularyWordsProvider fetched count=${words.length}');
     debugPrint('vocabularyWordsProvider completed ${words.length}');
     return words;
   } on Object catch (error, stackTrace) {
