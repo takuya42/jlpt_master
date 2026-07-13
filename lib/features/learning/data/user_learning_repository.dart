@@ -90,6 +90,18 @@ class UserLearningRepository {
     await _incrementStat('vocabularyCount');
   }
 
+  Future<void> recordVocabularyQuizAnswer({required String wordId, required bool isCorrect}) async {
+    final ref = _userRef;
+    if (ref == null) return;
+    final now = FieldValue.serverTimestamp();
+    await ref.collection('learning_history').add({
+      'wordId': wordId,
+      'isCorrect': isCorrect,
+      'answeredAt': now,
+    });
+    await _incrementStat('vocabularyCount');
+  }
+
   Future<void> setGrammarStudied(String grammarId, {required bool isStudied, String? jlptLevel, String? title}) async {
     final ref = _userRef;
     if (ref == null) return;

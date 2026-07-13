@@ -1,181 +1,154 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 
-import '../../../../app/navigation/app_route.dart';
 import '../../../../shared/presentation/widgets/app_state_views.dart';
 import '../../../../shared/presentation/widgets/premium_button.dart';
-import '../../domain/vocabulary_word.dart';
 import '../providers/vocabulary_providers.dart';
 
-class VocabularyPage extends ConsumerWidget {
+class VocabularyPage extends ConsumerStatefulWidget {
   const VocabularyPage({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final words = ref.watch(filteredVocabularyWordsProvider);
+  ConsumerState<VocabularyPage> createState() => _VocabularyPageState();
+}
+
+class _VocabularyPageState extends ConsumerState<VocabularyPage> {
+  final _answerController = TextEditingController();
+
+  @override
+  void dispose() {
+    _answerController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    ref.listen(vocabularyQuizProvider, (previous, next) {
+      final previousWordId = previous?.valueOrNull?.word?.id;
+      final nextWordId = next.valueOrNull?.word?.id;
+      if (previousWordId != nextWordId) {
+        _answerController.clear();
+      }
+    });
+
+    final quiz = ref.watch(vocabularyQuizProvider);
 
     return Scaffold(
       appBar: AppBar(actions: const [PremiumButton()]),
       body: SafeArea(
-        child: Center(
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 980),
-            child: CustomScrollView(
-              slivers: [
-                const SliverPadding(
-                  padding: EdgeInsets.fromLTRB(20, 20, 20, 12),
-                  sliver: SliverToBoxAdapter(child: _VocabularyHeader()),
+        child: quiz.when(
+          data: (state) => state.word == null
+              ? const _EmptyVocabularyQuizView()
+              : _VocabularyQuizCard(
+                  state: state,
+                  answerController: _answerController,
                 ),
-                const SliverPadding(
-                  padding: EdgeInsets.symmetric(horizontal: 20),
-                  sliver: SliverToBoxAdapter(child: _VocabularyFilters()),
-                ),
-                SliverPadding(
-                  padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
-                  sliver: words.when(
-                    data: (items) => items.isEmpty
-                        ? const SliverFillRemaining(hasScrollBody: false, child: _EmptyVocabularyView())
-                        : SliverList.separated(
-                            itemCount: items.length,
-                            separatorBuilder: (_, __) => const SizedBox(height: 12),
-                            itemBuilder: (context, index) => _VocabularyWordCard(word: items[index]),
-                          ),
-                    error: (error, stackTrace) => SliverFillRemaining(
-                      hasScrollBody: false,
-                      child: _VocabularyErrorView(message: error.toString()),
-                    ),
-                    loading: () => const SliverFillRemaining(
-                      hasScrollBody: false,
-                      child: AppLoadingView(message: 'Loading Vocabulary\n単語を読み込み中'),
-                    ),
-                  ),
-                ),
-              ],
-            ),
+          error: (error, stackTrace) => AppErrorView(
+            title: 'Could not load Vocabulary Quiz / 単語クイズを読み込めません',
+            message: error.toString(),
+            onRetry: () => ref.invalidate(vocabularyQuizProvider),
           ),
+          loading: () => const AppLoadingView(message: 'Loading Vocabulary Quiz\n単語クイズを読み込み中'),
         ),
       ),
     );
   }
 }
 
-class _VocabularyHeader extends StatelessWidget {
-  const _VocabularyHeader();
+class _VocabularyQuizCard extends ConsumerWidget {
+  const _VocabularyQuizCard({required this.state, required this.answerController});
 
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Text('Vocabulary\n単語', style: theme.textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.w900)),
-        const SizedBox(height: 6),
-        Text('Compare English and Japanese while reviewing by JLPT level.\n英語と日本語を見比べながら、JLPTレベル別に復習できます。', style: theme.textTheme.bodyMedium?.copyWith(color: theme.colorScheme.onSurfaceVariant)),
-      ],
-    );
-  }
-}
-
-class _VocabularyFilters extends ConsumerWidget {
-  const _VocabularyFilters();
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final selectedLevel = ref.watch(selectedJlptLevelProvider);
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        SearchBar(
-          leading: const Icon(Icons.search, size: 22),
-          trailing: [
-            IconButton(
-              tooltip: 'Filter / 絞り込み',
-              onPressed: () {},
-              icon: const Icon(Icons.tune_rounded),
-            ),
-          ],
-          hintText: 'Search vocabulary / 単語を検索',
-          onChanged: (value) => ref.read(vocabularySearchQueryProvider.notifier).setQuery(value),
-        ),
-        const SizedBox(height: 14),
-        Wrap(
-          spacing: 8,
-          runSpacing: 8,
-          children: [
-            for (final level in jlptLevels)
-              FilterChip(
-                label: Text(level),
-                selected: selectedLevel == level,
-                onSelected: (_) => ref.read(selectedJlptLevelProvider.notifier).selectLevel(level),
-              ),
-          ],
-        ),
-      ],
-    );
-  }
-}
-
-class _VocabularyWordCard extends ConsumerWidget {
-  const _VocabularyWordCard({required this.word});
-
-  final VocabularyWord word;
+  final VocabularyQuizState state;
+  final TextEditingController answerController;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
+    final word = state.word!;
+    final isAnswered = state.isCorrect != null;
+    final resultColor = state.isCorrect == true ? Colors.green : colorScheme.error;
 
-    return Card(
-      child: InkWell(
-        borderRadius: BorderRadius.circular(24),
-        onTap: () => context.go(AppRoute.vocabularyDetailPath(word.id)),
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(20, 18, 12, 18),
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
+    return Center(
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.all(24),
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 560),
+          child: Card(
+            child: Padding(
+              padding: const EdgeInsets.all(28),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Text(
+                    'Vocabulary\n単語',
+                    textAlign: TextAlign.center,
+                    style: theme.textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.w900),
+                  ),
+                  const SizedBox(height: 28),
+                  Text(
+                    word.word,
+                    textAlign: TextAlign.center,
+                    style: theme.textTheme.displaySmall?.copyWith(fontWeight: FontWeight.w900),
+                  ),
+                  if (word.reading.isNotEmpty) ...[
+                    const SizedBox(height: 8),
                     Text(
-                      word.meaning,
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                      style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w900),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      word.word,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: theme.textTheme.titleMedium?.copyWith(color: colorScheme.primary, fontWeight: FontWeight.w800),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(word.reading, maxLines: 1, overflow: TextOverflow.ellipsis, style: theme.textTheme.bodyMedium?.copyWith(color: colorScheme.onSurfaceVariant)),
-                    const SizedBox(height: 12),
-                    Wrap(
-                      spacing: 8,
-                      runSpacing: 8,
-                      children: [
-                        _Tag(label: word.jlptLevel, brand: true),
-                        _Tag(label: word.partOfSpeech),
-                      ],
+                      word.reading,
+                      textAlign: TextAlign.center,
+                      style: theme.textTheme.titleMedium?.copyWith(color: colorScheme.onSurfaceVariant),
                     ),
                   ],
-                ),
+                  const SizedBox(height: 28),
+                  TextField(
+                    controller: answerController,
+                    enabled: !isAnswered,
+                    textInputAction: TextInputAction.done,
+                    decoration: const InputDecoration(
+                      labelText: 'Enter English',
+                      border: OutlineInputBorder(),
+                    ),
+                    onChanged: (value) => ref.read(vocabularyQuizProvider.notifier).updateAnswer(value),
+                    onSubmitted: (_) {
+                      if (!isAnswered) {
+                        ref.read(vocabularyQuizProvider.notifier).checkAnswer();
+                      }
+                    },
+                  ),
+                  const SizedBox(height: 20),
+                  if (!isAnswered)
+                    FilledButton(
+                      onPressed: state.answer.trim().isEmpty ? null : () => ref.read(vocabularyQuizProvider.notifier).checkAnswer(),
+                      child: const Text('Check'),
+                    )
+                  else ...[
+                    Text(
+                      state.isCorrect == true ? 'Correct!' : 'Incorrect',
+                      textAlign: TextAlign.center,
+                      style: theme.textTheme.titleLarge?.copyWith(color: resultColor, fontWeight: FontWeight.w900),
+                    ),
+                    const SizedBox(height: 18),
+                    Text(
+                      'Correct Answer',
+                      textAlign: TextAlign.center,
+                      style: theme.textTheme.labelLarge?.copyWith(color: colorScheme.onSurfaceVariant, fontWeight: FontWeight.w800),
+                    ),
+                    const SizedBox(height: 6),
+                    Text(
+                      word.meaning,
+                      textAlign: TextAlign.center,
+                      style: theme.textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.w900),
+                    ),
+                    const SizedBox(height: 22),
+                    FilledButton(
+                      onPressed: () => ref.read(vocabularyQuizProvider.notifier).nextQuestion(),
+                      child: const Text('Next'),
+                    ),
+                  ],
+                ],
               ),
-              IconButton(
-                tooltip: word.isFavorite ? 'Favorite / お気に入り解除' : 'Favorite / お気に入り追加',
-                onPressed: () => toggleFavorite(ref, word),
-                icon: Icon(word.isFavorite ? Icons.favorite : Icons.favorite_border, color: word.isFavorite ? colorScheme.error : colorScheme.onSurfaceVariant),
-              ),
-            ],
+            ),
           ),
         ),
       ),
@@ -183,37 +156,11 @@ class _VocabularyWordCard extends ConsumerWidget {
   }
 }
 
-class _Tag extends StatelessWidget {
-  const _Tag({required this.label, this.brand = false});
-  final String label;
-  final bool brand;
+class _EmptyVocabularyQuizView extends StatelessWidget {
+  const _EmptyVocabularyQuizView();
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final background = brand ? theme.colorScheme.primary : theme.colorScheme.surfaceContainerHighest;
-    final foreground = brand ? theme.colorScheme.onPrimary : theme.colorScheme.onSurfaceVariant;
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-      decoration: BoxDecoration(color: background, borderRadius: BorderRadius.circular(999)),
-      child: Text(label, maxLines: 1, overflow: TextOverflow.ellipsis, style: theme.textTheme.labelSmall?.copyWith(color: foreground, fontWeight: FontWeight.w900)),
-    );
+    return const Center(child: Text('No vocabulary found / 単語が見つかりません'));
   }
-}
-
-class _EmptyVocabularyView extends StatelessWidget {
-  const _EmptyVocabularyView();
-  @override
-  Widget build(BuildContext context) => Column(mainAxisAlignment: MainAxisAlignment.center, children: [
-        Icon(Icons.search_off_outlined, size: 56, color: Theme.of(context).colorScheme.onSurfaceVariant),
-        const SizedBox(height: 14),
-        Text('No vocabulary found / 単語が見つかりません', style: Theme.of(context).textTheme.titleMedium),
-      ]);
-}
-
-class _VocabularyErrorView extends StatelessWidget {
-  const _VocabularyErrorView({required this.message});
-  final String message;
-  @override
-  Widget build(BuildContext context) => AppErrorView(title: 'Could not load Vocabulary / 単語を読み込めません', message: message);
 }

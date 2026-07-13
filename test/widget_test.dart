@@ -9,7 +9,7 @@ void main() {
 
     expect(find.text('Today\'s Goal\n今日の目標'), findsOneWidget);
     expect(find.text('Learning Progress'), findsOneWidget);
-    expect(find.text('Continue Learning'), findsOneWidget);
+    expect(find.text('Continue Learning'), findsNothing);
     expect(find.text('Recently Studied'), findsOneWidget);
     expect(find.textContaining('Mock Exam'), findsNothing);
     expect(find.textContaining('模擬試験'), findsNothing);
