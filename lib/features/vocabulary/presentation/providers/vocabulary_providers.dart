@@ -11,24 +11,34 @@ const jlptLevels = ['N5', 'N4', 'N3', 'N2', 'N1'];
 const vocabularyJlptLevels = ['All', ...jlptLevels];
 
 class VocabularyQuizState {
-  const VocabularyQuizState({this.word, this.answer = '', this.isCorrect});
+  const VocabularyQuizState({
+    this.word,
+    this.nextWord,
+    this.answer = '',
+    this.isCorrect,
+  });
 
   final VocabularyWord? word;
+  final VocabularyWord? nextWord;
   final String answer;
   final bool? isCorrect;
 
   VocabularyQuizState copyWith({
     VocabularyWord? word,
+    VocabularyWord? nextWord,
     String? answer,
     bool? isCorrect,
     bool clearResult = false,
   }) {
     return VocabularyQuizState(
       word: word ?? this.word,
+      nextWord: nextWord ?? this.nextWord,
       answer: answer ?? this.answer,
       isCorrect: clearResult ? null : isCorrect ?? this.isCorrect,
     );
   }
+
+  VocabularyQuizState advanceToNext() => VocabularyQuizState(word: nextWord);
 }
 
 final vocabularyQuizProvider =
@@ -37,17 +47,20 @@ final vocabularyQuizProvider =
 );
 
 class VocabularyQuizNotifier extends AsyncNotifier<VocabularyQuizState> {
+  bool _isPrefetching = false;
   @override
   Future<VocabularyQuizState> build() async {
     debugPrint('vocabularyQuizProvider build start');
     final selectedLevel = ref.watch(selectedVocabularyJlptProvider);
     try {
+      final jlpt = selectedLevel == 'All' ? null : selectedLevel;
       final word = await ref
           .read(vocabularyRepositoryProvider)
-          .fetchRandomWord(jlpt: selectedLevel == 'All' ? null : selectedLevel);
+          .fetchRandomWord(jlpt: jlpt);
+      final nextWord = await _fetchNextWord(excludeWordId: word?.id, jlpt: jlpt);
       debugPrint('Quiz created');
       debugPrint('Provider completed');
-      return VocabularyQuizState(word: word);
+      return VocabularyQuizState(word: word, nextWord: nextWord);
     } on Object catch (error, stackTrace) {
       debugPrint('vocabularyQuizProvider failed: $error');
       debugPrintStack(stackTrace: stackTrace);
@@ -86,23 +99,58 @@ class VocabularyQuizNotifier extends AsyncNotifier<VocabularyQuizState> {
   }
 
   Future<void> nextQuestion() async {
-    final previousWordId = state.hasValue ? state.value?.word?.id : null;
-    state = const AsyncLoading();
+    if (!state.hasValue) {
+      return;
+    }
+
+    final current = state.value;
+    if (current == null || current.nextWord == null) {
+      await _prefetchNextQuestion();
+      return;
+    }
+
+    state = AsyncData(current.advanceToNext());
+    await _prefetchNextQuestion();
+  }
+
+  Future<void> _prefetchNextQuestion() async {
+    if (_isPrefetching || !state.hasValue) {
+      return;
+    }
+
+    final current = state.value;
+    final currentWordId = current?.word?.id;
+    if (current == null || currentWordId == null || current.nextWord != null) {
+      return;
+    }
+
+    _isPrefetching = true;
     try {
       final selectedLevel = ref.read(selectedVocabularyJlptProvider);
-      final word = await ref.read(vocabularyRepositoryProvider).fetchRandomWord(
-            excludeWordId: previousWordId,
-            jlpt: selectedLevel == 'All' ? null : selectedLevel,
-          );
-      debugPrint('Quiz created');
-      debugPrint('Provider completed');
-      state = AsyncData(VocabularyQuizState(word: word));
+      final nextWord = await _fetchNextWord(
+        excludeWordId: currentWordId,
+        jlpt: selectedLevel == 'All' ? null : selectedLevel,
+      );
+      final latest = state.value;
+      if (latest?.word?.id == currentWordId) {
+        state = AsyncData(latest!.copyWith(nextWord: nextWord));
+      }
     } on Object catch (error, stackTrace) {
-      debugPrint('vocabularyQuizProvider nextQuestion failed: $error');
+      debugPrint('vocabularyQuizProvider prefetch failed: $error');
       debugPrintStack(stackTrace: stackTrace);
-      debugPrint('Provider completed');
-      state = const AsyncData(VocabularyQuizState());
+    } finally {
+      _isPrefetching = false;
     }
+  }
+
+  Future<VocabularyWord?> _fetchNextWord({
+    required String? excludeWordId,
+    required String? jlpt,
+  }) {
+    return ref.read(vocabularyRepositoryProvider).fetchRandomWord(
+          excludeWordId: excludeWordId,
+          jlpt: jlpt,
+        );
   }
 
   String _normalize(String value) => value.trim().toLowerCase();
