@@ -1,8 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
-
-import '../../../../app/navigation/app_route.dart';
 import '../../../../shared/presentation/widgets/app_state_views.dart';
 import '../../../../shared/presentation/widgets/premium_button.dart';
 import '../../domain/home_content.dart';
@@ -46,8 +43,6 @@ class _HomeContentView extends StatelessWidget {
           padding: const EdgeInsets.fromLTRB(24, 28, 24, 36),
           children: [
             _TodayGoalCard(status: content.studyStatus),
-            const SizedBox(height: 18),
-            const _ContinueLearningSection(),
             const SizedBox(height: 18),
             _ProgressCard(levels: content.levels),
             const SizedBox(height: 18),
@@ -190,92 +185,6 @@ class _GoalMetric extends StatelessWidget {
             ),
           ),
         ]),
-      ),
-    );
-  }
-}
-
-class _ContinueLearningSection extends StatelessWidget {
-  const _ContinueLearningSection();
-
-  @override
-  Widget build(BuildContext context) {
-    return _SectionCard(
-      icon: Icons.play_circle_outline_rounded,
-      title: 'Continue Learning',
-      subtitle: '学習を続ける',
-      child: LayoutBuilder(
-        builder: (context, constraints) {
-          const spacing = 12.0;
-          final useTwoColumns = constraints.maxWidth >= 560;
-          final cardWidth = useTwoColumns
-              ? (constraints.maxWidth - spacing) / 2
-              : constraints.maxWidth;
-          final cards = [
-            SizedBox(
-              width: cardWidth,
-              child: _ContinueLearningTile(
-                emoji: '📖',
-                title: 'Vocabulary',
-                routePath: AppRoute.vocabulary.path,
-              ),
-            ),
-            SizedBox(
-              width: cardWidth,
-              child: _ContinueLearningTile(
-                emoji: '📝',
-                title: 'Grammar',
-                routePath: AppRoute.grammar.path,
-              ),
-            ),
-          ];
-
-          return Wrap(spacing: spacing, runSpacing: spacing, children: cards);
-        },
-      ),
-    );
-  }
-}
-
-class _ContinueLearningTile extends StatelessWidget {
-  const _ContinueLearningTile({
-    required this.emoji,
-    required this.title,
-    required this.routePath,
-  });
-
-  final String emoji;
-  final String title;
-  final String routePath;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-
-    return Card.filled(
-      margin: EdgeInsets.zero,
-      clipBehavior: Clip.antiAlias,
-      child: InkWell(
-        onTap: () => context.go(routePath),
-        child: Padding(
-          padding: const EdgeInsets.all(18),
-          child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            Text(emoji, style: theme.textTheme.headlineMedium),
-            const SizedBox(height: 14),
-            Text(
-              title,
-              style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w900),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              'Continue Learning →',
-              style: theme.textTheme.labelLarge?.copyWith(
-                color: theme.colorScheme.primary,
-                fontWeight: FontWeight.w800,
-              ),
-            ),
-          ]),
-        ),
       ),
     );
   }
