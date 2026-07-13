@@ -12,7 +12,7 @@ class MainShell extends StatelessWidget {
     _NavigationItem(AppRoute.home, Icons.home_outlined, Icons.home, 'Home\nホーム'),
     _NavigationItem(AppRoute.vocabulary, Icons.menu_book_outlined, Icons.menu_book, 'Vocabulary\n単語'),
     _NavigationItem(AppRoute.grammar, Icons.subject_outlined, Icons.subject, 'Grammar\n文法'),
-    _NavigationItem(AppRoute.statistics, Icons.bar_chart_outlined, Icons.bar_chart, 'Statistics\n学習記録'),
+    _NavigationItem(AppRoute.notes, Icons.note_alt_rounded, Icons.note_alt_rounded, 'Notes\nメモ'),
     _NavigationItem(AppRoute.settings, Icons.settings_outlined, Icons.settings, 'Settings\n設定'),
   ];
 
