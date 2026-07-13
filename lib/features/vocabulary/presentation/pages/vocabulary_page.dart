@@ -236,16 +236,16 @@ class _GlobalLearningPainter extends CustomPainter {
     final ink = const Color(0xFF0F172A);
     final gold = const Color(0xFFF59E0B);
     final blue = const Color(0xFF2563EB);
-    final globeCenter = Offset(size.width * 0.72, size.height * 0.34);
-    final globeRadius = math.min(size.width, size.height) * 0.34;
+    final globeCenter = Offset(size.width * 0.28, size.height * 0.72);
+    final globeRadius = math.min(size.width, size.height) * 0.48;
 
     final globeFillPaint = Paint()
       ..style = PaintingStyle.fill
-      ..color = blue.withOpacity(0.045);
+      ..color = blue.withOpacity(0.055);
     final globePaint = Paint()
       ..style = PaintingStyle.stroke
       ..strokeWidth = 1.2
-      ..color = blue.withOpacity(0.09);
+      ..color = blue.withOpacity(0.085);
     canvas.drawCircle(globeCenter, globeRadius, globeFillPaint);
     canvas.drawCircle(globeCenter, globeRadius, globePaint);
     for (final factor in const [-0.66, -0.34, 0.0, 0.34, 0.66]) {
@@ -272,25 +272,25 @@ class _GlobalLearningPainter extends CustomPainter {
       ..strokeCap = StrokeCap.round
       ..color = ink.withOpacity(0.08);
     final orbit = Path()
-      ..moveTo(size.width * 0.08, size.height * 0.28)
-      ..cubicTo(size.width * 0.28, size.height * 0.08, size.width * 0.58, size.height * 0.22, size.width * 0.88, size.height * 0.12)
-      ..cubicTo(size.width * 0.72, size.height * 0.42, size.width * 0.38, size.height * 0.48, size.width * 0.16, size.height * 0.66);
+      ..moveTo(size.width * 0.06, size.height * 0.60)
+      ..cubicTo(size.width * 0.24, size.height * 0.42, size.width * 0.58, size.height * 0.38, size.width * 0.88, size.height * 0.18)
+      ..cubicTo(size.width * 0.74, size.height * 0.50, size.width * 0.42, size.height * 0.58, size.width * 0.18, size.height * 0.78);
     _drawDashedPath(canvas, orbit, orbitPaint, dash: 10, gap: 9);
     final secondRoute = Path()
-      ..moveTo(size.width * 0.02, size.height * 0.72)
-      ..cubicTo(size.width * 0.25, size.height * 0.56, size.width * 0.52, size.height * 0.64, globeCenter.dx - globeRadius * 0.18, globeCenter.dy - globeRadius * 0.12);
+      ..moveTo(size.width * 0.05, size.height * 0.86)
+      ..cubicTo(size.width * 0.28, size.height * 0.66, size.width * 0.54, size.height * 0.62, globeCenter.dx + globeRadius * 0.44, globeCenter.dy - globeRadius * 0.28);
     _drawDashedPath(canvas, secondRoute, orbitPaint..color = blue.withOpacity(0.07), dash: 7, gap: 8);
 
-    final japanPoint = Offset(globeCenter.dx - globeRadius * 0.18, globeCenter.dy - globeRadius * 0.18);
+    final japanPoint = Offset(globeCenter.dx + globeRadius * 0.42, globeCenter.dy - globeRadius * 0.30);
     final japanGlowPaint = Paint()..maskFilter = const MaskFilter.blur(BlurStyle.normal, 30);
-    canvas.drawCircle(japanPoint, globeRadius * 0.16, japanGlowPaint..color = gold.withOpacity(0.10));
-    canvas.drawCircle(japanPoint, 5, Paint()..color = gold.withOpacity(0.10));
+    canvas.drawCircle(japanPoint, globeRadius * 0.16, japanGlowPaint..color = gold.withOpacity(0.09));
+    canvas.drawCircle(japanPoint, 5, Paint()..color = gold.withOpacity(0.09));
 
-    final planePoint = Offset(size.width * 0.58, size.height * 0.22);
+    final planePoint = Offset(size.width * 0.62, size.height * 0.38);
     canvas.save();
     canvas.translate(planePoint.dx, planePoint.dy);
     canvas.rotate(-0.35);
-    final planePainter = TextPainter(text: TextSpan(text: '✈', style: TextStyle(fontSize: 30, color: ink.withOpacity(0.1))), textDirection: TextDirection.ltr)..layout();
+    final planePainter = TextPainter(text: TextSpan(text: '✈', style: TextStyle(fontSize: 30, color: ink.withOpacity(0.09))), textDirection: TextDirection.ltr)..layout();
     planePainter.paint(canvas, Offset.zero);
     canvas.restore();
 
@@ -408,46 +408,49 @@ class _VocabularyCardStack extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final width = MediaQuery.sizeOf(context).width;
-    final cardHeight = width > 700 ? 476.0 : 452.0;
-    return SizedBox(
-      height: cardHeight + 48,
-      child: Stack(
-        alignment: Alignment.center,
-        clipBehavior: Clip.none,
-        children: [
-          for (var i = 2; i >= 1; i--) _BackCard(index: i, height: cardHeight, liftProgress: (dragOffset.dx / 180).clamp(0, 1).toDouble()),
-          AnimatedBuilder(
-            animation: Listenable.merge([entranceController, resultController, shakeController, swipeController]),
-            child: _VocabularyQuizCard(state: state, answerController: answerController, dragProgress: (dragOffset.dx / 180).clamp(0, 1).toDouble()),
-            builder: (context, child) {
-              final entrance = Curves.easeOutBack.transform(entranceController.value);
-              final pop = math.sin(resultController.value * math.pi) * 0.045;
-              final lift = state.isCorrect == true ? -18.0 * Curves.easeOutCubic.transform(resultController.value) : 0.0;
-              final shake = state.isCorrect == false ? math.sin(shakeController.value * math.pi * 8) * 10 * (1 - shakeController.value) : 0.0;
-              final dragProgress = (dragOffset.dx / 180).clamp(0, 1).toDouble();
-              final rotation = (dragOffset.dx / math.max(width, 1) * 0.28).clamp(-0.14, 0.14);
-              final card = Opacity(
-                opacity: entrance.clamp(0, 1).toDouble(),
-                child: Transform.translate(
-                  offset: Offset(44 * (1 - entrance) + shake, 34 * (1 - entrance) + lift) + dragOffset,
-                  child: Transform.rotate(
-                    angle: rotation,
-                    child: Transform.scale(scale: 0.9 + 0.1 * entrance + pop + dragProgress * 0.025, child: child),
+    final cardHeight = width > 700 ? 428.0 : 408.0;
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 22),
+      child: SizedBox(
+        height: cardHeight + 64,
+        child: Stack(
+          alignment: Alignment.center,
+          clipBehavior: Clip.none,
+          children: [
+            for (var i = 2; i >= 1; i--) _BackCard(index: i, height: cardHeight, liftProgress: (dragOffset.dx / 180).clamp(0, 1).toDouble()),
+            AnimatedBuilder(
+              animation: Listenable.merge([entranceController, resultController, shakeController, swipeController]),
+              child: _VocabularyQuizCard(state: state, answerController: answerController, dragProgress: (dragOffset.dx / 180).clamp(0, 1).toDouble()),
+              builder: (context, child) {
+                final entrance = Curves.easeOutBack.transform(entranceController.value);
+                final pop = math.sin(resultController.value * math.pi) * 0.045;
+                final lift = state.isCorrect == true ? -18.0 * Curves.easeOutCubic.transform(resultController.value) : 0.0;
+                final shake = state.isCorrect == false ? math.sin(shakeController.value * math.pi * 8) * 10 * (1 - shakeController.value) : 0.0;
+                final dragProgress = (dragOffset.dx / 180).clamp(0, 1).toDouble();
+                final rotation = (dragOffset.dx / math.max(width, 1) * 0.28).clamp(-0.14, 0.14);
+                final card = Opacity(
+                  opacity: entrance.clamp(0, 1).toDouble(),
+                  child: Transform.translate(
+                    offset: Offset(44 * (1 - entrance) + shake, 34 * (1 - entrance) + lift) + dragOffset,
+                    child: Transform.rotate(
+                      angle: rotation,
+                      child: Transform.scale(scale: 0.9 + 0.1 * entrance + pop + dragProgress * 0.025, child: child),
+                    ),
                   ),
-                ),
-              );
-              return GestureDetector(
-                behavior: HitTestBehavior.translucent,
-                onHorizontalDragStart: onDragStart,
-                onHorizontalDragUpdate: onDragUpdate,
-                onHorizontalDragEnd: onDragEnd,
-                child: card,
-              );
-            },
-          ),
-          if (state.isCorrect != null) _ResultOverlay(isCorrect: state.isCorrect!, controller: resultController),
-          _PremiumConfetti(controller: confettiController),
-        ],
+                );
+                return GestureDetector(
+                  behavior: HitTestBehavior.translucent,
+                  onHorizontalDragStart: onDragStart,
+                  onHorizontalDragUpdate: onDragUpdate,
+                  onHorizontalDragEnd: onDragEnd,
+                  child: card,
+                );
+              },
+            ),
+            if (state.isCorrect != null) _ResultOverlay(isCorrect: state.isCorrect!, controller: resultController),
+            _PremiumConfetti(controller: confettiController),
+          ],
+        ),
       ),
     );
   }
@@ -461,14 +464,14 @@ class _BackCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final baseOffset = Offset(20.0 * index, 20.0 * index);
-    final promotedOffset = index == 1 ? Offset.zero : const Offset(20, 20);
-    final baseScale = index == 1 ? 0.97 : 0.94;
-    final promotedScale = index == 1 ? 1.0 : 0.97;
+    final baseOffset = Offset(24.0 * index, 24.0 * index);
+    final promotedOffset = index == 1 ? const Offset(8, 8) : const Offset(24, 24);
+    final baseScale = index == 1 ? 0.96 : 0.92;
+    final promotedScale = index == 1 ? 0.985 : 0.955;
     final t = Curves.easeOutCubic.transform(liftProgress);
     final offset = Offset.lerp(baseOffset, promotedOffset, t)!;
     final scale = lerpDouble(baseScale, promotedScale, t)!;
-    final opacity = lerpDouble(index == 1 ? 0.84 : 0.70, index == 1 ? 0.94 : 0.84, t)!;
+    final opacity = lerpDouble(index == 1 ? 0.66 : 0.46, index == 1 ? 0.84 : 0.66, t)!;
     return Transform.translate(
       offset: offset,
       child: Transform.scale(
@@ -512,7 +515,7 @@ class _VocabularyQuizCard extends ConsumerWidget {
 
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 6),
-      constraints: const BoxConstraints(maxWidth: 620, minHeight: 452, maxHeight: 476),
+      constraints: const BoxConstraints(maxWidth: 620, minHeight: 408, maxHeight: 428),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(36),
         gradient: LinearGradient(begin: Alignment.topLeft, end: Alignment.bottomRight, colors: [Colors.white.withOpacity(0.94), const Color(0xFFFFFCF8).withOpacity(0.82), const Color(0xFFF8FBFF).withOpacity(0.88)]),
@@ -529,13 +532,19 @@ class _VocabularyQuizCard extends ConsumerWidget {
             Positioned(top: -36, right: -46, child: Container(width: 128, height: 128, decoration: BoxDecoration(shape: BoxShape.circle, color: const Color(0xFFFFF1D6).withOpacity(0.8)))),
             Positioned(top: 0, left: 0, right: 0, height: 108, child: DecoratedBox(decoration: BoxDecoration(gradient: LinearGradient(colors: [Colors.white.withOpacity(0.9), Colors.white.withOpacity(0)])))),
             Padding(
-              padding: const EdgeInsets.fromLTRB(28, 18, 28, 18),
+              padding: const EdgeInsets.fromLTRB(28, 16, 28, 16),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  Text('✨ Vocabulary Quest', textAlign: TextAlign.center, style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w900, letterSpacing: 1.2, color: const Color(0xFF64748B))),
-                  const SizedBox(height: 14),
-                  Hero(tag: 'vocabulary-${word.id}', child: Material(color: Colors.transparent, child: Text(word.word, textAlign: TextAlign.center, style: theme.textTheme.displayMedium?.copyWith(fontSize: 54, fontWeight: FontWeight.w900, color: const Color(0xFF0F172A), letterSpacing: -1.4)))),
+                  Text('📖 Vocabulary Quest', textAlign: TextAlign.center, style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w900, letterSpacing: 1.2, color: const Color(0xFF64748B))),
+                  const SizedBox(height: 10),
+                  Text(
+                    word.meaningEn.trim().isNotEmpty ? word.meaningEn.trim() : word.meaning,
+                    textAlign: TextAlign.center,
+                    style: theme.textTheme.titleLarge?.copyWith(fontSize: 24, fontWeight: FontWeight.w900, color: const Color(0xFF475569)),
+                  ),
+                  const SizedBox(height: 8),
+                  Hero(tag: 'vocabulary-${word.id}', child: Material(color: Colors.transparent, child: Text(word.word, textAlign: TextAlign.center, style: theme.textTheme.displayMedium?.copyWith(fontSize: 50, fontWeight: FontWeight.w900, color: const Color(0xFF0F172A), letterSpacing: -1.4)))),
                   if (word.reading.isNotEmpty) ...[
                     const SizedBox(height: 4),
                     Text(word.reading, textAlign: TextAlign.center, style: theme.textTheme.titleLarge?.copyWith(fontSize: 22, color: colorScheme.onSurfaceVariant, fontWeight: FontWeight.w700)),
@@ -545,7 +554,7 @@ class _VocabularyQuizCard extends ConsumerWidget {
                     padding: const EdgeInsets.symmetric(horizontal: 20),
                     child: _GlassTextField(controller: answerController, enabled: !isAnswered, onChanged: (value) => ref.read(vocabularyQuizProvider.notifier).updateAnswer(value), onSubmitted: (_) { if (!isAnswered) ref.read(vocabularyQuizProvider.notifier).checkAnswer(); }),
                   ),
-                  const SizedBox(height: 12),
+                  const SizedBox(height: 10),
                   PageTransitionSwitcher(
                     duration: const Duration(milliseconds: 360),
                     reverse: !isAnswered,
@@ -662,10 +671,10 @@ class _PressScaleButtonState extends State<_PressScaleButton> {
           child: AnimatedContainer(
             duration: const Duration(milliseconds: 130),
             curve: Curves.easeOutCubic,
-            height: 52,
+            height: 46,
             transform: Matrix4.translationValues(0, _pressed ? 3 : 0, 0),
             decoration: BoxDecoration(borderRadius: BorderRadius.circular(22), gradient: const LinearGradient(begin: Alignment.topLeft, end: Alignment.bottomRight, colors: [Color(0xFF111827), Color(0xFF334155), Color(0xFF7C3AED)]), boxShadow: [BoxShadow(color: const Color(0xFF111827).withOpacity(_pressed ? 0.18 : 0.32), blurRadius: _pressed ? 10 : 24, offset: Offset(0, _pressed ? 5 : 14))]),
-            child: Row(mainAxisAlignment: MainAxisAlignment.center, children: [Icon(widget.icon, color: Colors.white), const SizedBox(width: 10), Text(widget.label, style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w900))]),
+            child: Row(mainAxisAlignment: MainAxisAlignment.center, children: [Icon(widget.icon, color: Colors.white), const SizedBox(width: 10), Text(widget.label, style: const TextStyle(color: Colors.white, fontSize: 15, fontWeight: FontWeight.w900))]),
           ),
         ),
       ),
