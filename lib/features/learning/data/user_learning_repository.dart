@@ -20,6 +20,18 @@ class UserLearningRepository {
     return ref.collection('favorites').where('type', isEqualTo: type).snapshots().map((s) => s.docs.map((d) => d.id).toSet());
   }
 
+
+  Stream<Set<String>> watchStudiedGrammarIds() {
+    final ref = _userRef;
+    if (ref == null) return Stream.value(<String>{});
+    return ref.collection('grammar_history').snapshots().map((snapshot) {
+      return snapshot.docs.expand((doc) {
+        final grammarId = doc.data()['grammarId'] as String?;
+        return <String>{doc.id, if (grammarId != null && grammarId.isNotEmpty) grammarId};
+      }).toSet();
+    });
+  }
+
   Stream<List<FavoriteEntry>> watchFavorites() {
     final ref = _userRef;
     if (ref == null) return Stream.value(const <FavoriteEntry>[]);
