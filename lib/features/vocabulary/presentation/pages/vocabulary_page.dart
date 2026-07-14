@@ -228,7 +228,6 @@ class _LuxuryQuizBackground extends StatelessWidget {
   }
 }
 
-
 class _GlobalLearningBackdrop extends StatelessWidget {
   const _GlobalLearningBackdrop();
 
@@ -240,77 +239,177 @@ class _GlobalLearningPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final ink = const Color(0xFF0F172A);
-    final gold = const Color(0xFFF59E0B);
     final blue = const Color(0xFF2563EB);
-    final globeCenter = Offset(size.width * 0.28, size.height * 0.72);
-    final globeRadius = math.min(size.width, size.height) * 0.48;
+    final aqua = const Color(0xFF38BDF8);
+    final gold = const Color(0xFFF59E0B);
+    final white = Colors.white;
+
+    final globeRadius = math.min(size.width, size.height) * 0.66;
+    final globeCenter = Offset(size.width * 0.10, size.height * 0.86);
+    final globeBounds = Rect.fromCircle(center: globeCenter, radius: globeRadius);
+    final globeClip = Path()..addOval(globeBounds);
+
+    _drawAmbientGlass(canvas, size, ink, blue, aqua, gold, white);
 
     final globeFillPaint = Paint()
-      ..style = PaintingStyle.fill
-      ..color = blue.withOpacity(0.055);
-    final globePaint = Paint()
+      ..shader = RadialGradient(
+        center: const Alignment(0.35, -0.40),
+        radius: 0.95,
+        colors: [white.withOpacity(0.070), aqua.withOpacity(0.045), blue.withOpacity(0.020)],
+      ).createShader(globeBounds);
+    final outerRingPaint = Paint()
       ..style = PaintingStyle.stroke
-      ..strokeWidth = 1.2
-      ..color = blue.withOpacity(0.085);
+      ..strokeWidth = 2.0
+      ..color = white.withOpacity(0.075);
+    final innerRingPaint = Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1.0
+      ..color = aqua.withOpacity(0.070);
+
     canvas.drawCircle(globeCenter, globeRadius, globeFillPaint);
-    canvas.drawCircle(globeCenter, globeRadius, globePaint);
-    for (final factor in const [-0.66, -0.34, 0.0, 0.34, 0.66]) {
-      canvas.drawOval(
-        Rect.fromCenter(center: globeCenter, width: globeRadius * 2, height: globeRadius * 2 * math.cos(factor.abs())),
-        globePaint..color = blue.withOpacity(0.055 + (1 - factor.abs()) * 0.035),
-      );
-      canvas.drawLine(
-        Offset(globeCenter.dx - globeRadius, globeCenter.dy + globeRadius * factor),
-        Offset(globeCenter.dx + globeRadius, globeCenter.dy + globeRadius * factor),
-        globePaint..color = ink.withOpacity(0.05),
-      );
-    }
-    for (final factor in const [-0.62, -0.28, 0.28, 0.62]) {
-      canvas.drawOval(
-        Rect.fromCenter(center: globeCenter, width: globeRadius * 2 * math.cos(factor.abs()), height: globeRadius * 2),
-        globePaint..color = blue.withOpacity(0.06),
-      );
-    }
+    canvas.drawCircle(globeCenter, globeRadius, outerRingPaint);
+    canvas.drawCircle(globeCenter, globeRadius * 0.985, innerRingPaint);
 
-    final orbitPaint = Paint()
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 1.4
-      ..strokeCap = StrokeCap.round
-      ..color = ink.withOpacity(0.08);
-    final orbit = Path()
-      ..moveTo(size.width * 0.06, size.height * 0.60)
-      ..cubicTo(size.width * 0.24, size.height * 0.42, size.width * 0.58, size.height * 0.38, size.width * 0.88, size.height * 0.18)
-      ..cubicTo(size.width * 0.74, size.height * 0.50, size.width * 0.42, size.height * 0.58, size.width * 0.18, size.height * 0.78);
-    _drawDashedPath(canvas, orbit, orbitPaint, dash: 10, gap: 9);
-    final secondRoute = Path()
-      ..moveTo(size.width * 0.05, size.height * 0.86)
-      ..cubicTo(size.width * 0.28, size.height * 0.66, size.width * 0.54, size.height * 0.62, globeCenter.dx + globeRadius * 0.44, globeCenter.dy - globeRadius * 0.28);
-    _drawDashedPath(canvas, secondRoute, orbitPaint..color = blue.withOpacity(0.07), dash: 7, gap: 8);
-
-    final japanPoint = Offset(globeCenter.dx + globeRadius * 0.42, globeCenter.dy - globeRadius * 0.30);
-    final japanGlowPaint = Paint()..maskFilter = const MaskFilter.blur(BlurStyle.normal, 30);
-    canvas.drawCircle(japanPoint, globeRadius * 0.16, japanGlowPaint..color = gold.withOpacity(0.09));
-    canvas.drawCircle(japanPoint, 5, Paint()..color = gold.withOpacity(0.09));
-
-    final planePoint = Offset(size.width * 0.62, size.height * 0.38);
     canvas.save();
-    canvas.translate(planePoint.dx, planePoint.dy);
-    canvas.rotate(-0.35);
-    final planePainter = TextPainter(text: TextSpan(text: '✈', style: TextStyle(fontSize: 30, color: ink.withOpacity(0.09))), textDirection: TextDirection.ltr)..layout();
-    planePainter.paint(canvas, Offset.zero);
+    canvas.clipPath(globeClip);
+    _drawContinents(canvas, globeCenter, globeRadius, aqua);
+    _drawGlobeGrid(canvas, globeCenter, globeRadius, aqua, ink);
     canvas.restore();
 
-    final glowPaint = Paint()..maskFilter = const MaskFilter.blur(BlurStyle.normal, 34);
-    canvas.drawCircle(Offset(size.width * 0.22, size.height * 0.18), 72, glowPaint..color = gold.withOpacity(0.09));
-    canvas.drawCircle(Offset(size.width * 0.78, size.height * 0.72), 96, glowPaint..color = blue.withOpacity(0.08));
+    _drawJapanAndRoutes(canvas, size, globeCenter, globeRadius, aqua, gold, white, ink);
+    _drawForegroundSparkles(canvas, size, ink, aqua, white);
+  }
 
-    final starPainter = TextPainter(textDirection: TextDirection.ltr);
-    for (var i = 0; i < 24; i++) {
+  void _drawGlobeGrid(Canvas canvas, Offset c, double r, Color aqua, Color ink) {
+    final gridPaint = Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1.05
+      ..color = aqua.withOpacity(0.068);
+
+    for (final yFactor in const [-0.72, -0.48, -0.24, 0.0, 0.24, 0.48, 0.72]) {
+      final height = r * 2 * math.cos(yFactor.abs() * math.pi / 2.05);
+      canvas.drawOval(Rect.fromCenter(center: Offset(c.dx, c.dy + r * yFactor), width: r * 2, height: height * 0.20), gridPaint..color = aqua.withOpacity(yFactor == 0 ? 0.080 : 0.056));
+    }
+
+    for (final xFactor in const [-0.75, -0.50, -0.25, 0.0, 0.25, 0.50, 0.75]) {
+      canvas.drawOval(Rect.fromCenter(center: c, width: r * 2 * math.cos(xFactor.abs() * math.pi / 2.2), height: r * 2), gridPaint..color = ink.withOpacity(xFactor == 0 ? 0.055 : 0.043));
+    }
+  }
+
+  void _drawContinents(Canvas canvas, Offset c, double r, Color aqua) {
+    final landPaint = Paint()
+      ..style = PaintingStyle.fill
+      ..color = const Color(0xFFE0F2FE).withOpacity(0.072);
+    final landStroke = Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 0.9
+      ..color = aqua.withOpacity(0.055);
+
+    Path blob(List<Offset> pts) {
+      final p = Path()..moveTo(c.dx + pts.first.dx * r, c.dy + pts.first.dy * r);
+      for (var i = 1; i < pts.length; i++) {
+        final prev = pts[i - 1];
+        final next = pts[i];
+        p.quadraticBezierTo(c.dx + prev.dx * r, c.dy + prev.dy * r, c.dx + next.dx * r, c.dy + next.dy * r);
+      }
+      p.close();
+      return p;
+    }
+
+    final eurasia = blob(const [
+      Offset(0.10, -0.60), Offset(0.28, -0.70), Offset(0.53, -0.61), Offset(0.70, -0.48), Offset(0.63, -0.34), Offset(0.78, -0.24), Offset(0.62, -0.11), Offset(0.40, -0.15), Offset(0.28, 0.00), Offset(0.10, -0.06), Offset(-0.08, -0.16), Offset(-0.18, -0.34), Offset(-0.05, -0.50),
+    ]);
+    final asiaSouthEast = blob(const [
+      Offset(0.42, -0.10), Offset(0.58, -0.05), Offset(0.70, 0.08), Offset(0.61, 0.20), Offset(0.45, 0.15), Offset(0.35, 0.02),
+    ]);
+    final northAmerica = blob(const [
+      Offset(-0.82, -0.52), Offset(-0.60, -0.69), Offset(-0.34, -0.61), Offset(-0.22, -0.42), Offset(-0.37, -0.28), Offset(-0.32, -0.14), Offset(-0.54, -0.17), Offset(-0.72, -0.30),
+    ]);
+
+    for (final p in [eurasia, asiaSouthEast, northAmerica]) {
+      canvas.drawPath(p, landPaint);
+      canvas.drawPath(p, landStroke);
+    }
+  }
+
+  void _drawJapanAndRoutes(Canvas canvas, Size size, Offset c, double r, Color aqua, Color gold, Color white, Color ink) {
+    final japanPoint = Offset(c.dx + r * 0.55, c.dy - r * 0.27);
+    final glowPaint = Paint()..maskFilter = const MaskFilter.blur(BlurStyle.normal, 18);
+    canvas.drawCircle(japanPoint, r * 0.070, glowPaint..color = aqua.withOpacity(0.090));
+    canvas.drawCircle(japanPoint, r * 0.038, glowPaint..color = white.withOpacity(0.080));
+
+    final pinPaint = Paint()..color = const Color(0xFFE0F2FE).withOpacity(0.145);
+    canvas.drawCircle(japanPoint, 5.6, pinPaint);
+    canvas.drawCircle(japanPoint, 2.2, Paint()..color = gold.withOpacity(0.34));
+    final pinLinePaint = Paint()
+      ..color = aqua.withOpacity(0.10)
+      ..strokeWidth = 1.2
+      ..strokeCap = StrokeCap.round;
+    canvas.drawLine(japanPoint + const Offset(0, 4), japanPoint + const Offset(0, 17), pinLinePaint);
+
+    final routePaint = Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1.45
+      ..strokeCap = StrokeCap.round
+      ..color = white.withOpacity(0.115);
+    final routes = [
+      Path()..moveTo(japanPoint.dx, japanPoint.dy)..cubicTo(size.width * 0.46, size.height * 0.40, size.width * 0.70, size.height * 0.32, size.width * 0.92, size.height * 0.18),
+      Path()..moveTo(japanPoint.dx, japanPoint.dy)..cubicTo(size.width * 0.55, size.height * 0.62, size.width * 0.78, size.height * 0.63, size.width * 1.02, size.height * 0.48),
+      Path()..moveTo(japanPoint.dx, japanPoint.dy)..cubicTo(size.width * 0.34, size.height * 0.48, size.width * 0.18, size.height * 0.38, -20, size.height * 0.30),
+    ];
+    for (final route in routes) {
+      _drawDashedPath(canvas, route, routePaint, dash: 8, gap: 8);
+      _drawLightParticles(canvas, route, aqua, white);
+    }
+
+    _drawPlane(canvas, Offset(size.width * 0.68, size.height * 0.34), -0.48, ink.withOpacity(0.105));
+  }
+
+  void _drawPlane(Canvas canvas, Offset p, double angle, Color color) {
+    final paint = Paint()
+      ..color = color
+      ..style = PaintingStyle.fill;
+    final path = Path()
+      ..moveTo(15, 0)..lineTo(-12, -7)..lineTo(-6, 0)..lineTo(-12, 7)..close()
+      ..moveTo(-4, 0)..lineTo(-15, -13)..lineTo(-11, 0)..lineTo(-15, 13)..close();
+    canvas.save();
+    canvas.translate(p.dx, p.dy);
+    canvas.rotate(angle);
+    canvas.drawPath(path, paint);
+    canvas.restore();
+  }
+
+  void _drawLightParticles(Canvas canvas, Path path, Color aqua, Color white) {
+    for (final metric in path.computeMetrics()) {
+      for (final t in const [0.22, 0.46, 0.72]) {
+        final tangent = metric.getTangentForOffset(metric.length * t);
+        if (tangent == null) continue;
+        canvas.drawCircle(tangent.position, 2.2, Paint()..color = (t == 0.46 ? white : aqua).withOpacity(0.10));
+      }
+    }
+  }
+
+  void _drawAmbientGlass(Canvas canvas, Size size, Color ink, Color blue, Color aqua, Color gold, Color white) {
+    final blurPaint = Paint()..maskFilter = const MaskFilter.blur(BlurStyle.normal, 26);
+    canvas.drawCircle(Offset(size.width * 0.22, size.height * 0.18), 72, blurPaint..color = gold.withOpacity(0.075));
+    canvas.drawCircle(Offset(size.width * 0.78, size.height * 0.72), 96, blurPaint..color = blue.withOpacity(0.065));
+    canvas.drawCircle(Offset(size.width * 0.70, size.height * 0.12), 42, blurPaint..color = white.withOpacity(0.13));
+
+    final ringPaint = Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1.1
+      ..color = white.withOpacity(0.115);
+    canvas.drawCircle(Offset(size.width * 0.86, size.height * 0.24), 48, ringPaint);
+    canvas.drawCircle(Offset(size.width * 0.16, size.height * 0.38), 28, ringPaint..color = aqua.withOpacity(0.070));
+    canvas.drawCircle(Offset(size.width * 0.75, size.height * 0.86), 34, ringPaint..color = ink.withOpacity(0.045));
+  }
+
+  void _drawForegroundSparkles(Canvas canvas, Size size, Color ink, Color aqua, Color white) {
+    for (var i = 0; i < 46; i++) {
       final x = (math.sin(i * 12.989) * 43758.5453).abs() % 1 * size.width;
       final y = (math.sin(i * 78.233) * 24634.6345).abs() % 1 * size.height;
-      starPainter.text = TextSpan(text: i % 3 == 0 ? '✦' : '•', style: TextStyle(fontSize: i % 3 == 0 ? 12 : 8, color: ink.withOpacity(i % 3 == 0 ? 0.09 : 0.07)));
-      starPainter.layout();
-      starPainter.paint(canvas, Offset(x, y));
+      final radius = i % 5 == 0 ? 1.8 : 1.0;
+      canvas.drawCircle(Offset(x, y), radius, Paint()..color = (i % 4 == 0 ? aqua : white).withOpacity(i % 5 == 0 ? 0.11 : 0.075));
     }
   }
 
