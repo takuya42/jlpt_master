@@ -9,6 +9,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../shared/presentation/widgets/app_state_views.dart';
 import '../../../../shared/presentation/widgets/premium_button.dart';
+import '../../domain/vocabulary_word.dart';
 import '../providers/vocabulary_providers.dart';
 
 class VocabularyPage extends ConsumerStatefulWidget {
@@ -137,6 +138,11 @@ class _VocabularyPageState extends ConsumerState<VocabularyPage> with TickerProv
     });
     ref.listen(selectedVocabularyJlptProvider, (previous, next) {
       if (previous != next) _answerController.clear();
+    });
+    ref.listen(quizDirectionProvider, (previous, next) {
+      if (previous == next) return;
+      _answerController.clear();
+      ref.read(vocabularyQuizProvider.notifier).resetAnswer();
     });
 
     final quiz = ref.watch(vocabularyQuizProvider);
@@ -420,7 +426,11 @@ class _VocabularyCardStack extends StatelessWidget {
             for (var i = 2; i >= 1; i--) _BackCard(index: i, height: cardHeight, liftProgress: (dragOffset.dx / 180).clamp(0, 1).toDouble()),
             AnimatedBuilder(
               animation: Listenable.merge([entranceController, resultController, shakeController, swipeController]),
-              child: _VocabularyQuizCard(state: state, answerController: answerController, dragProgress: (dragOffset.dx / 180).clamp(0, 1).toDouble()),
+              child: _VocabularyQuizCard(
+                state: state,
+                answerController: answerController,
+                dragProgress: (dragOffset.dx / 180).clamp(0, 1).toDouble(),
+              ),
               builder: (context, child) {
                 final entrance = Curves.easeOutBack.transform(entranceController.value);
                 final pop = math.sin(resultController.value * math.pi) * 0.045;
@@ -511,6 +521,7 @@ class _VocabularyQuizCard extends ConsumerWidget {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
     final word = state.word!;
+    final direction = ref.watch(quizDirectionProvider);
     final isAnswered = state.isCorrect != null;
 
     return Container(
@@ -536,39 +547,54 @@ class _VocabularyQuizCard extends ConsumerWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    mainAxisSize: MainAxisSize.min,
+                  Stack(
+                    alignment: Alignment.center,
                     children: [
-                      const Icon(Icons.menu_book_rounded, size: 22, color: Color(0xFF64748B)),
-                      const SizedBox(width: 8),
-                      Text(
-                        'Vocabulary Quest',
-                        textAlign: TextAlign.center,
-                        style: theme.textTheme.titleMedium?.copyWith(
-                          fontWeight: FontWeight.w900,
-                          letterSpacing: 1.2,
-                          color: const Color(0xFF64748B),
-                        ),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Icon(Icons.menu_book_rounded, size: 22, color: Color(0xFF64748B)),
+                          const SizedBox(width: 8),
+                          Text(
+                            'Vocabulary Quest',
+                            textAlign: TextAlign.center,
+                            style: theme.textTheme.titleMedium?.copyWith(
+                              fontWeight: FontWeight.w900,
+                              letterSpacing: 1.2,
+                              color: const Color(0xFF64748B),
+                            ),
+                          ),
+                        ],
+                      ),
+                      Align(
+                        alignment: Alignment.centerRight,
+                        child: _DirectionToggleButton(direction: direction),
                       ),
                     ],
                   ),
                   const SizedBox(height: 10),
-                  Text(
-                    word.meaningEn.trim().isNotEmpty ? word.meaningEn.trim() : word.meaning,
-                    textAlign: TextAlign.center,
-                    style: theme.textTheme.titleLarge?.copyWith(fontSize: 24, fontWeight: FontWeight.w900, color: const Color(0xFF475569)),
+                  AnimatedSwitcher(
+                    duration: const Duration(milliseconds: 180),
+                    transitionBuilder: (child, animation) => FadeTransition(opacity: animation, child: child),
+                    child: _VocabularyPrompt(
+                      key: ValueKey('${word.id}-${direction.name}'),
+                      word: word,
+                      direction: direction,
+                    ),
                   ),
-                  const SizedBox(height: 8),
-                  Hero(tag: 'vocabulary-${word.id}', child: Material(color: Colors.transparent, child: Text(word.word, textAlign: TextAlign.center, style: theme.textTheme.displayMedium?.copyWith(fontSize: 50, fontWeight: FontWeight.w900, color: const Color(0xFF0F172A), letterSpacing: -1.4)))),
-                  if (word.reading.isNotEmpty) ...[
-                    const SizedBox(height: 4),
-                    Text(word.reading, textAlign: TextAlign.center, style: theme.textTheme.titleLarge?.copyWith(fontSize: 22, color: colorScheme.onSurfaceVariant, fontWeight: FontWeight.w700)),
-                  ],
                   const Spacer(),
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 20),
-                    child: _GlassTextField(controller: answerController, enabled: !isAnswered, onChanged: (value) => ref.read(vocabularyQuizProvider.notifier).updateAnswer(value), onSubmitted: (_) { if (!isAnswered) ref.read(vocabularyQuizProvider.notifier).checkAnswer(); }),
+                    child: _GlassTextField(
+                      controller: answerController,
+                      enabled: !isAnswered,
+                      labelText: direction.inputLabel,
+                      onChanged: (value) => ref.read(vocabularyQuizProvider.notifier).updateAnswer(value),
+                      onSubmitted: (_) {
+                        if (!isAnswered) ref.read(vocabularyQuizProvider.notifier).checkAnswer();
+                      },
+                    ),
                   ),
                   const SizedBox(height: 10),
                   PageTransitionSwitcher(
@@ -584,7 +610,7 @@ class _VocabularyQuizCard extends ConsumerWidget {
                               const SizedBox(height: 8),
                               Text('Correct Answer', style: theme.textTheme.labelLarge?.copyWith(color: colorScheme.onSurfaceVariant, fontWeight: FontWeight.w800)),
                               const SizedBox(height: 4),
-                              Text(word.meaning, textAlign: TextAlign.center, style: theme.textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.w900)),
+                              Text(direction.correctAnswerFor(word), textAlign: TextAlign.center, style: theme.textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.w900)),
                               const SizedBox(height: 10),
                               const _SwipeForNextHint(),
                             ],
@@ -596,6 +622,74 @@ class _VocabularyQuizCard extends ConsumerWidget {
           ],
         ),
       ),
+    );
+  }
+}
+
+
+class _DirectionToggleButton extends ConsumerWidget {
+  const _DirectionToggleButton({required this.direction});
+
+  final QuizDirection direction;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final nextDirection = direction == QuizDirection.japaneseToEnglish
+        ? QuizDirection.englishToJapanese
+        : QuizDirection.japaneseToEnglish;
+    return Semantics(
+      button: true,
+      label: 'Switch quiz direction',
+      child: InkWell(
+        borderRadius: BorderRadius.circular(999),
+        onTap: () => ref.read(quizDirectionProvider.notifier).state = nextDirection,
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(999),
+            color: const Color(0xFF0F172A).withOpacity(0.06),
+            border: Border.all(color: Colors.white.withOpacity(0.9)),
+          ),
+          child: Text(
+            direction.toggleLabel,
+            style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                  color: const Color(0xFF475569),
+                  fontWeight: FontWeight.w900,
+                ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _VocabularyPrompt extends StatelessWidget {
+  const _VocabularyPrompt({super.key, required this.word, required this.direction});
+
+  final VocabularyWord word;
+  final QuizDirection direction;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    return Column(
+      children: [
+        Text(
+          direction.prompt,
+          textAlign: TextAlign.center,
+          style: theme.textTheme.titleLarge?.copyWith(fontSize: 24, fontWeight: FontWeight.w900, color: const Color(0xFF475569)),
+        ),
+        const SizedBox(height: 8),
+        if (direction == QuizDirection.japaneseToEnglish) ...[
+          Hero(tag: 'vocabulary-${word.id}', child: Material(color: Colors.transparent, child: Text(word.word, textAlign: TextAlign.center, style: theme.textTheme.displayMedium?.copyWith(fontSize: 50, fontWeight: FontWeight.w900, color: const Color(0xFF0F172A), letterSpacing: -1.4)))),
+          if (word.reading.isNotEmpty) ...[
+            const SizedBox(height: 4),
+            Text(word.reading, textAlign: TextAlign.center, style: theme.textTheme.titleLarge?.copyWith(fontSize: 22, color: colorScheme.onSurfaceVariant, fontWeight: FontWeight.w700)),
+          ],
+        ] else
+          Text(direction.englishFor(word), textAlign: TextAlign.center, style: theme.textTheme.displaySmall?.copyWith(fontSize: 40, fontWeight: FontWeight.w900, color: const Color(0xFF0F172A), letterSpacing: -1.1)),
+      ],
     );
   }
 }
@@ -640,9 +734,10 @@ class _SwipeForNextHint extends StatelessWidget {
 }
 
 class _GlassTextField extends StatelessWidget {
-  const _GlassTextField({required this.controller, required this.enabled, required this.onChanged, required this.onSubmitted});
+  const _GlassTextField({required this.controller, required this.enabled, required this.labelText, required this.onChanged, required this.onSubmitted});
   final TextEditingController controller;
   final bool enabled;
+  final String labelText;
   final ValueChanged<String> onChanged;
   final ValueChanged<String> onSubmitted;
 
@@ -651,7 +746,7 @@ class _GlassTextField extends StatelessWidget {
         controller: controller,
         enabled: enabled,
         textInputAction: TextInputAction.done,
-        decoration: InputDecoration(labelText: 'Enter English', filled: true, fillColor: const Color(0xFFF8FAFC), border: OutlineInputBorder(borderRadius: BorderRadius.circular(22), borderSide: BorderSide.none), enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(22), borderSide: const BorderSide(color: Color(0xFFE2E8F0))), focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(22), borderSide: const BorderSide(color: Color(0xFF94A3B8), width: 1.4))),
+        decoration: InputDecoration(labelText: labelText, filled: true, fillColor: const Color(0xFFF8FAFC), border: OutlineInputBorder(borderRadius: BorderRadius.circular(22), borderSide: BorderSide.none), enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(22), borderSide: const BorderSide(color: Color(0xFFE2E8F0))), focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(22), borderSide: const BorderSide(color: Color(0xFF94A3B8), width: 1.4))),
         onChanged: onChanged,
         onSubmitted: onSubmitted,
       );
