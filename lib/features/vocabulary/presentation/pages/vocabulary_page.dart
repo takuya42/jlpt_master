@@ -384,7 +384,7 @@ class _VocabularyLevelFilters extends ConsumerWidget {
   }
 }
 
-class _VocabularyCardStack extends StatelessWidget {
+class _VocabularyCardStack extends ConsumerWidget {
   const _VocabularyCardStack({
     required this.state,
     required this.answerController,
@@ -412,55 +412,67 @@ class _VocabularyCardStack extends StatelessWidget {
   final GestureDragEndCallback onDragEnd;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final width = MediaQuery.sizeOf(context).width;
     final cardHeight = width > 700 ? 428.0 : 408.0;
+    final direction = ref.watch(quizDirectionProvider);
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 22),
-      child: SizedBox(
-        height: cardHeight + 64,
-        child: Stack(
-          alignment: Alignment.center,
-          clipBehavior: Clip.none,
-          children: [
-            for (var i = 2; i >= 1; i--) _BackCard(index: i, height: cardHeight, liftProgress: (dragOffset.dx / 180).clamp(0, 1).toDouble()),
-            AnimatedBuilder(
-              animation: Listenable.merge([entranceController, resultController, shakeController, swipeController]),
-              child: _VocabularyQuizCard(
-                state: state,
-                answerController: answerController,
-                dragProgress: (dragOffset.dx / 180).clamp(0, 1).toDouble(),
-              ),
-              builder: (context, child) {
-                final entrance = Curves.easeOutBack.transform(entranceController.value);
-                final pop = math.sin(resultController.value * math.pi) * 0.045;
-                final lift = state.isCorrect == true ? -18.0 * Curves.easeOutCubic.transform(resultController.value) : 0.0;
-                final shake = state.isCorrect == false ? math.sin(shakeController.value * math.pi * 8) * 10 * (1 - shakeController.value) : 0.0;
-                final dragProgress = (dragOffset.dx / 180).clamp(0, 1).toDouble();
-                final rotation = (dragOffset.dx / math.max(width, 1) * 0.28).clamp(-0.14, 0.14);
-                final card = Opacity(
-                  opacity: entrance.clamp(0, 1).toDouble(),
-                  child: Transform.translate(
-                    offset: Offset(44 * (1 - entrance) + shake, 34 * (1 - entrance) + lift) + dragOffset,
-                    child: Transform.rotate(
-                      angle: rotation,
-                      child: Transform.scale(scale: 0.9 + 0.1 * entrance + pop + dragProgress * 0.025, child: child),
-                    ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Align(
+            alignment: Alignment.centerRight,
+            child: _DirectionToggleButton(direction: direction),
+          ),
+          const SizedBox(height: 10),
+          SizedBox(
+            height: cardHeight + 64,
+            child: Stack(
+              alignment: Alignment.center,
+              clipBehavior: Clip.none,
+              children: [
+                for (var i = 2; i >= 1; i--) _BackCard(index: i, height: cardHeight, liftProgress: (dragOffset.dx / 180).clamp(0, 1).toDouble()),
+                AnimatedBuilder(
+                  animation: Listenable.merge([entranceController, resultController, shakeController, swipeController]),
+                  child: _VocabularyQuizCard(
+                    state: state,
+                    answerController: answerController,
+                    dragProgress: (dragOffset.dx / 180).clamp(0, 1).toDouble(),
                   ),
-                );
-                return GestureDetector(
-                  behavior: HitTestBehavior.translucent,
-                  onHorizontalDragStart: onDragStart,
-                  onHorizontalDragUpdate: onDragUpdate,
-                  onHorizontalDragEnd: onDragEnd,
-                  child: card,
-                );
-              },
+                  builder: (context, child) {
+                    final entrance = Curves.easeOutBack.transform(entranceController.value);
+                    final pop = math.sin(resultController.value * math.pi) * 0.045;
+                    final lift = state.isCorrect == true ? -18.0 * Curves.easeOutCubic.transform(resultController.value) : 0.0;
+                    final shake = state.isCorrect == false ? math.sin(shakeController.value * math.pi * 8) * 10 * (1 - shakeController.value) : 0.0;
+                    final dragProgress = (dragOffset.dx / 180).clamp(0, 1).toDouble();
+                    final rotation = (dragOffset.dx / math.max(width, 1) * 0.28).clamp(-0.14, 0.14);
+                    final card = Opacity(
+                      opacity: entrance.clamp(0, 1).toDouble(),
+                      child: Transform.translate(
+                        offset: Offset(44 * (1 - entrance) + shake, 34 * (1 - entrance) + lift) + dragOffset,
+                        child: Transform.rotate(
+                          angle: rotation,
+                          child: Transform.scale(scale: 0.9 + 0.1 * entrance + pop + dragProgress * 0.025, child: child),
+                        ),
+                      ),
+                    );
+                    return GestureDetector(
+                      behavior: HitTestBehavior.translucent,
+                      onHorizontalDragStart: onDragStart,
+                      onHorizontalDragUpdate: onDragUpdate,
+                      onHorizontalDragEnd: onDragEnd,
+                      child: card,
+                    );
+                  },
+                ),
+                if (state.isCorrect != null) _ResultOverlay(isCorrect: state.isCorrect!, controller: resultController),
+                _PremiumConfetti(controller: confettiController),
+              ],
             ),
-            if (state.isCorrect != null) _ResultOverlay(isCorrect: state.isCorrect!, controller: resultController),
-            _PremiumConfetti(controller: confettiController),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
@@ -547,29 +559,20 @@ class _VocabularyQuizCard extends ConsumerWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  Stack(
-                    alignment: Alignment.center,
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    mainAxisSize: MainAxisSize.min,
                     children: [
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          const Icon(Icons.menu_book_rounded, size: 22, color: Color(0xFF64748B)),
-                          const SizedBox(width: 8),
-                          Text(
-                            'Vocabulary Quest',
-                            textAlign: TextAlign.center,
-                            style: theme.textTheme.titleMedium?.copyWith(
-                              fontWeight: FontWeight.w900,
-                              letterSpacing: 1.2,
-                              color: const Color(0xFF64748B),
-                            ),
-                          ),
-                        ],
-                      ),
-                      Align(
-                        alignment: Alignment.centerRight,
-                        child: _DirectionToggleButton(direction: direction),
+                      const Icon(Icons.menu_book_rounded, size: 22, color: Color(0xFF64748B)),
+                      const SizedBox(width: 8),
+                      Text(
+                        'Vocabulary Quest',
+                        textAlign: TextAlign.center,
+                        style: theme.textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.w900,
+                          letterSpacing: 1.2,
+                          color: const Color(0xFF64748B),
+                        ),
                       ),
                     ],
                   ),
@@ -644,19 +647,24 @@ class _DirectionToggleButton extends ConsumerWidget {
         borderRadius: BorderRadius.circular(999),
         onTap: () =>
             ref.read(quizDirectionProvider.notifier).setDirection(nextDirection),
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(999),
-            color: const Color(0xFF0F172A).withOpacity(0.06),
-            border: Border.all(color: Colors.white.withOpacity(0.9)),
-          ),
-          child: Text(
-            direction.toggleLabel,
-            style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                  color: const Color(0xFF475569),
-                  fontWeight: FontWeight.w900,
-                ),
+        child: SizedBox(
+          width: 80,
+          height: 34,
+          child: DecoratedBox(
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(999),
+              color: const Color(0xFF0F172A).withOpacity(0.06),
+              border: Border.all(color: Colors.white.withOpacity(0.9)),
+            ),
+            child: Center(
+              child: Text(
+                direction.toggleLabel,
+                style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                      color: const Color(0xFF475569),
+                      fontWeight: FontWeight.w900,
+                    ),
+              ),
+            ),
           ),
         ),
       ),
