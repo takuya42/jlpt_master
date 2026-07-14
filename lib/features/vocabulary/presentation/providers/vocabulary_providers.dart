@@ -15,36 +15,66 @@ enum QuizDirection {
   englishToJapanese,
 }
 
-final quizDirectionProvider = StateProvider<QuizDirection>(
-  (ref) => QuizDirection.japaneseToEnglish,
+final quizDirectionProvider =
+    NotifierProvider<QuizDirectionNotifier, QuizDirection>(
+  QuizDirectionNotifier.new,
 );
 
+class QuizDirectionNotifier extends Notifier<QuizDirection> {
+  @override
+  QuizDirection build() => QuizDirection.japaneseToEnglish;
+
+  void setDirection(QuizDirection direction) {
+    state = direction;
+  }
+
+  void toggle() {
+    if (state == QuizDirection.japaneseToEnglish) {
+      state = QuizDirection.englishToJapanese;
+    } else {
+      state = QuizDirection.japaneseToEnglish;
+    }
+  }
+}
+
 extension QuizDirectionLabels on QuizDirection {
-  String get prompt => switch (this) {
-        QuizDirection.japaneseToEnglish => 'Translate into English',
-        QuizDirection.englishToJapanese => 'Translate into Japanese',
-      };
+  String get prompt {
+    if (this == QuizDirection.japaneseToEnglish) {
+      return 'Translate into English';
+    } else {
+      return 'Translate into Japanese';
+    }
+  }
 
-  String get inputLabel => switch (this) {
-        QuizDirection.japaneseToEnglish => 'Enter English',
-        QuizDirection.englishToJapanese => 'Enter Japanese',
-      };
+  String get inputLabel {
+    if (this == QuizDirection.japaneseToEnglish) {
+      return 'Enter English';
+    } else {
+      return 'Enter Japanese';
+    }
+  }
 
-  String get toggleLabel => switch (this) {
-        QuizDirection.japaneseToEnglish => 'JP→EN',
-        QuizDirection.englishToJapanese => 'EN→JP',
-      };
+  String get toggleLabel {
+    if (this == QuizDirection.japaneseToEnglish) {
+      return 'JP→EN';
+    } else {
+      return 'EN→JP';
+    }
+  }
 
   String englishFor(VocabularyWord word) => word.meaningEn.trim().isNotEmpty
       ? word.meaningEn.trim()
       : word.meaning.trim();
 
-  String correctAnswerFor(VocabularyWord word) => switch (this) {
-        QuizDirection.japaneseToEnglish => englishFor(word),
-        QuizDirection.englishToJapanese => word.reading.trim().isEmpty
-            ? word.word.trim()
-            : '${word.word.trim()} / ${word.reading.trim()}',
-      };
+  String correctAnswerFor(VocabularyWord word) {
+    if (this == QuizDirection.japaneseToEnglish) {
+      return englishFor(word);
+    } else {
+      return word.reading.trim().isEmpty
+          ? word.word.trim()
+          : '${word.word.trim()} / ${word.reading.trim()}';
+    }
+  }
 }
 
 class VocabularyQuizState {
@@ -140,13 +170,14 @@ class VocabularyQuizNotifier extends AsyncNotifier<VocabularyQuizState> {
 
     final direction = ref.read(quizDirectionProvider);
     final normalizedAnswer = _normalize(current.answer);
-    final isCorrect = switch (direction) {
-      QuizDirection.japaneseToEnglish =>
-        normalizedAnswer == _normalize(direction.correctAnswerFor(word)),
-      QuizDirection.englishToJapanese =>
-        normalizedAnswer == _normalize(word.word) ||
-            normalizedAnswer == _normalize(word.reading),
-    };
+    final bool isCorrect;
+    if (direction == QuizDirection.japaneseToEnglish) {
+      isCorrect =
+          normalizedAnswer == _normalize(direction.correctAnswerFor(word));
+    } else {
+      isCorrect = normalizedAnswer == _normalize(word.word) ||
+          normalizedAnswer == _normalize(word.reading);
+    }
     state = AsyncData(current.copyWith(isCorrect: isCorrect));
     await ref.read(userLearningRepositoryProvider).recordVocabularyQuizAnswer(
           wordId: word.id,
