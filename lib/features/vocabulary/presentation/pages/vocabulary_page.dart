@@ -642,7 +642,8 @@ class _DirectionToggleButton extends ConsumerWidget {
       label: 'Switch quiz direction',
       child: InkWell(
         borderRadius: BorderRadius.circular(999),
-        onTap: () => ref.read(quizDirectionProvider.notifier).state = nextDirection,
+        onTap: () =>
+            ref.read(quizDirectionProvider.notifier).setDirection(nextDirection),
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
           decoration: BoxDecoration(
