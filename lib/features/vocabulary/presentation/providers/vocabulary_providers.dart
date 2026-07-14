@@ -10,6 +10,43 @@ import '../../domain/vocabulary_word.dart';
 const jlptLevels = ['N5', 'N4', 'N3', 'N2', 'N1'];
 const vocabularyJlptLevels = ['All', ...jlptLevels];
 
+enum QuizDirection {
+  japaneseToEnglish,
+  englishToJapanese,
+}
+
+final quizDirectionProvider = StateProvider<QuizDirection>(
+  (ref) => QuizDirection.japaneseToEnglish,
+);
+
+extension QuizDirectionLabels on QuizDirection {
+  String get prompt => switch (this) {
+        QuizDirection.japaneseToEnglish => 'Translate into English',
+        QuizDirection.englishToJapanese => 'Translate into Japanese',
+      };
+
+  String get inputLabel => switch (this) {
+        QuizDirection.japaneseToEnglish => 'Enter English',
+        QuizDirection.englishToJapanese => 'Enter Japanese',
+      };
+
+  String get toggleLabel => switch (this) {
+        QuizDirection.japaneseToEnglish => 'JP→EN',
+        QuizDirection.englishToJapanese => 'EN→JP',
+      };
+
+  String englishFor(VocabularyWord word) => word.meaningEn.trim().isNotEmpty
+      ? word.meaningEn.trim()
+      : word.meaning.trim();
+
+  String correctAnswerFor(VocabularyWord word) => switch (this) {
+        QuizDirection.japaneseToEnglish => englishFor(word),
+        QuizDirection.englishToJapanese => word.reading.trim().isEmpty
+            ? word.word.trim()
+            : '${word.word.trim()} / ${word.reading.trim()}',
+      };
+}
+
 class VocabularyQuizState {
   const VocabularyQuizState({
     this.word,
@@ -80,6 +117,17 @@ class VocabularyQuizNotifier extends AsyncNotifier<VocabularyQuizState> {
     state = AsyncData(current.copyWith(answer: answer, clearResult: true));
   }
 
+  void resetAnswer() {
+    if (!state.hasValue) {
+      return;
+    }
+    final current = state.value;
+    if (current == null) {
+      return;
+    }
+    state = AsyncData(current.copyWith(answer: '', clearResult: true));
+  }
+
   Future<void> checkAnswer() async {
     if (!state.hasValue) {
       return;
@@ -90,7 +138,15 @@ class VocabularyQuizNotifier extends AsyncNotifier<VocabularyQuizState> {
       return;
     }
 
-    final isCorrect = _normalize(current.answer) == _normalize(word.meaning);
+    final direction = ref.read(quizDirectionProvider);
+    final normalizedAnswer = _normalize(current.answer);
+    final isCorrect = switch (direction) {
+      QuizDirection.japaneseToEnglish =>
+        normalizedAnswer == _normalize(direction.correctAnswerFor(word)),
+      QuizDirection.englishToJapanese =>
+        normalizedAnswer == _normalize(word.word) ||
+            normalizedAnswer == _normalize(word.reading),
+    };
     state = AsyncData(current.copyWith(isCorrect: isCorrect));
     await ref.read(userLearningRepositoryProvider).recordVocabularyQuizAnswer(
           wordId: word.id,
