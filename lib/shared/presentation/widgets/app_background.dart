@@ -4,9 +4,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
 class AppBackground extends StatelessWidget {
-  const AppBackground({super.key, required this.child});
+  const AppBackground({super.key, required this.child, this.worldMapOpacityFactor = 1, this.globeOpacityFactor = 1});
 
   final Widget child;
+  final double worldMapOpacityFactor;
+  final double globeOpacityFactor;
 
   @override
   Widget build(BuildContext context) {
@@ -15,13 +17,13 @@ class AppBackground extends StatelessWidget {
     return Stack(
       fit: StackFit.expand,
       children: [
-        CustomPaint(painter: _AppBackgroundPainter(isDark: isDark)),
+        CustomPaint(painter: _AppBackgroundPainter(isDark: isDark, globeOpacityFactor: globeOpacityFactor)),
         IgnorePointer(
           child: Center(
             child: FractionallySizedBox(
               widthFactor: 1.34,
               child: Opacity(
-                opacity: isDark ? 0.060 : 0.048,
+                opacity: (isDark ? 0.060 : 0.048) * worldMapOpacityFactor,
                 child: SvgPicture.string(
                   _worldMapSvg,
                   fit: BoxFit.contain,
@@ -52,9 +54,12 @@ const _worldMapSvg = """
 """;
 
 class _AppBackgroundPainter extends CustomPainter {
-  const _AppBackgroundPainter({required this.isDark});
+  const _AppBackgroundPainter({required this.isDark, required this.globeOpacityFactor});
 
   final bool isDark;
+  final double globeOpacityFactor;
+
+  double _globeAlpha(double alpha) => alpha * globeOpacityFactor;
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -95,10 +100,10 @@ class _AppBackgroundPainter extends CustomPainter {
           center: const Alignment(0.28, -0.36),
           radius: 1.02,
           colors: [
-            white.withValues(alpha: isDark ? 0.135 : 0.160),
-            cyan.withValues(alpha: isDark ? 0.070 : 0.080),
-            blue.withValues(alpha: isDark ? 0.030 : 0.036),
-            purple.withValues(alpha: isDark ? 0.018 : 0.022),
+            white.withValues(alpha: _globeAlpha(isDark ? 0.135 : 0.160)),
+            cyan.withValues(alpha: _globeAlpha(isDark ? 0.070 : 0.080)),
+            blue.withValues(alpha: _globeAlpha(isDark ? 0.030 : 0.036)),
+            purple.withValues(alpha: _globeAlpha(isDark ? 0.018 : 0.022)),
           ],
           stops: const [0.0, 0.36, 0.74, 1.0],
         ).createShader(globeBounds),
@@ -108,7 +113,7 @@ class _AppBackgroundPainter extends CustomPainter {
       ..style = PaintingStyle.stroke
       ..strokeWidth = 8
       ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 12)
-      ..color = cyan.withValues(alpha: isDark ? 0.055 : 0.045);
+      ..color = cyan.withValues(alpha: _globeAlpha(isDark ? 0.055 : 0.045));
     canvas.drawCircle(globeCenter, globeRadius * 1.008, halo);
     canvas.drawCircle(
       globeCenter,
@@ -118,10 +123,10 @@ class _AppBackgroundPainter extends CustomPainter {
         ..strokeWidth = 1.25
         ..shader = SweepGradient(
           colors: [
-            white.withValues(alpha: 0.16),
-            cyan.withValues(alpha: 0.075),
-            white.withValues(alpha: 0.03),
-            white.withValues(alpha: 0.16),
+            white.withValues(alpha: _globeAlpha(0.16)),
+            cyan.withValues(alpha: _globeAlpha(0.075)),
+            white.withValues(alpha: _globeAlpha(0.03)),
+            white.withValues(alpha: _globeAlpha(0.16)),
           ],
         ).createShader(globeBounds),
     );
@@ -148,13 +153,13 @@ class _AppBackgroundPainter extends CustomPainter {
           width: r * 1.92,
           height: r * 2 * math.cos(y.abs() * math.pi / 2.08) * 0.18,
         ),
-        paint..color = cyan.withValues(alpha: y == 0 ? 0.050 : 0.034),
+        paint..color = cyan.withValues(alpha: _globeAlpha(y == 0 ? 0.050 : 0.034)),
       );
     }
     for (final x in const [-0.58, -0.28, 0.0, 0.28, 0.58]) {
       canvas.drawOval(
         Rect.fromCenter(center: c, width: r * 2 * math.cos(x.abs() * math.pi / 2.16), height: r * 1.96),
-        paint..color = ink.withValues(alpha: x == 0 ? 0.034 : 0.026),
+        paint..color = ink.withValues(alpha: _globeAlpha(x == 0 ? 0.034 : 0.026)),
       );
     }
   }
@@ -165,14 +170,14 @@ class _AppBackgroundPainter extends CustomPainter {
         begin: Alignment.topLeft,
         end: Alignment.bottomRight,
         colors: [
-          const Color(0xFFFFFFFF).withValues(alpha: isDark ? 0.060 : 0.070),
-          const Color(0xFFBDEBFF).withValues(alpha: isDark ? 0.055 : 0.060),
+          const Color(0xFFFFFFFF).withValues(alpha: _globeAlpha(isDark ? 0.060 : 0.070)),
+          const Color(0xFFBDEBFF).withValues(alpha: _globeAlpha(isDark ? 0.055 : 0.060)),
         ],
       ).createShader(Rect.fromCircle(center: c, radius: r));
     final stroke = Paint()
       ..style = PaintingStyle.stroke
       ..strokeWidth = 0.55
-      ..color = cyan.withValues(alpha: isDark ? 0.038 : 0.032);
+      ..color = cyan.withValues(alpha: _globeAlpha(isDark ? 0.038 : 0.032));
 
     Path smooth(List<Offset> pts) {
       final path = Path()..moveTo(c.dx + pts.first.dx * r, c.dy + pts.first.dy * r);
@@ -206,15 +211,15 @@ class _AppBackgroundPainter extends CustomPainter {
   void _drawJapanAndRoutes(Canvas canvas, Size size, Offset c, double r, Color cyan, Color orange, Color white, Color ink) {
     final japan = Offset(c.dx + r * 0.58, c.dy - r * 0.28);
     final glow = Paint()..maskFilter = const MaskFilter.blur(BlurStyle.normal, 18);
-    canvas.drawCircle(japan, r * 0.070, glow..color = cyan.withValues(alpha: 0.080));
-    canvas.drawCircle(japan, r * 0.030, glow..color = white.withValues(alpha: 0.075));
+    canvas.drawCircle(japan, r * 0.070, glow..color = cyan.withValues(alpha: _globeAlpha(0.080)));
+    canvas.drawCircle(japan, r * 0.030, glow..color = white.withValues(alpha: _globeAlpha(0.075)));
 
-    final islandPaint = Paint()..color = white.withValues(alpha: isDark ? 0.185 : 0.230);
+    final islandPaint = Paint()..color = white.withValues(alpha: _globeAlpha(isDark ? 0.185 : 0.230));
     for (final p in [const Offset(-4.8, -8.5), const Offset(-1.0, -3.0), const Offset(3.2, 3.0), const Offset(5.8, 8.4)]) {
       canvas.drawOval(Rect.fromCenter(center: japan + p, width: 3.1, height: 7.2), islandPaint);
     }
-    canvas.drawCircle(japan, 2.2, Paint()..color = orange.withValues(alpha: 0.30));
-    canvas.drawCircle(japan, 1.15, Paint()..color = white.withValues(alpha: 0.45));
+    canvas.drawCircle(japan, 2.2, Paint()..color = orange.withValues(alpha: _globeAlpha(0.30)));
+    canvas.drawCircle(japan, 1.15, Paint()..color = white.withValues(alpha: _globeAlpha(0.45)));
 
     final routes = [
       Path()..moveTo(japan.dx, japan.dy)..cubicTo(size.width * 0.50, size.height * 0.37, size.width * 0.73, size.height * 0.27, size.width * 0.96, size.height * 0.15),
@@ -224,12 +229,12 @@ class _AppBackgroundPainter extends CustomPainter {
       ..style = PaintingStyle.stroke
       ..strokeWidth = 0.95
       ..strokeCap = StrokeCap.round
-      ..color = white.withValues(alpha: isDark ? 0.105 : 0.088);
+      ..color = white.withValues(alpha: _globeAlpha(isDark ? 0.105 : 0.088));
     for (final route in routes) {
       _drawDashedPath(canvas, route, routePaint, dash: 5.5, gap: 9.0);
     }
-    _drawPlane(canvas, Offset(size.width * 0.70, size.height * 0.29), -0.44, ink.withValues(alpha: isDark ? 0.090 : 0.070));
-    _drawPlane(canvas, Offset(size.width * 0.84, size.height * 0.52), -0.12, ink.withValues(alpha: isDark ? 0.075 : 0.058));
+    _drawPlane(canvas, Offset(size.width * 0.70, size.height * 0.29), -0.44, ink.withValues(alpha: _globeAlpha(isDark ? 0.090 : 0.070)));
+    _drawPlane(canvas, Offset(size.width * 0.84, size.height * 0.52), -0.12, ink.withValues(alpha: _globeAlpha(isDark ? 0.075 : 0.058)));
   }
 
   void _drawPlane(Canvas canvas, Offset p, double angle, Color color) {
@@ -264,7 +269,7 @@ class _AppBackgroundPainter extends CustomPainter {
       ..color = white.withValues(alpha: isDark ? 0.095 : 0.085);
     canvas.drawCircle(Offset(size.width * 0.86, size.height * 0.25), 52, ring);
     canvas.drawCircle(Offset(size.width * 0.86, size.height * 0.25), 66, ring..color = white.withValues(alpha: isDark ? 0.040 : 0.034));
-    canvas.drawCircle(Offset(size.width * 0.18, size.height * 0.42), 30, ring..color = cyan.withValues(alpha: isDark ? 0.055 : 0.045));
+    canvas.drawCircle(Offset(size.width * 0.18, size.height * 0.42), 30, ring..color = cyan.withValues(alpha: _globeAlpha(isDark ? 0.055 : 0.045)));
   }
 
   void _drawLightParticles(Canvas canvas, Size size, Color cyan, Color white) {
@@ -287,5 +292,6 @@ class _AppBackgroundPainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(covariant _AppBackgroundPainter oldDelegate) => oldDelegate.isDark != isDark;
+  bool shouldRepaint(covariant _AppBackgroundPainter oldDelegate) =>
+      oldDelegate.isDark != isDark || oldDelegate.globeOpacityFactor != globeOpacityFactor;
 }

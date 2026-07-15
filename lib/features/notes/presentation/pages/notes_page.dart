@@ -5,7 +5,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../shared/presentation/widgets/app_background.dart';
 import '../../../../shared/presentation/widgets/app_state_views.dart';
-import '../../../../shared/presentation/widgets/premium_button.dart';
 import '../providers/notes_providers.dart';
 
 class NotesPage extends ConsumerWidget {
@@ -15,8 +14,9 @@ class NotesPage extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final note = ref.watch(noteProvider);
     return Scaffold(
-      appBar: AppBar(actions: const [PremiumButton()]),
       body: AppBackground(
+        worldMapOpacityFactor: 0.42,
+        globeOpacityFactor: 0.46,
         child: SafeArea(
           child: note.when(
             loading: () => const AppLoadingView(message: 'Loading Notes\nメモを読み込み中'),
@@ -44,6 +44,7 @@ class _NotesContent extends StatefulWidget {
 
 class _NotesContentState extends State<_NotesContent> with SingleTickerProviderStateMixin {
   late final AnimationController _controller;
+  final _editorKey = GlobalKey<_MemoEditorState>();
 
   @override
   void initState() {
@@ -63,20 +64,17 @@ class _NotesContentState extends State<_NotesContent> with SingleTickerProviderS
       child: ConstrainedBox(
         constraints: const BoxConstraints(maxWidth: 720),
         child: Padding(
-          padding: const EdgeInsets.fromLTRB(24, 20, 24, 36),
+          padding: const EdgeInsets.fromLTRB(24, 16, 24, 0),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               _FadeSlideTransition(
                 animation: _controller,
                 index: 0,
-                child: Text(
-                  'Notes\nメモ',
-                  style: Theme.of(context).textTheme.headlineMedium?.copyWith(fontWeight: FontWeight.w900),
-                ),
+                child: _NotesHeader(editorKey: _editorKey),
               ),
-              const SizedBox(height: 20),
-              Expanded(child: MemoEditor(initialMemo: widget.initialMemo, entryAnimation: _controller)),
+              const SizedBox(height: 16),
+              Expanded(child: MemoEditor(key: _editorKey, initialMemo: widget.initialMemo, entryAnimation: _controller)),
             ],
           ),
         ),
@@ -143,13 +141,12 @@ class _MemoEditorState extends ConsumerState<MemoEditor> with TickerProviderStat
   AnimationController? _toastController;
   var _saving = false;
   var _lastSavedMemo = '';
-  var _buttonPressed = false;
 
   @override
   void initState() {
     super.initState();
     _memoController = TextEditingController(text: widget.initialMemo);
-    _focusNode = FocusNode()..addListener(() => setState(() {}));
+    _focusNode = FocusNode();
     _lastSavedMemo = widget.initialMemo;
   }
 
@@ -174,13 +171,12 @@ class _MemoEditorState extends ConsumerState<MemoEditor> with TickerProviderStat
 
   @override
   Widget build(BuildContext context) {
-    final inputCard = _FadeSlideTransition(
+    final editor = _FadeSlideTransition(
       animation: widget.entryAnimation,
       index: 1,
-      child: _MemoInputCard(
+      child: _MemoInputArea(
         controller: _memoController,
         focusNode: _focusNode,
-        focused: _focusNode.hasFocus,
         onChanged: _scheduleAutoSave,
         expand: widget.entryAnimation != null,
       ),
@@ -188,28 +184,15 @@ class _MemoEditorState extends ConsumerState<MemoEditor> with TickerProviderStat
 
     return LayoutBuilder(
       builder: (context, constraints) {
-        final canExpandInput = constraints.hasBoundedHeight;
-
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            if (canExpandInput) Expanded(child: inputCard) else inputCard,
-            const SizedBox(height: 20),
-            _FadeSlideTransition(
-              animation: widget.entryAnimation,
-              index: 2,
-              child: _GradientSaveButton(
-                saving: _saving,
-                pressed: _buttonPressed,
-                onPressedChanged: (value) => setState(() => _buttonPressed = value),
-                onPressed: _saving ? null : () => _save(showToast: true),
-              ),
-            ),
-          ],
-        );
+        if (constraints.hasBoundedHeight) {
+          return editor;
+        }
+        return SizedBox(height: 360, child: editor);
       },
     );
   }
+
+  Future<void> saveFromHeader() => _save(showToast: true);
 
   void _scheduleAutoSave(String _) {
     _debounce?.cancel();
@@ -253,82 +236,64 @@ class _MemoEditorState extends ConsumerState<MemoEditor> with TickerProviderStat
   }
 }
 
-class _MemoInputCard extends StatelessWidget {
-  const _MemoInputCard({
+class _NotesHeader extends StatelessWidget {
+  const _NotesHeader({required this.editorKey});
+
+  final GlobalKey<_MemoEditorState> editorKey;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Expanded(
+          child: Text(
+            'Notes\nメモ',
+            style: Theme.of(context).textTheme.headlineMedium?.copyWith(fontWeight: FontWeight.w900),
+          ),
+        ),
+        TextButton(
+          onPressed: () => editorKey.currentState?.saveFromHeader(),
+          child: const Text('保存'),
+        ),
+      ],
+    );
+  }
+}
+
+class _MemoInputArea extends StatelessWidget {
+  const _MemoInputArea({
     required this.controller,
     required this.focusNode,
-    required this.focused,
     required this.onChanged,
     required this.expand,
   });
 
   final TextEditingController controller;
   final FocusNode focusNode;
-  final bool focused;
   final ValueChanged<String> onChanged;
   final bool expand;
 
   @override
   Widget build(BuildContext context) {
-    return AnimatedContainer(
-      duration: const Duration(milliseconds: 180),
-      height: expand ? null : 360,
-      constraints: const BoxConstraints(minHeight: 360),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(32),
-        border: Border.all(color: focused ? const Color(0xFF6D6CFF) : const Color(0xFFE5E7EB), width: focused ? 1.6 : 1),
-        boxShadow: [
-          BoxShadow(color: Colors.black.withValues(alpha: 0.07), blurRadius: 18, offset: const Offset(0, 10)),
-          if (focused) BoxShadow(color: const Color(0xFF7C6CFF).withValues(alpha: 0.22), blurRadius: 22, spreadRadius: 1),
-        ],
+    return TextField(
+      controller: controller,
+      focusNode: focusNode,
+      expands: expand,
+      maxLines: expand ? null : 12,
+      minLines: expand ? null : 8,
+      textAlignVertical: TextAlignVertical.top,
+      keyboardType: TextInputType.multiline,
+      decoration: const InputDecoration(
+        hintText: 'Write your notes...',
+        hintStyle: TextStyle(color: Color(0xFF9CA3AF), fontWeight: FontWeight.w500),
+        border: InputBorder.none,
+        enabledBorder: InputBorder.none,
+        focusedBorder: InputBorder.none,
+        filled: false,
+        contentPadding: EdgeInsets.zero,
       ),
-      child: TextField(
-        controller: controller,
-        focusNode: focusNode,
-        expands: true,
-        maxLines: null,
-        minLines: null,
-        textAlignVertical: TextAlignVertical.top,
-        decoration: InputDecoration(
-          hintText: 'Write your notes...',
-          hintStyle: const TextStyle(color: Color(0xFF9CA3AF), fontWeight: FontWeight.w500),
-          border: InputBorder.none,
-          contentPadding: const EdgeInsets.all(24),
-        ),
-        onChanged: onChanged,
-      ),
-    );
-  }
-}
-
-class _GradientSaveButton extends StatelessWidget {
-  const _GradientSaveButton({required this.saving, required this.pressed, required this.onPressedChanged, required this.onPressed});
-
-  final bool saving;
-  final bool pressed;
-  final ValueChanged<bool> onPressedChanged;
-  final VoidCallback? onPressed;
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTapDown: onPressed == null ? null : (_) => onPressedChanged(true),
-      onTapUp: onPressed == null ? null : (_) => onPressedChanged(false),
-      onTapCancel: onPressed == null ? null : () => onPressedChanged(false),
-      onTap: onPressed,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 120),
-        height: 60,
-        transform: Matrix4.translationValues(0, pressed ? 3 : 0, 0),
-        alignment: Alignment.center,
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(20),
-          gradient: LinearGradient(colors: [const Color(0xFF5B6CFF).withValues(alpha: saving ? 0.60 : 1), const Color(0xFF9C7CFF).withValues(alpha: saving ? 0.60 : 1)]),
-          boxShadow: [BoxShadow(color: const Color(0xFF6D6CFF).withValues(alpha: pressed ? 0.18 : 0.34), blurRadius: pressed ? 12 : 20, offset: Offset(0, pressed ? 6 : 12))],
-        ),
-        child: Text(saving ? '保存中...' : '保存', style: const TextStyle(color: Colors.white, fontSize: 17, fontWeight: FontWeight.w900, letterSpacing: 0.4)),
-      ),
+      onChanged: onChanged,
     );
   }
 }
