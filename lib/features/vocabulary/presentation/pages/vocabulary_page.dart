@@ -228,8 +228,8 @@ class _VocabularyLevelFilters extends ConsumerWidget {
                 Expanded(
                   child: AnimatedContainer(
                     duration: const Duration(milliseconds: 260),
-                    curve: Curves.easeOutCubic,
-                    decoration: BoxDecoration(
+                  curve: Curves.easeOutCubic,
+                  decoration: BoxDecoration(
                       borderRadius: BorderRadius.circular(18),
                       gradient: selectedLevel == level ? const LinearGradient(colors: [Color(0xFF111827), Color(0xFF475569)]) : null,
                       boxShadow: selectedLevel == level ? const [BoxShadow(color: Color(0x33111827), blurRadius: 16, offset: Offset(0, 8))] : null,
@@ -303,7 +303,7 @@ class _VocabularyCardStack extends ConsumerWidget {
           ),
           const SizedBox(height: 10),
           SizedBox(
-            height: cardHeight + 64,
+          height: cardHeight + 64,
             child: Stack(
               alignment: Alignment.center,
               clipBehavior: Clip.none,
@@ -376,9 +376,9 @@ class _BackCard extends StatelessWidget {
         child: Opacity(
           opacity: opacity,
           child: Container(
-            height: height,
+          height: height,
             margin: const EdgeInsets.symmetric(horizontal: 6),
-            decoration: BoxDecoration(
+          decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(36),
               gradient: LinearGradient(
                 begin: Alignment.topLeft,
@@ -396,6 +396,18 @@ class _BackCard extends StatelessWidget {
   }
 }
 
+class _VocabularyCardColors {
+  const _VocabularyCardColors._();
+
+  static const primaryText = Color(0xFF0F172A);
+  static const secondaryText = Color(0xFF334155);
+  static const inputFill = Color(0xFFF8FAFC);
+  static const inputBorder = Color(0xFFCBD5E1);
+  static const textShadow = [
+    Shadow(color: Color(0x66FFFFFF), blurRadius: 10, offset: Offset(0, 1)),
+  ];
+}
+
 class _VocabularyQuizCard extends ConsumerWidget {
   const _VocabularyQuizCard({required this.state, required this.answerController, required this.dragProgress});
 
@@ -406,7 +418,6 @@ class _VocabularyQuizCard extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
     final word = state.word!;
     final direction = ref.watch(quizDirectionProvider);
     final isAnswered = state.isCorrect != null;
@@ -416,8 +427,17 @@ class _VocabularyQuizCard extends ConsumerWidget {
       constraints: const BoxConstraints(maxWidth: 620, minHeight: 408, maxHeight: 428),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(36),
-        gradient: LinearGradient(begin: Alignment.topLeft, end: Alignment.bottomRight, colors: [Colors.white.withOpacity(0.94), const Color(0xFFFFFCF8).withOpacity(0.82), const Color(0xFFF8FBFF).withOpacity(0.88)]),
-        border: Border.all(color: Colors.white.withOpacity(0.9), width: 1.4),
+        gradient: const LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            Color(0xFFEAF1FA),
+            Color(0xFFE9E2D8),
+            Color(0xFFDCE8F6),
+          ],
+          stops: [0, .48, 1],
+        ),
+        border: Border.all(color: Colors.white.withOpacity(0.58), width: 1.2),
         boxShadow: [
           BoxShadow(color: const Color(0x24334155).withOpacity(0.14 + dragProgress * 0.08), blurRadius: 44 + dragProgress * 18, offset: Offset(0, 28 + dragProgress * 8)),
           const BoxShadow(color: Color(0x18FFFFFF), blurRadius: 8, offset: Offset(-4, -4)),
@@ -427,8 +447,34 @@ class _VocabularyQuizCard extends ConsumerWidget {
         borderRadius: BorderRadius.circular(36),
         child: Stack(
           children: [
-            Positioned(top: -36, right: -46, child: Container(width: 128, height: 128, decoration: BoxDecoration(shape: BoxShape.circle, color: const Color(0xFFFFF1D6).withOpacity(0.8)))),
-            Positioned(top: 0, left: 0, right: 0, height: 108, child: DecoratedBox(decoration: BoxDecoration(gradient: LinearGradient(colors: [Colors.white.withOpacity(0.9), Colors.white.withOpacity(0)])))),
+            Positioned(
+              top: -36,
+              right: -46,
+              child: Container(
+                width: 128,
+              height: 128,
+              decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: const Color(0xFFFFF1D6).withOpacity(0.32),
+                ),
+              ),
+            ),
+            Positioned(
+              top: 0,
+              left: 0,
+              right: 0,
+            height: 108,
+              child: DecoratedBox(
+              decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [
+                      Colors.white.withOpacity(0.22),
+                      Colors.white.withOpacity(0),
+                    ],
+                  ),
+                ),
+              ),
+            ),
             Padding(
               padding: const EdgeInsets.fromLTRB(28, 16, 28, 16),
               child: Column(
@@ -438,7 +484,7 @@ class _VocabularyQuizCard extends ConsumerWidget {
                     mainAxisAlignment: MainAxisAlignment.center,
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Icon(Icons.menu_book_rounded, size: 22, color: colorScheme.onSurfaceVariant),
+                      Icon(Icons.menu_book_rounded, size: 22, color: _VocabularyCardColors.secondaryText),
                       const SizedBox(width: 8),
                       Text(
                         'Vocabulary Quest',
@@ -446,7 +492,8 @@ class _VocabularyQuizCard extends ConsumerWidget {
                         style: theme.textTheme.titleMedium?.copyWith(
                           fontWeight: FontWeight.w900,
                           letterSpacing: 1.2,
-                          color: colorScheme.onSurfaceVariant,
+                          color: _VocabularyCardColors.secondaryText,
+                          shadows: _VocabularyCardColors.textShadow,
                         ),
                       ),
                     ],
@@ -486,9 +533,9 @@ class _VocabularyQuizCard extends ConsumerWidget {
                             children: [
                               Text(state.isCorrect == true ? 'Correct!' : 'Incorrect', style: theme.textTheme.titleLarge?.copyWith(color: state.isCorrect == true ? const Color(0xFF16A34A) : const Color(0xFFEF4444), fontWeight: FontWeight.w900)),
                               const SizedBox(height: 8),
-                              Text('Correct Answer', style: theme.textTheme.labelLarge?.copyWith(color: colorScheme.onSurfaceVariant, fontWeight: FontWeight.w800)),
+                              Text('Correct Answer', style: theme.textTheme.labelLarge?.copyWith(color: _VocabularyCardColors.secondaryText, fontWeight: FontWeight.w800)),
                               const SizedBox(height: 4),
-                              Text(direction.correctAnswerFor(word), textAlign: TextAlign.center, style: theme.textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.w900)),
+                              Text(direction.correctAnswerFor(word), textAlign: TextAlign.center, style: theme.textTheme.headlineSmall?.copyWith(color: _VocabularyCardColors.primaryText, fontWeight: FontWeight.w900, shadows: _VocabularyCardColors.textShadow)),
                               const SizedBox(height: 10),
                               const _SwipeForNextHint(),
                             ],
@@ -528,7 +575,7 @@ class _DirectionToggleButton extends ConsumerWidget {
           width: 80,
           height: 34,
           child: DecoratedBox(
-            decoration: BoxDecoration(
+          decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(999),
               color: colorScheme.onSurface.withValues(alpha: 0.06),
               border: Border.all(color: colorScheme.outlineVariant),
@@ -558,23 +605,62 @@ class _VocabularyPrompt extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
     return Column(
       children: [
         Text(
           direction.prompt,
           textAlign: TextAlign.center,
-          style: theme.textTheme.titleLarge?.copyWith(fontSize: 24, fontWeight: FontWeight.w900, color: colorScheme.onSurfaceVariant),
+          style: theme.textTheme.titleLarge?.copyWith(
+            fontSize: 24,
+            fontWeight: FontWeight.w900,
+            color: _VocabularyCardColors.secondaryText,
+            shadows: _VocabularyCardColors.textShadow,
+          ),
         ),
         const SizedBox(height: 8),
         if (direction == QuizDirection.japaneseToEnglish) ...[
-          Hero(tag: 'vocabulary-${word.id}', child: Material(color: Colors.transparent, child: Text(word.word, textAlign: TextAlign.center, style: theme.textTheme.displayMedium?.copyWith(fontSize: 50, fontWeight: FontWeight.w900, color: colorScheme.onSurface, letterSpacing: -1.4)))),
+          Hero(
+            tag: 'vocabulary-${word.id}',
+            child: Material(
+              color: Colors.transparent,
+              child: Text(
+                word.word,
+                textAlign: TextAlign.center,
+                style: theme.textTheme.displayMedium?.copyWith(
+                  fontSize: 50,
+                  fontWeight: FontWeight.w900,
+                  color: _VocabularyCardColors.primaryText,
+                  letterSpacing: -1.4,
+                  shadows: _VocabularyCardColors.textShadow,
+                ),
+              ),
+            ),
+          ),
           if (word.reading.isNotEmpty) ...[
             const SizedBox(height: 4),
-            Text(word.reading, textAlign: TextAlign.center, style: theme.textTheme.titleLarge?.copyWith(fontSize: 22, color: colorScheme.onSurfaceVariant, fontWeight: FontWeight.w700)),
+            Text(
+              word.reading,
+              textAlign: TextAlign.center,
+              style: theme.textTheme.titleLarge?.copyWith(
+                fontSize: 22,
+                color: _VocabularyCardColors.secondaryText,
+                fontWeight: FontWeight.w800,
+                shadows: _VocabularyCardColors.textShadow,
+              ),
+            ),
           ],
         ] else
-          Text(direction.englishFor(word), textAlign: TextAlign.center, style: theme.textTheme.displaySmall?.copyWith(fontSize: 40, fontWeight: FontWeight.w900, color: colorScheme.onSurface, letterSpacing: -1.1)),
+          Text(
+            direction.englishFor(word),
+            textAlign: TextAlign.center,
+            style: theme.textTheme.displaySmall?.copyWith(
+              fontSize: 40,
+              fontWeight: FontWeight.w900,
+              color: _VocabularyCardColors.primaryText,
+              letterSpacing: -1.1,
+              shadows: _VocabularyCardColors.textShadow,
+            ),
+          ),
       ],
     );
   }
@@ -634,22 +720,37 @@ class _GlassTextField extends StatelessWidget {
     final colorScheme = theme.colorScheme;
 
     return TextField(
-        controller: controller,
-        style: theme.textTheme.bodyLarge?.copyWith(color: colorScheme.onSurface),
-        enabled: enabled,
-        textInputAction: TextInputAction.done,
-        decoration: InputDecoration(
+      controller: controller,
+      style: theme.textTheme.bodyLarge?.copyWith(
+        color: _VocabularyCardColors.primaryText,
+        fontWeight: FontWeight.w700,
+      ),
+      enabled: enabled,
+      textInputAction: TextInputAction.done,
+      decoration: InputDecoration(
           labelText: labelText,
-          labelStyle: theme.textTheme.bodyMedium?.copyWith(color: colorScheme.onSurface.withValues(alpha: 0.45)),
-          filled: true,
-          fillColor: colorScheme.surfaceContainer,
-          border: OutlineInputBorder(borderRadius: BorderRadius.circular(22), borderSide: BorderSide.none),
-          enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(22), borderSide: BorderSide(color: colorScheme.outlineVariant)),
-          focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(22), borderSide: BorderSide(color: colorScheme.primary, width: 1.4)),
+        labelStyle: theme.textTheme.bodyMedium?.copyWith(
+          color: _VocabularyCardColors.secondaryText,
+          fontWeight: FontWeight.w700,
         ),
-        onChanged: onChanged,
-        onSubmitted: onSubmitted,
-      );
+        filled: true,
+        fillColor: _VocabularyCardColors.inputFill,
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(22),
+          borderSide: BorderSide.none,
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(22),
+          borderSide: const BorderSide(color: _VocabularyCardColors.inputBorder),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(22),
+          borderSide: BorderSide(color: colorScheme.primary, width: 1.4),
+        ),
+      ),
+      onChanged: onChanged,
+      onSubmitted: onSubmitted,
+    );
   }
 }
 
@@ -677,16 +778,42 @@ class _PressScaleButtonState extends State<_PressScaleButton> {
         onTapDown: widget.enabled ? (_) => setState(() => _pressed = true) : null,
         onTapCancel: () => setState(() => _pressed = false),
         onTapUp: widget.enabled ? (_) { setState(() => _pressed = false); widget.onPressed(); } : null,
-        child: AnimatedOpacity(
-          opacity: widget.enabled ? 1 : 0.45,
-          duration: const Duration(milliseconds: 180),
-          child: AnimatedContainer(
-            duration: const Duration(milliseconds: 130),
-            curve: Curves.easeOutCubic,
-            height: 46,
-            transform: Matrix4.translationValues(0, _pressed ? 3 : 0, 0),
-            decoration: BoxDecoration(borderRadius: BorderRadius.circular(22), gradient: const LinearGradient(begin: Alignment.topLeft, end: Alignment.bottomRight, colors: [Color(0xFF111827), Color(0xFF334155), Color(0xFF7C3AED)]), boxShadow: [BoxShadow(color: const Color(0xFF111827).withOpacity(_pressed ? 0.18 : 0.32), blurRadius: _pressed ? 10 : 24, offset: Offset(0, _pressed ? 5 : 14))]),
-            child: Row(mainAxisAlignment: MainAxisAlignment.center, children: [Icon(widget.icon, color: Colors.white), const SizedBox(width: 10), Text(widget.label, style: const TextStyle(color: Colors.white, fontSize: 15, fontWeight: FontWeight.w900))]),
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 130),
+          curve: Curves.easeOutCubic,
+          height: 46,
+          transform: Matrix4.translationValues(0, _pressed ? 3 : 0, 0),
+          decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(22),
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: widget.enabled
+                    ? const [Color(0xFF111827), Color(0xFF334155), Color(0xFF7C3AED)]
+                    : const [Color(0xFF334155), Color(0xFF475569), Color(0xFF5B4B8A)],
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: const Color(0xFF111827).withOpacity(widget.enabled ? (_pressed ? 0.18 : 0.32) : 0.18),
+                  blurRadius: _pressed ? 10 : 24,
+                  offset: Offset(0, _pressed ? 5 : 14),
+                ),
+              ],
+            ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(widget.icon, color: Colors.white),
+              const SizedBox(width: 10),
+              Text(
+                widget.label,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 15,
+                  fontWeight: FontWeight.w900,
+                ),
+              ),
+            ],
           ),
         ),
       ),
@@ -710,7 +837,7 @@ class _ResultOverlay extends StatelessWidget {
             opacity: value.clamp(0, 1).toDouble(),
             child: Container(
               margin: const EdgeInsets.symmetric(horizontal: 16),
-              decoration: BoxDecoration(
+            decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(32),
                 boxShadow: [BoxShadow(color: (isCorrect ? const Color(0xFF22C55E) : const Color(0xFFEF4444)).withOpacity(0.32 * (1 - controller.value * 0.35)), blurRadius: isCorrect ? 70 : 46, spreadRadius: isCorrect ? 14 : 3)],
               ),
@@ -719,8 +846,8 @@ class _ResultOverlay extends StatelessWidget {
                   scale: 0.55 + value * 0.65,
                   child: Container(
                     width: 96,
-                    height: 96,
-                    decoration: BoxDecoration(shape: BoxShape.circle, color: (isCorrect ? const Color(0xFF22C55E) : const Color(0xFFEF4444)).withOpacity(0.92), boxShadow: const [BoxShadow(color: Color(0x33000000), blurRadius: 24, offset: Offset(0, 12))]),
+                  height: 96,
+                  decoration: BoxDecoration(shape: BoxShape.circle, color: (isCorrect ? const Color(0xFF22C55E) : const Color(0xFFEF4444)).withOpacity(0.92), boxShadow: const [BoxShadow(color: Color(0x33000000), blurRadius: 24, offset: Offset(0, 12))]),
                     child: Icon(isCorrect ? Icons.check_rounded : Icons.close_rounded, color: Colors.white, size: 62),
                   ),
                 ),
@@ -767,8 +894,8 @@ class _PremiumConfetti extends StatelessWidget {
                       angle: t * math.pi * (1 + i % 4),
                       child: Container(
                         width: i.isEven ? 8 : 6,
-                        height: i.isEven ? 14 : 6,
-                        decoration: BoxDecoration(
+                      height: i.isEven ? 14 : 6,
+                      decoration: BoxDecoration(
                           color: _colors[i % _colors.length],
                           borderRadius: BorderRadius.circular(3),
                         ),
