@@ -62,33 +62,23 @@ class _NotesContentState extends State<_NotesContent> with SingleTickerProviderS
     return Center(
       child: ConstrainedBox(
         constraints: const BoxConstraints(maxWidth: 720),
-        child: ListView(
-          padding: const EdgeInsets.fromLTRB(24, 28, 24, 36),
-          children: [
-            _FadeSlideTransition(
-              animation: _controller,
-              index: 0,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Notes\nメモ',
-                    style: Theme.of(context).textTheme.headlineMedium?.copyWith(fontWeight: FontWeight.w900),
-                  ),
-                  const SizedBox(height: 10),
-                  Text(
-                    'Save useful words and grammar.',
-                    style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                          color: const Color(0xFF6B7280),
-                          fontWeight: FontWeight.w600,
-                        ),
-                  ),
-                ],
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(24, 20, 24, 36),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              _FadeSlideTransition(
+                animation: _controller,
+                index: 0,
+                child: Text(
+                  'Notes\nメモ',
+                  style: Theme.of(context).textTheme.headlineMedium?.copyWith(fontWeight: FontWeight.w900),
+                ),
               ),
-            ),
-            const SizedBox(height: 24),
-            MemoEditor(initialMemo: widget.initialMemo, entryAnimation: _controller),
-          ],
+              const SizedBox(height: 20),
+              Expanded(child: MemoEditor(initialMemo: widget.initialMemo, entryAnimation: _controller)),
+            ],
+          ),
         ),
       ),
     );
@@ -184,36 +174,41 @@ class _MemoEditorState extends ConsumerState<MemoEditor> with TickerProviderStat
 
   @override
   Widget build(BuildContext context) {
-    final content = Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        _FadeSlideTransition(
-          animation: widget.entryAnimation,
-          index: 1,
-          child: _MemoInputCard(
-            controller: _memoController,
-            focusNode: _focusNode,
-            focused: _focusNode.hasFocus,
-            onChanged: _scheduleAutoSave,
-          ),
-        ),
-        const SizedBox(height: 18),
-        _FadeSlideTransition(animation: widget.entryAnimation, index: 2, child: const _TipsCard()),
-        const SizedBox(height: 24),
-        _FadeSlideTransition(
-          animation: widget.entryAnimation,
-          index: 3,
-          child: _GradientSaveButton(
-            saving: _saving,
-            pressed: _buttonPressed,
-            onPressedChanged: (value) => setState(() => _buttonPressed = value),
-            onPressed: _saving ? null : () => _save(showToast: true),
-          ),
-        ),
-      ],
+    final inputCard = _FadeSlideTransition(
+      animation: widget.entryAnimation,
+      index: 1,
+      child: _MemoInputCard(
+        controller: _memoController,
+        focusNode: _focusNode,
+        focused: _focusNode.hasFocus,
+        onChanged: _scheduleAutoSave,
+        expand: widget.entryAnimation != null,
+      ),
     );
 
-    return content;
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final canExpandInput = constraints.hasBoundedHeight;
+
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            if (canExpandInput) Expanded(child: inputCard) else inputCard,
+            const SizedBox(height: 20),
+            _FadeSlideTransition(
+              animation: widget.entryAnimation,
+              index: 2,
+              child: _GradientSaveButton(
+                saving: _saving,
+                pressed: _buttonPressed,
+                onPressedChanged: (value) => setState(() => _buttonPressed = value),
+                onPressed: _saving ? null : () => _save(showToast: true),
+              ),
+            ),
+          ],
+        );
+      },
+    );
   }
 
   void _scheduleAutoSave(String _) {
@@ -259,18 +254,26 @@ class _MemoEditorState extends ConsumerState<MemoEditor> with TickerProviderStat
 }
 
 class _MemoInputCard extends StatelessWidget {
-  const _MemoInputCard({required this.controller, required this.focusNode, required this.focused, required this.onChanged});
+  const _MemoInputCard({
+    required this.controller,
+    required this.focusNode,
+    required this.focused,
+    required this.onChanged,
+    required this.expand,
+  });
 
   final TextEditingController controller;
   final FocusNode focusNode;
   final bool focused;
   final ValueChanged<String> onChanged;
+  final bool expand;
 
   @override
   Widget build(BuildContext context) {
     return AnimatedContainer(
       duration: const Duration(milliseconds: 180),
-      height: 360,
+      height: expand ? null : 360,
+      constraints: const BoxConstraints(minHeight: 360),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(32),
@@ -288,42 +291,12 @@ class _MemoInputCard extends StatelessWidget {
         minLines: null,
         textAlignVertical: TextAlignVertical.top,
         decoration: InputDecoration(
-          prefixIcon: const Padding(
-            padding: EdgeInsets.only(left: 22, right: 10, top: 20),
-            child: Icon(Icons.edit_note_rounded, color: Color(0xFF5B6CFF), size: 30),
-          ),
-          prefixIconConstraints: const BoxConstraints(minWidth: 62, minHeight: 54),
-          hintText: 'Write words, grammar or anything you want to remember.',
+          hintText: 'Write your notes...',
           hintStyle: const TextStyle(color: Color(0xFF9CA3AF), fontWeight: FontWeight.w500),
           border: InputBorder.none,
-          contentPadding: const EdgeInsets.fromLTRB(0, 24, 24, 24),
+          contentPadding: const EdgeInsets.all(24),
         ),
         onChanged: onChanged,
-      ),
-    );
-  }
-}
-
-class _TipsCard extends StatelessWidget {
-  const _TipsCard();
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.92),
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: const Color(0xFFE5E7EB)),
-        boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 16, offset: const Offset(0, 8))],
-      ),
-      child: const Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text('💡 Tips', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w900, color: Color(0xFF111827))),
-          SizedBox(height: 12),
-          Text('• Save difficult vocabulary.\n• Write your own example sentences.\n• Review every day.', style: TextStyle(height: 1.7, color: Color(0xFF4B5563), fontWeight: FontWeight.w600)),
-        ],
       ),
     );
   }
