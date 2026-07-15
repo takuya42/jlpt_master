@@ -75,9 +75,9 @@ class MockHomeRepository implements HomeRepository {
         ),
       ],
       studyStatus: const StudyStatusData(
-        studyTimeMinutes: 0,
+        studyTimeLabel: '0m',
         studyDays: 0,
-        accuracyPercent: 0,
+        progressPercent: 0,
         goalProgress: 0,
       ),
       recentHistory: const [

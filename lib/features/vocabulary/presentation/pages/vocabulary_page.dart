@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:math' as math;
 import 'dart:ui';
 
@@ -12,6 +13,7 @@ import '../../../../shared/presentation/widgets/app_state_views.dart';
 import '../../../../shared/presentation/widgets/premium_button.dart';
 import '../../domain/vocabulary_word.dart';
 import '../providers/vocabulary_providers.dart';
+import '../../../study_stats/presentation/providers/study_stats_provider.dart';
 
 class VocabularyPage extends ConsumerStatefulWidget {
   const VocabularyPage({super.key});
@@ -29,11 +31,13 @@ class _VocabularyPageState extends ConsumerState<VocabularyPage> with TickerProv
   late final AnimationController _swipeController;
   Offset _dragOffset = Offset.zero;
   bool _isSwipingAway = false;
+  late final DateTime _studyStartedAt;
   Animation<Offset>? _settleAnimation;
 
   @override
   void initState() {
     super.initState();
+    _studyStartedAt = DateTime.now();
     _cardEntranceController = AnimationController(vsync: this, duration: const Duration(milliseconds: 720))..forward();
     _resultController = AnimationController(vsync: this, duration: const Duration(milliseconds: 780));
     _shakeController = AnimationController(vsync: this, duration: const Duration(milliseconds: 520));
@@ -55,6 +59,7 @@ class _VocabularyPageState extends ConsumerState<VocabularyPage> with TickerProv
     _shakeController.dispose();
     _confettiController.dispose();
     _swipeController.dispose();
+    unawaited(ref.read(studyStatsProvider.notifier).addStudyTime(DateTime.now().difference(_studyStartedAt)));
     super.dispose();
   }
 

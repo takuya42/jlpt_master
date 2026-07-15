@@ -5,6 +5,7 @@ import '../../data/google_sheet_vocabulary_repository.dart';
 import '../../data/vocabulary_repository.dart';
 import '../../../../features/auth/presentation/providers/auth_providers.dart';
 import '../../../../features/learning/presentation/providers/learning_providers.dart';
+import '../../../../features/study_stats/presentation/providers/study_stats_provider.dart';
 import '../../domain/vocabulary_word.dart';
 
 const jlptLevels = ['N5', 'N4', 'N3', 'N2', 'N1'];
@@ -179,10 +180,13 @@ class VocabularyQuizNotifier extends AsyncNotifier<VocabularyQuizState> {
           normalizedAnswer == _normalize(word.reading);
     }
     state = AsyncData(current.copyWith(isCorrect: isCorrect));
-    await ref.read(userLearningRepositoryProvider).recordVocabularyQuizAnswer(
-          wordId: word.id,
-          isCorrect: isCorrect,
-        );
+    await Future.wait([
+      ref.read(userLearningRepositoryProvider).recordVocabularyQuizAnswer(
+            wordId: word.id,
+            isCorrect: isCorrect,
+          ),
+      ref.read(studyStatsProvider.notifier).markVocabularySolved(word.id),
+    ]);
   }
 
   Future<void> nextQuestion() async {
@@ -191,6 +195,10 @@ class VocabularyQuizNotifier extends AsyncNotifier<VocabularyQuizState> {
     }
 
     final current = state.value;
+    final word = current?.word;
+    if (word != null && current?.isCorrect == null) {
+      await ref.read(studyStatsProvider.notifier).markVocabularySolved(word.id);
+    }
     if (current == null || current.nextWord == null) {
       await _prefetchNextQuestion();
       return;

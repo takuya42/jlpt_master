@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../features/auth/presentation/providers/auth_providers.dart';
 import '../../../../features/learning/presentation/providers/learning_providers.dart';
+import '../../../../features/study_stats/presentation/providers/study_stats_provider.dart';
 import '../../data/google_sheet_grammar_repository.dart';
 import '../../data/grammar_repository.dart';
 import '../../domain/grammar_pattern.dart';
@@ -104,18 +105,23 @@ Future<void> toggleGrammarFavorite(WidgetRef ref, GrammarPattern pattern) async 
 
 Future<void> toggleGrammarStudied(WidgetRef ref, GrammarPattern pattern) async {
   final studiedIds = ref.read(studiedGrammarIdsProvider).asData?.value ?? <String>{};
+  final isStudied = !studiedIds.contains(pattern.id);
   await ref.read(userLearningRepositoryProvider).setGrammarStudied(
         pattern.id,
-        isStudied: !studiedIds.contains(pattern.id),
+        isStudied: isStudied,
         jlptLevel: pattern.jlpt,
         title: pattern.grammar,
       );
+  if (isStudied) {
+    await ref.read(studyStatsProvider.notifier).markGrammarSolved(pattern.id);
+  }
 }
 
-Future<void> recordGrammarStudy(WidgetRef ref, GrammarPattern pattern) {
-  return ref.read(userLearningRepositoryProvider).recordGrammarStudy(
+Future<void> recordGrammarStudy(WidgetRef ref, GrammarPattern pattern) async {
+  await ref.read(userLearningRepositoryProvider).recordGrammarStudy(
         pattern.id,
         jlptLevel: pattern.jlpt,
         title: pattern.grammar,
       );
+  await ref.read(studyStatsProvider.notifier).markGrammarSolved(pattern.id);
 }
