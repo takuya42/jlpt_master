@@ -1,43 +1,21 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../domain/note.dart';
 
 class NotesRepository {
-  NotesRepository({FirebaseFirestore? firestore, FirebaseAuth? auth})
-      : _firestore = firestore ?? FirebaseFirestore.instance,
-        _auth = auth ?? FirebaseAuth.instance;
+  NotesRepository({SharedPreferencesAsync? preferences})
+    : _preferences = preferences ?? SharedPreferencesAsync();
 
-  final FirebaseFirestore _firestore;
-  final FirebaseAuth _auth;
+  static const _memoKey = 'notes.memo';
 
-  CollectionReference<Map<String, dynamic>>? get _notesRef {
-    final uid = _auth.currentUser?.uid;
-    if (uid == null) return null;
-    return _firestore.collection('users').doc(uid).collection('notes');
-  }
+  final SharedPreferencesAsync _preferences;
 
-  Stream<Note> watchNote({String noteId = Note.defaultNoteId}) {
-    final ref = _notesRef;
-    if (ref == null) return Stream.value(Note.empty(id: noteId));
-    return ref.doc(noteId).snapshots().map((snapshot) {
-      if (!snapshot.exists) return Note.empty(id: noteId);
-      return Note.fromSnapshot(snapshot);
-    });
+  Stream<Note> watchNote({String noteId = Note.defaultNoteId}) async* {
+    final memo = await _preferences.getString(_memoKey) ?? '';
+    yield Note.empty(id: noteId).copyWith(memo: memo);
   }
 
   Future<void> saveMemo(String memo, {String noteId = Note.defaultNoteId}) async {
-    final ref = _notesRef;
-    if (ref == null) return;
-    final doc = ref.doc(noteId);
-    await _firestore.runTransaction((transaction) async {
-      final snapshot = await transaction.get(doc);
-      transaction.set(doc, {
-        'id': doc.id,
-        'memo': memo,
-        if (!snapshot.exists) 'createdAt': FieldValue.serverTimestamp(),
-        'updatedAt': FieldValue.serverTimestamp(),
-      }, SetOptions(merge: true));
-    });
+    await _preferences.setString(_memoKey, memo);
   }
 }
