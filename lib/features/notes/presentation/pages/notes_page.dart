@@ -268,6 +268,9 @@ class _MemoInputArea extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
     return TextField(
       controller: controller,
       focusNode: focusNode,
@@ -276,9 +279,10 @@ class _MemoInputArea extends StatelessWidget {
       minLines: expand ? null : 8,
       textAlignVertical: TextAlignVertical.top,
       keyboardType: TextInputType.multiline,
-      decoration: const InputDecoration(
+      style: theme.textTheme.bodyLarge?.copyWith(color: colorScheme.onSurface),
+      decoration: InputDecoration(
         hintText: 'Write your notes...',
-        hintStyle: TextStyle(color: Color(0xFF9CA3AF), fontWeight: FontWeight.w500),
+        hintStyle: theme.textTheme.bodyLarge?.copyWith(color: colorScheme.onSurface.withValues(alpha: 0.45), fontWeight: FontWeight.w500),
         border: InputBorder.none,
         enabledBorder: InputBorder.none,
         focusedBorder: InputBorder.none,
@@ -297,6 +301,9 @@ class _SavedToast extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
     return Positioned(
       left: 0,
       right: 0,
@@ -311,8 +318,8 @@ class _SavedToast extends StatelessWidget {
                 color: Colors.transparent,
                 child: Container(
                   padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
-                  decoration: BoxDecoration(color: const Color(0xFF111827).withValues(alpha: 0.92), borderRadius: BorderRadius.circular(999), boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.20), blurRadius: 16, offset: const Offset(0, 8))]),
-                  child: const Text('Saved', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w900)),
+                  decoration: BoxDecoration(color: colorScheme.inverseSurface.withValues(alpha: 0.92), borderRadius: BorderRadius.circular(999), boxShadow: [BoxShadow(color: colorScheme.shadow.withValues(alpha: 0.20), blurRadius: 16, offset: const Offset(0, 8))]),
+                  child: Text('Saved', style: theme.textTheme.labelLarge?.copyWith(color: colorScheme.onInverseSurface, fontWeight: FontWeight.w900)),
                 ),
               ),
             ),

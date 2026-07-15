@@ -143,7 +143,7 @@ class _GrammarFilters extends ConsumerWidget {
       mainAxisSize: MainAxisSize.min,
       children: [
         SearchBar(
-          leading: const Icon(Icons.search, size: 22),
+          leading: Icon(Icons.search, size: 22, color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.45)),
           hintText: 'Search grammar / 文法を検索',
           onChanged: (value) =>
               ref.read(grammarSearchQueryProvider.notifier).setQuery(value),
@@ -184,7 +184,7 @@ class _GrammarCard extends ConsumerWidget {
     final isFavorite = favoriteIds.contains(pattern.id);
 
     return Card(
-      color: Colors.white,
+      color: colorScheme.surfaceContainer,
       elevation: 1,
       shadowColor: colorScheme.shadow.withValues(alpha: 0.12),
       shape: RoundedRectangleBorder(
@@ -224,8 +224,10 @@ class _GrammarCard extends ConsumerWidget {
                   Text(
                     pattern.grammar,
                     textAlign: TextAlign.center,
-                    style: theme.textTheme.titleLarge
-                        ?.copyWith(fontWeight: FontWeight.w900),
+                    style: theme.textTheme.titleLarge?.copyWith(
+                      fontWeight: FontWeight.w900,
+                      color: colorScheme.onSurface,
+                    ),
                   ),
                   const SizedBox(height: 3),
                   Text(
@@ -269,8 +271,10 @@ class _GrammarCard extends ConsumerWidget {
               pattern.exampleJp,
               maxLines: 2,
               overflow: TextOverflow.ellipsis,
-              style: theme.textTheme.titleMedium
-                  ?.copyWith(fontWeight: FontWeight.w800),
+              style: theme.textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.w800,
+                color: colorScheme.onSurface,
+              ),
             ),
             const SizedBox(height: 8),
             Text(
