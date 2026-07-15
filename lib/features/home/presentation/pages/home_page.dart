@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../../shared/presentation/widgets/app_background.dart';
 import '../../../../shared/presentation/widgets/app_state_views.dart';
 import '../../../../shared/presentation/widgets/premium_button.dart';
 import '../../domain/home_content.dart';
@@ -14,15 +15,17 @@ class HomePage extends ConsumerWidget {
 
     return Scaffold(
       appBar: AppBar(actions: const [PremiumButton()]),
-      body: SafeArea(
-        child: homeContent.when(
-          data: (content) => _HomeContentView(content: content),
-          error: (error, stackTrace) => AppErrorView(
-            title: 'Home\nホームを読み込めません',
-            message: error.toString(),
-            onRetry: () => ref.invalidate(homeContentProvider),
+      body: AppBackground(
+        child: SafeArea(
+          child: homeContent.when(
+            data: (content) => _HomeContentView(content: content),
+            error: (error, stackTrace) => AppErrorView(
+              title: 'Home\nホームを読み込めません',
+              message: error.toString(),
+              onRetry: () => ref.invalidate(homeContentProvider),
+            ),
+            loading: () => const AppLoadingView(message: 'Loading Home\nホームを読み込み中'),
           ),
-          loading: () => const AppLoadingView(message: 'Loading Home\nホームを読み込み中'),
         ),
       ),
     );

@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../app/navigation/app_route.dart';
+import '../../../../shared/presentation/widgets/app_background.dart';
 import '../../../auth/presentation/providers/auth_providers.dart';
 import '../providers/theme_mode_provider.dart';
 
@@ -73,13 +74,14 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     return Scaffold(
-      body: SafeArea(
-        child: Center(
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 820),
-            child: ListView(
-              padding: const EdgeInsets.fromLTRB(24, 28, 24, 36),
-              children: [
+      body: AppBackground(
+        child: SafeArea(
+          child: Center(
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 820),
+              child: ListView(
+                padding: const EdgeInsets.fromLTRB(24, 28, 24, 36),
+                children: [
                 Text(
                   'Settings\n設定',
                   style: theme.textTheme.headlineMedium?.copyWith(fontWeight: FontWeight.w900),
@@ -122,6 +124,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
             ),
           ),
         ),
+      ),
       ),
     );
   }

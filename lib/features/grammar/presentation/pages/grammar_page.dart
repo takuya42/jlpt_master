@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../../shared/presentation/widgets/app_background.dart';
 import '../../../../shared/presentation/widgets/app_state_views.dart';
 import '../../../../app/navigation/app_route.dart';
 import '../../../../shared/presentation/widgets/premium_button.dart';
@@ -17,15 +18,16 @@ class GrammarPage extends ConsumerWidget {
     final patterns = ref.watch(filteredGrammarPatternsProvider);
 
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: Colors.transparent,
       appBar: AppBar(actions: const [PremiumButton()]),
-      body: SafeArea(
-        child: Center(
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 980),
-            child: CustomScrollView(
-              slivers: [
-                const SliverPadding(
+      body: AppBackground(
+        child: SafeArea(
+          child: Center(
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 980),
+              child: CustomScrollView(
+                slivers: [
+                  const SliverPadding(
                   padding: EdgeInsets.fromLTRB(20, 18, 20, 12),
                   sliver: SliverToBoxAdapter(child: _GrammarHeader()),
                 ),
@@ -57,6 +59,7 @@ class GrammarPage extends ConsumerWidget {
             ),
           ),
         ),
+      ),
       ),
     );
   }
