@@ -1,6 +1,7 @@
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 
 class AppBackground extends StatelessWidget {
   const AppBackground({super.key, required this.child});
@@ -9,12 +10,46 @@ class AppBackground extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return CustomPaint(
-      painter: _AppBackgroundPainter(isDark: Theme.of(context).brightness == Brightness.dark),
-      child: child,
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    return Stack(
+      fit: StackFit.expand,
+      children: [
+        CustomPaint(painter: _AppBackgroundPainter(isDark: isDark)),
+        IgnorePointer(
+          child: Center(
+            child: FractionallySizedBox(
+              widthFactor: 1.34,
+              child: Opacity(
+                opacity: isDark ? 0.060 : 0.048,
+                child: SvgPicture.string(
+                  _worldMapSvg,
+                  fit: BoxFit.contain,
+                  colorFilter: ColorFilter.mode(
+                    isDark ? const Color(0xFFE8FAFF) : const Color(0xFF7EDBFF),
+                    BlendMode.srcIn,
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+        child,
+      ],
     );
   }
 }
+
+const _worldMapSvg = """
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 620">
+  <path d="M91 219c25-58 91-91 165-87 42 2 80 13 114 36 20 14 45 18 69 12 33-8 74-1 98 22 22 21 19 48-3 66-27 23-71 16-99 37-24 18-15 53-39 73-27 22-72 5-104 21-31 15-39 57-71 66-36 10-67-25-69-59-1-30 17-57 4-85-14-31-78-44-65-102z"/>
+  <path d="M376 406c29-17 72-10 95 17 31 37 17 95 48 131 15 18 42 32 38 55-43 7-98-17-128-60-26-38-25-85-56-119-8-9-5-19 3-24z"/>
+  <path d="M545 152c34-45 92-66 150-59 25 3 48 13 72 9 37-6 75-35 112-21 33 13 38 54 14 76-31 28-82 16-116 41-33 24-20 70-49 98-30 29-81 6-119 27-32 18-39 61-72 75-39 16-80-21-72-63 7-38 49-54 57-91 7-31-1-64 23-92z"/>
+  <path d="M703 318c47-22 112-3 141 41 18 27 19 63 44 85 25 23 67 23 89 52 20 28 5 72-29 83-45 14-88-25-111-63-19-31-30-66-58-90-23-20-58-25-78-50-16-19-18-46 2-58z"/>
+  <path d="M850 222c56-35 142-34 195 9 36 29 49 78 30 117-17 36-59 52-97 43-35-8-57-38-92-45-30-7-67 3-89-21-29-32 13-82 53-103z"/>
+  <path d="M1017 421c27-18 70-19 96 2 21 17 26 50 11 72-18 27-58 29-85 12-30-18-50-62-22-86z"/>
+</svg>
+""";
 
 class _AppBackgroundPainter extends CustomPainter {
   const _AppBackgroundPainter({required this.isDark});
@@ -47,8 +82,8 @@ class _AppBackgroundPainter extends CustomPainter {
 
     _drawAmbient(canvas, size, ink, blue, purple, cyan, orange, white);
 
-    final globeRadius = size.width * 0.43;
-    final globeCenter = Offset(size.width * 0.14, size.height * 0.84);
+    final globeRadius = size.width * 0.26;
+    final globeCenter = Offset(size.width * 0.15, size.height * 0.90);
     final globeBounds = Rect.fromCircle(center: globeCenter, radius: globeRadius);
     final globeClip = Path()..addOval(globeBounds);
 
