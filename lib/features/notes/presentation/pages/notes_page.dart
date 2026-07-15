@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../shared/presentation/widgets/app_background.dart';
 import '../../../../shared/presentation/widgets/app_state_views.dart';
 import '../../../../shared/presentation/widgets/premium_button.dart';
 import '../providers/notes_providers.dart';
@@ -15,30 +16,79 @@ class NotesPage extends ConsumerWidget {
     final note = ref.watch(noteProvider);
     return Scaffold(
       appBar: AppBar(actions: const [PremiumButton()]),
-      body: SafeArea(
-        child: note.when(
-          loading: () => const AppLoadingView(message: 'Loading Notes\nメモを読み込み中'),
-          error: (error, stackTrace) => AppErrorView(
-            title: 'Notes\nメモ',
-            message: error.toString(),
-            onRetry: () => ref.invalidate(noteProvider),
+      body: AppBackground(
+        child: SafeArea(
+          child: note.when(
+            loading: () => const AppLoadingView(message: 'Loading Notes\nメモを読み込み中'),
+            error: (error, stackTrace) => AppErrorView(
+              title: 'Notes\nメモ',
+              message: error.toString(),
+              onRetry: () => ref.invalidate(noteProvider),
+            ),
+            data: (data) => _NotesContent(initialMemo: data.memo),
           ),
-          data: (data) => Center(
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 720),
-              child: ListView(
-                padding: const EdgeInsets.all(24),
+        ),
+      ),
+    );
+  }
+}
+
+class _NotesContent extends StatefulWidget {
+  const _NotesContent({required this.initialMemo});
+
+  final String initialMemo;
+
+  @override
+  State<_NotesContent> createState() => _NotesContentState();
+}
+
+class _NotesContentState extends State<_NotesContent> with SingleTickerProviderStateMixin {
+  late final AnimationController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(vsync: this, duration: const Duration(milliseconds: 1000))..forward();
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 720),
+        child: ListView(
+          padding: const EdgeInsets.fromLTRB(24, 28, 24, 36),
+          children: [
+            _FadeSlideTransition(
+              animation: _controller,
+              index: 0,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
                     'Notes\nメモ',
                     style: Theme.of(context).textTheme.headlineMedium?.copyWith(fontWeight: FontWeight.w900),
                   ),
-                  const SizedBox(height: 24),
-                  MemoEditor(initialMemo: data.memo),
+                  const SizedBox(height: 10),
+                  Text(
+                    'Save useful words and grammar.',
+                    style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                          color: const Color(0xFF6B7280),
+                          fontWeight: FontWeight.w600,
+                        ),
+                  ),
                 ],
               ),
             ),
-          ),
+            const SizedBox(height: 24),
+            MemoEditor(initialMemo: widget.initialMemo, entryAnimation: _controller),
+          ],
         ),
       ),
     );
@@ -75,7 +125,7 @@ class _MemoBottomSheet extends ConsumerWidget {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('📝 Memo', style: Theme.of(context).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.w900)),
+            Text('Memo', style: Theme.of(context).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.w900)),
             const SizedBox(height: 20),
             MemoEditor(initialMemo: data.memo),
           ],
@@ -86,24 +136,30 @@ class _MemoBottomSheet extends ConsumerWidget {
 }
 
 class MemoEditor extends ConsumerStatefulWidget {
-  const MemoEditor({super.key, required this.initialMemo});
+  const MemoEditor({super.key, required this.initialMemo, this.entryAnimation});
 
   final String initialMemo;
+  final Animation<double>? entryAnimation;
 
   @override
   ConsumerState<MemoEditor> createState() => _MemoEditorState();
 }
 
-class _MemoEditorState extends ConsumerState<MemoEditor> {
+class _MemoEditorState extends ConsumerState<MemoEditor> with TickerProviderStateMixin {
   late final TextEditingController _memoController;
+  late final FocusNode _focusNode;
   Timer? _debounce;
+  OverlayEntry? _toastEntry;
+  AnimationController? _toastController;
   var _saving = false;
   var _lastSavedMemo = '';
+  var _buttonPressed = false;
 
   @override
   void initState() {
     super.initState();
     _memoController = TextEditingController(text: widget.initialMemo);
+    _focusNode = FocusNode()..addListener(() => setState(() {}));
     _lastSavedMemo = widget.initialMemo;
   }
 
@@ -119,40 +175,45 @@ class _MemoEditorState extends ConsumerState<MemoEditor> {
   @override
   void dispose() {
     _debounce?.cancel();
+    _toastEntry?.remove();
+    _toastController?.dispose();
+    _focusNode.dispose();
     _memoController.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    return Column(
+    final content = Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        SizedBox(
-          height: 360,
-          child: TextField(
+        _FadeSlideTransition(
+          animation: widget.entryAnimation,
+          index: 1,
+          child: _MemoInputCard(
             controller: _memoController,
-            expands: true,
-            maxLines: null,
-            minLines: null,
-            textAlignVertical: TextAlignVertical.top,
-            decoration: InputDecoration(
-              hintText: 'Write your notes...',
-              border: OutlineInputBorder(borderRadius: BorderRadius.circular(24)),
-              enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(24)),
-              focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(24)),
-              contentPadding: const EdgeInsets.all(24),
-            ),
+            focusNode: _focusNode,
+            focused: _focusNode.hasFocus,
             onChanged: _scheduleAutoSave,
           ),
         ),
+        const SizedBox(height: 18),
+        _FadeSlideTransition(animation: widget.entryAnimation, index: 2, child: const _TipsCard()),
         const SizedBox(height: 24),
-        FilledButton(
-          onPressed: _saving ? null : () => _save(showSnackBar: true),
-          child: const Text('保存'),
+        _FadeSlideTransition(
+          animation: widget.entryAnimation,
+          index: 3,
+          child: _GradientSaveButton(
+            saving: _saving,
+            pressed: _buttonPressed,
+            onPressedChanged: (value) => setState(() => _buttonPressed = value),
+            onPressed: _saving ? null : () => _save(showToast: true),
+          ),
         ),
       ],
     );
+
+    return content;
   }
 
   void _scheduleAutoSave(String _) {
@@ -160,12 +221,10 @@ class _MemoEditorState extends ConsumerState<MemoEditor> {
     _debounce = Timer(const Duration(seconds: 1), () => _save());
   }
 
-  Future<void> _save({bool showSnackBar = false}) async {
+  Future<void> _save({bool showToast = false}) async {
     final memo = _memoController.text;
     if (_saving || memo == _lastSavedMemo) {
-      if (showSnackBar && mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Saved')));
-      }
+      if (showToast && mounted) _showSavedToast();
       return;
     }
 
@@ -173,13 +232,189 @@ class _MemoEditorState extends ConsumerState<MemoEditor> {
     try {
       await ref.read(notesRepositoryProvider).saveMemo(memo);
       _lastSavedMemo = memo;
-      if (showSnackBar && mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Saved')));
-      }
+      if (showToast && mounted) _showSavedToast();
     } finally {
       if (mounted) {
         setState(() => _saving = false);
       }
     }
+  }
+
+  void _showSavedToast() {
+    _toastEntry?.remove();
+    _toastController?.dispose();
+    _toastController = AnimationController(vsync: this, duration: const Duration(milliseconds: 300));
+    _toastEntry = OverlayEntry(
+      builder: (context) => _SavedToast(animation: CurvedAnimation(parent: _toastController!, curve: Curves.easeOutCubic)),
+    );
+    Overlay.of(context).insert(_toastEntry!);
+    _toastController!.forward();
+    Future<void>.delayed(const Duration(milliseconds: 1100), () async {
+      if (!mounted || _toastController == null) return;
+      await _toastController!.reverse();
+      _toastEntry?.remove();
+      _toastEntry = null;
+    });
+  }
+}
+
+class _MemoInputCard extends StatelessWidget {
+  const _MemoInputCard({required this.controller, required this.focusNode, required this.focused, required this.onChanged});
+
+  final TextEditingController controller;
+  final FocusNode focusNode;
+  final bool focused;
+  final ValueChanged<String> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 180),
+      height: 360,
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(32),
+        border: Border.all(color: focused ? const Color(0xFF6D6CFF) : const Color(0xFFE5E7EB), width: focused ? 1.6 : 1),
+        boxShadow: [
+          BoxShadow(color: Colors.black.withValues(alpha: 0.07), blurRadius: 18, offset: const Offset(0, 10)),
+          if (focused) BoxShadow(color: const Color(0xFF7C6CFF).withValues(alpha: 0.22), blurRadius: 22, spreadRadius: 1),
+        ],
+      ),
+      child: TextField(
+        controller: controller,
+        focusNode: focusNode,
+        expands: true,
+        maxLines: null,
+        minLines: null,
+        textAlignVertical: TextAlignVertical.top,
+        decoration: InputDecoration(
+          prefixIcon: const Padding(
+            padding: EdgeInsets.only(left: 22, right: 10, top: 20),
+            child: Icon(Icons.edit_note_rounded, color: Color(0xFF5B6CFF), size: 30),
+          ),
+          prefixIconConstraints: const BoxConstraints(minWidth: 62, minHeight: 54),
+          hintText: 'Write words, grammar or anything you want to remember.',
+          hintStyle: const TextStyle(color: Color(0xFF9CA3AF), fontWeight: FontWeight.w500),
+          border: InputBorder.none,
+          contentPadding: const EdgeInsets.fromLTRB(0, 24, 24, 24),
+        ),
+        onChanged: onChanged,
+      ),
+    );
+  }
+}
+
+class _TipsCard extends StatelessWidget {
+  const _TipsCard();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.92),
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: const Color(0xFFE5E7EB)),
+        boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 16, offset: const Offset(0, 8))],
+      ),
+      child: const Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text('💡 Tips', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w900, color: Color(0xFF111827))),
+          SizedBox(height: 12),
+          Text('• Save difficult vocabulary.\n• Write your own example sentences.\n• Review every day.', style: TextStyle(height: 1.7, color: Color(0xFF4B5563), fontWeight: FontWeight.w600)),
+        ],
+      ),
+    );
+  }
+}
+
+class _GradientSaveButton extends StatelessWidget {
+  const _GradientSaveButton({required this.saving, required this.pressed, required this.onPressedChanged, required this.onPressed});
+
+  final bool saving;
+  final bool pressed;
+  final ValueChanged<bool> onPressedChanged;
+  final VoidCallback? onPressed;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTapDown: onPressed == null ? null : (_) => onPressedChanged(true),
+      onTapUp: onPressed == null ? null : (_) => onPressedChanged(false),
+      onTapCancel: onPressed == null ? null : () => onPressedChanged(false),
+      onTap: onPressed,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 120),
+        height: 60,
+        transform: Matrix4.translationValues(0, pressed ? 3 : 0, 0),
+        alignment: Alignment.center,
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(20),
+          gradient: LinearGradient(colors: [const Color(0xFF5B6CFF).withValues(alpha: saving ? 0.60 : 1), const Color(0xFF9C7CFF).withValues(alpha: saving ? 0.60 : 1)]),
+          boxShadow: [BoxShadow(color: const Color(0xFF6D6CFF).withValues(alpha: pressed ? 0.18 : 0.34), blurRadius: pressed ? 12 : 20, offset: Offset(0, pressed ? 6 : 12))],
+        ),
+        child: Text(saving ? '保存中...' : '保存', style: const TextStyle(color: Colors.white, fontSize: 17, fontWeight: FontWeight.w900, letterSpacing: 0.4)),
+      ),
+    );
+  }
+}
+
+class _SavedToast extends StatelessWidget {
+  const _SavedToast({required this.animation});
+
+  final Animation<double> animation;
+
+  @override
+  Widget build(BuildContext context) {
+    return Positioned(
+      left: 0,
+      right: 0,
+      bottom: MediaQuery.paddingOf(context).bottom + 92,
+      child: IgnorePointer(
+        child: FadeTransition(
+          opacity: animation,
+          child: SlideTransition(
+            position: Tween<Offset>(begin: const Offset(0, 0.12), end: Offset.zero).animate(animation),
+            child: Center(
+              child: Material(
+                color: Colors.transparent,
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
+                  decoration: BoxDecoration(color: const Color(0xFF111827).withValues(alpha: 0.92), borderRadius: BorderRadius.circular(999), boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.20), blurRadius: 16, offset: const Offset(0, 8))]),
+                  child: const Text('✓ Saved', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w900)),
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _FadeSlideTransition extends StatelessWidget {
+  const _FadeSlideTransition({required this.child, this.animation, required this.index});
+
+  final Widget child;
+  final Animation<double>? animation;
+  final int index;
+
+  @override
+  Widget build(BuildContext context) {
+    final parent = animation;
+    if (parent == null) return child;
+
+    final start = index * 0.18;
+    final end = (start + 0.25).clamp(0.0, 1.0);
+    final curved = CurvedAnimation(parent: parent, curve: Interval(start, end, curve: Curves.easeOutCubic));
+
+    return FadeTransition(
+      opacity: curved,
+      child: SlideTransition(
+        position: Tween<Offset>(begin: const Offset(0, 0.12), end: Offset.zero).animate(curved),
+        child: child,
+      ),
+    );
   }
 }
