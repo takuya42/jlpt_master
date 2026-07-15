@@ -200,6 +200,7 @@ class _MemoEditorState extends ConsumerState<MemoEditor> with TickerProviderStat
     setState(() => _saving = true);
     try {
       await ref.read(notesRepositoryProvider).saveMemo(memo);
+      ref.invalidate(noteProvider);
       _lastSavedMemo = memo;
       if (showToast && mounted) _showSavedToast();
     } finally {
