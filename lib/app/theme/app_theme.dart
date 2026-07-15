@@ -67,8 +67,8 @@ class AppTheme {
         elevation: const WidgetStatePropertyAll(0),
         backgroundColor: WidgetStatePropertyAll(Colors.white.withValues(alpha: 0.05)),
         surfaceTintColor: const WidgetStatePropertyAll(Colors.transparent),
-        textStyle: const WidgetStatePropertyAll(TextStyle(color: Colors.white)),
-        hintStyle: const WidgetStatePropertyAll(TextStyle(color: subText)),
+        textStyle: WidgetStatePropertyAll(TextStyle(color: colorScheme.onSurface)),
+        hintStyle: WidgetStatePropertyAll(TextStyle(color: colorScheme.onSurface.withValues(alpha: 0.45))),
         shape: WidgetStatePropertyAll(RoundedRectangleBorder(borderRadius: BorderRadius.circular(16), side: const BorderSide(color: glassBorder))),
         padding: const WidgetStatePropertyAll(EdgeInsets.symmetric(horizontal: 16)),
       ),
@@ -90,7 +90,7 @@ class AppTheme {
         iconTheme: WidgetStateProperty.resolveWith((states) => IconThemeData(size: 23, color: states.contains(WidgetState.selected) ? accent : const Color(0xFF8E99B3))),
         labelTextStyle: const WidgetStatePropertyAll(TextStyle(fontSize: 11, fontWeight: FontWeight.w800)),
       ),
-      dividerTheme: const DividerThemeData(color: Color(0x228E99B3)),
+      dividerTheme: DividerThemeData(color: colorScheme.outlineVariant),
       segmentedButtonTheme: SegmentedButtonThemeData(
         style: ButtonStyle(
           foregroundColor: WidgetStateProperty.resolveWith((states) => states.contains(WidgetState.selected) ? Colors.white : subText),

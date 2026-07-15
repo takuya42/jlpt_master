@@ -213,6 +213,8 @@ class _VocabularyLevelFilters extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final selectedLevel = ref.watch(selectedVocabularyJlptProvider);
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
     return ClipRRect(
       borderRadius: BorderRadius.circular(24),
       child: BackdropFilter(
@@ -237,7 +239,14 @@ class _VocabularyLevelFilters extends ConsumerWidget {
                       onTap: () => ref.read(selectedVocabularyJlptProvider.notifier).selectLevel(level),
                       child: Padding(
                         padding: const EdgeInsets.symmetric(vertical: 11),
-                        child: Text(level, textAlign: TextAlign.center, style: TextStyle(fontWeight: FontWeight.w900, color: selectedLevel == level ? Colors.white : const Color(0xFF64748B))),
+                        child: Text(
+                          level,
+                          textAlign: TextAlign.center,
+                          style: theme.textTheme.labelLarge?.copyWith(
+                                fontWeight: FontWeight.w900,
+                                color: selectedLevel == level ? colorScheme.onPrimary : colorScheme.onSurfaceVariant,
+                              ),
+                        ),
                       ),
                     ),
                   ),
@@ -429,7 +438,7 @@ class _VocabularyQuizCard extends ConsumerWidget {
                     mainAxisAlignment: MainAxisAlignment.center,
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      const Icon(Icons.menu_book_rounded, size: 22, color: Color(0xFF64748B)),
+                      Icon(Icons.menu_book_rounded, size: 22, color: colorScheme.onSurfaceVariant),
                       const SizedBox(width: 8),
                       Text(
                         'Vocabulary Quest',
@@ -437,7 +446,7 @@ class _VocabularyQuizCard extends ConsumerWidget {
                         style: theme.textTheme.titleMedium?.copyWith(
                           fontWeight: FontWeight.w900,
                           letterSpacing: 1.2,
-                          color: const Color(0xFF64748B),
+                          color: colorScheme.onSurfaceVariant,
                         ),
                       ),
                     ],
@@ -503,6 +512,8 @@ class _DirectionToggleButton extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
     final nextDirection = direction == QuizDirection.japaneseToEnglish
         ? QuizDirection.englishToJapanese
         : QuizDirection.japaneseToEnglish;
@@ -519,14 +530,14 @@ class _DirectionToggleButton extends ConsumerWidget {
           child: DecoratedBox(
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(999),
-              color: const Color(0xFF0F172A).withOpacity(0.06),
-              border: Border.all(color: Colors.white.withOpacity(0.9)),
+              color: colorScheme.onSurface.withValues(alpha: 0.06),
+              border: Border.all(color: colorScheme.outlineVariant),
             ),
             child: Center(
               child: Text(
                 direction.toggleLabel,
-                style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                      color: const Color(0xFF475569),
+                style: theme.textTheme.labelMedium?.copyWith(
+                      color: colorScheme.onSurfaceVariant,
                       fontWeight: FontWeight.w900,
                     ),
               ),
@@ -553,17 +564,17 @@ class _VocabularyPrompt extends StatelessWidget {
         Text(
           direction.prompt,
           textAlign: TextAlign.center,
-          style: theme.textTheme.titleLarge?.copyWith(fontSize: 24, fontWeight: FontWeight.w900, color: const Color(0xFF475569)),
+          style: theme.textTheme.titleLarge?.copyWith(fontSize: 24, fontWeight: FontWeight.w900, color: colorScheme.onSurfaceVariant),
         ),
         const SizedBox(height: 8),
         if (direction == QuizDirection.japaneseToEnglish) ...[
-          Hero(tag: 'vocabulary-${word.id}', child: Material(color: Colors.transparent, child: Text(word.word, textAlign: TextAlign.center, style: theme.textTheme.displayMedium?.copyWith(fontSize: 50, fontWeight: FontWeight.w900, color: const Color(0xFF0F172A), letterSpacing: -1.4)))),
+          Hero(tag: 'vocabulary-${word.id}', child: Material(color: Colors.transparent, child: Text(word.word, textAlign: TextAlign.center, style: theme.textTheme.displayMedium?.copyWith(fontSize: 50, fontWeight: FontWeight.w900, color: colorScheme.onSurface, letterSpacing: -1.4)))),
           if (word.reading.isNotEmpty) ...[
             const SizedBox(height: 4),
             Text(word.reading, textAlign: TextAlign.center, style: theme.textTheme.titleLarge?.copyWith(fontSize: 22, color: colorScheme.onSurfaceVariant, fontWeight: FontWeight.w700)),
           ],
         ] else
-          Text(direction.englishFor(word), textAlign: TextAlign.center, style: theme.textTheme.displaySmall?.copyWith(fontSize: 40, fontWeight: FontWeight.w900, color: const Color(0xFF0F172A), letterSpacing: -1.1)),
+          Text(direction.englishFor(word), textAlign: TextAlign.center, style: theme.textTheme.displaySmall?.copyWith(fontSize: 40, fontWeight: FontWeight.w900, color: colorScheme.onSurface, letterSpacing: -1.1)),
       ],
     );
   }
@@ -575,25 +586,26 @@ class _SwipeForNextHint extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
     return Semantics(
       label: 'Swipe for next',
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(999),
-          color: const Color(0xFF0F172A).withOpacity(0.06),
-          border: Border.all(color: Colors.white.withOpacity(0.86)),
+          color: colorScheme.onSurface.withValues(alpha: 0.06),
+          border: Border.all(color: colorScheme.outlineVariant),
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(Icons.swipe_rounded, size: 20, color: Color(0xFF475569)),
+            Icon(Icons.swipe_rounded, size: 20, color: colorScheme.onSurfaceVariant),
             const SizedBox(width: 8),
             Text(
               '→ Swipe for next',
               style: theme.textTheme.labelLarge?.copyWith(
-                color: const Color(0xFF475569),
+                color: colorScheme.onSurfaceVariant,
                 fontWeight: FontWeight.w900,
                 letterSpacing: 0.2,
               ),
@@ -617,14 +629,28 @@ class _GlassTextField extends StatelessWidget {
   final ValueChanged<String> onSubmitted;
 
   @override
-  Widget build(BuildContext context) => TextField(
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
+    return TextField(
         controller: controller,
+        style: theme.textTheme.bodyLarge?.copyWith(color: colorScheme.onSurface),
         enabled: enabled,
         textInputAction: TextInputAction.done,
-        decoration: InputDecoration(labelText: labelText, filled: true, fillColor: const Color(0xFFF8FAFC), border: OutlineInputBorder(borderRadius: BorderRadius.circular(22), borderSide: BorderSide.none), enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(22), borderSide: const BorderSide(color: Color(0xFFE2E8F0))), focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(22), borderSide: const BorderSide(color: Color(0xFF94A3B8), width: 1.4))),
+        decoration: InputDecoration(
+          labelText: labelText,
+          labelStyle: theme.textTheme.bodyMedium?.copyWith(color: colorScheme.onSurface.withValues(alpha: 0.45)),
+          filled: true,
+          fillColor: colorScheme.surfaceContainer,
+          border: OutlineInputBorder(borderRadius: BorderRadius.circular(22), borderSide: BorderSide.none),
+          enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(22), borderSide: BorderSide(color: colorScheme.outlineVariant)),
+          focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(22), borderSide: BorderSide(color: colorScheme.primary, width: 1.4)),
+        ),
         onChanged: onChanged,
         onSubmitted: onSubmitted,
       );
+  }
 }
 
 class _PressScaleButton extends StatefulWidget {
