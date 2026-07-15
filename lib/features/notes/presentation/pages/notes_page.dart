@@ -1,5 +1,3 @@
-import 'dart:async';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -136,7 +134,6 @@ class MemoEditor extends ConsumerStatefulWidget {
 class _MemoEditorState extends ConsumerState<MemoEditor> with TickerProviderStateMixin {
   late final TextEditingController _memoController;
   late final FocusNode _focusNode;
-  Timer? _debounce;
   OverlayEntry? _toastEntry;
   AnimationController? _toastController;
   var _saving = false;
@@ -161,7 +158,6 @@ class _MemoEditorState extends ConsumerState<MemoEditor> with TickerProviderStat
 
   @override
   void dispose() {
-    _debounce?.cancel();
     _toastEntry?.remove();
     _toastController?.dispose();
     _focusNode.dispose();
@@ -177,7 +173,7 @@ class _MemoEditorState extends ConsumerState<MemoEditor> with TickerProviderStat
       child: _MemoInputArea(
         controller: _memoController,
         focusNode: _focusNode,
-        onChanged: _scheduleAutoSave,
+        onChanged: (_) {},
         expand: widget.entryAnimation != null,
       ),
     );
@@ -193,11 +189,6 @@ class _MemoEditorState extends ConsumerState<MemoEditor> with TickerProviderStat
   }
 
   Future<void> saveFromHeader() => _save(showToast: true);
-
-  void _scheduleAutoSave(String _) {
-    _debounce?.cancel();
-    _debounce = Timer(const Duration(seconds: 1), () => _save());
-  }
 
   Future<void> _save({bool showToast = false}) async {
     final memo = _memoController.text;
@@ -320,7 +311,7 @@ class _SavedToast extends StatelessWidget {
                 child: Container(
                   padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
                   decoration: BoxDecoration(color: const Color(0xFF111827).withValues(alpha: 0.92), borderRadius: BorderRadius.circular(999), boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.20), blurRadius: 16, offset: const Offset(0, 8))]),
-                  child: const Text('✓ Saved', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w900)),
+                  child: const Text('Saved', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w900)),
                 ),
               ),
             ),
