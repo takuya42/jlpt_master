@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -6,16 +8,36 @@ import '../../../../app/navigation/app_route.dart';
 import '../../../notes/presentation/pages/notes_page.dart';
 import '../../domain/grammar_pattern.dart';
 import '../providers/grammar_providers.dart';
+import '../../../study_stats/presentation/providers/study_stats_provider.dart';
 import '../widgets/grammar_studied_toggle.dart';
 
-class GrammarDetailPage extends ConsumerWidget {
+class GrammarDetailPage extends ConsumerStatefulWidget {
   const GrammarDetailPage({super.key, required this.grammarId});
 
   final String grammarId;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final pattern = ref.watch(grammarPatternProvider(grammarId));
+  ConsumerState<GrammarDetailPage> createState() => _GrammarDetailPageState();
+}
+
+class _GrammarDetailPageState extends ConsumerState<GrammarDetailPage> {
+  late final DateTime _studyStartedAt;
+
+  @override
+  void initState() {
+    super.initState();
+    _studyStartedAt = DateTime.now();
+  }
+
+  @override
+  void dispose() {
+    unawaited(ref.read(studyStatsProvider.notifier).addStudyTime(DateTime.now().difference(_studyStartedAt)));
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final pattern = ref.watch(grammarPatternProvider(widget.grammarId));
 
     return Scaffold(
       appBar: AppBar(

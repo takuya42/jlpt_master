@@ -41,15 +41,15 @@ class LearningMenuItemData {
 @immutable
 class StudyStatusData {
   const StudyStatusData({
-    required this.studyTimeMinutes,
+    required this.studyTimeLabel,
     required this.studyDays,
-    required this.accuracyPercent,
+    required this.progressPercent,
     required this.goalProgress,
   });
 
-  final int studyTimeMinutes;
+  final String studyTimeLabel;
   final int studyDays;
-  final int accuracyPercent;
+  final int progressPercent;
   final double goalProgress;
 }
 
