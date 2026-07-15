@@ -1,5 +1,3 @@
-import 'dart:math' as math;
-
 import 'package:flutter/material.dart';
 
 class AppBackground extends StatelessWidget {
@@ -21,8 +19,8 @@ class AppBackground extends StatelessWidget {
       children: [
         CustomPaint(
           painter: _AppBackgroundPainter(
-            worldMapOpacityFactor: worldMapOpacityFactor,
-            globeOpacityFactor: globeOpacityFactor,
+            atmosphereOpacityFactor: worldMapOpacityFactor,
+            ringOpacityFactor: globeOpacityFactor,
           ),
         ),
         child,
@@ -33,21 +31,23 @@ class AppBackground extends StatelessWidget {
 
 class _AppBackgroundPainter extends CustomPainter {
   const _AppBackgroundPainter({
-    required this.worldMapOpacityFactor,
-    required this.globeOpacityFactor,
+    required this.atmosphereOpacityFactor,
+    required this.ringOpacityFactor,
   });
 
-  final double worldMapOpacityFactor;
-  final double globeOpacityFactor;
+  final double atmosphereOpacityFactor;
+  final double ringOpacityFactor;
 
   static const _top = Color(0xFF08111F);
-  static const _middle = Color(0xFF10203B);
+  static const _middle = Color(0xFF10213A);
   static const _bottom = Color(0xFF050A14);
-  static const _accent = Color(0xFF7C8CFF);
-  static const _ice = Color(0xFFFFFFFF);
+  static const _white = Color(0xFFFFFFFF);
+  static const _blue = Color(0xFF4D9CFF);
+  static const _purple = Color(0xFF9B6BFF);
+  static const _orange = Color(0xFFFF9A45);
 
-  double _globeAlpha(double alpha) => alpha * globeOpacityFactor;
-  double _mapAlpha(double alpha) => alpha * worldMapOpacityFactor;
+  double _atmosphereAlpha(double alpha) => alpha * atmosphereOpacityFactor;
+  double _ringAlpha(double alpha) => alpha * ringOpacityFactor;
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -63,278 +63,222 @@ class _AppBackgroundPainter extends CustomPainter {
         ).createShader(rect),
     );
 
-    _drawWorldMap(canvas, size);
-    _drawJapanGlow(canvas, size);
-    _drawSingleRoute(canvas, size);
-    _drawGlassGlobe(canvas, size);
+    _drawSoftGlows(canvas, size);
+    _drawAtmosphericOrbs(canvas, size);
+    _drawGlassRings(canvas, size);
+    _drawFineCurves(canvas, size);
+    _drawAirParticles(canvas, size);
   }
 
-  void _drawWorldMap(Canvas canvas, Size size) {
-    final mapRect = Rect.fromCenter(
-      center: Offset(size.width * .52, size.height * .40),
-      width: size.width * 1.08,
-      height: size.height * .46,
+  void _drawSoftGlows(Canvas canvas, Size size) {
+    _drawGlow(
+      canvas,
+      center: Offset(size.width * .22, size.height * .08),
+      radius: size.shortestSide * .74,
+      color: _blue.withValues(alpha: _atmosphereAlpha(.075)),
+      blur: 150,
     );
-    final paint = Paint()..color = _ice.withValues(alpha: _mapAlpha(.04));
+    _drawGlow(
+      canvas,
+      center: Offset(size.width * 1.06, size.height * .20),
+      radius: size.shortestSide * .62,
+      color: _purple.withValues(alpha: _atmosphereAlpha(.070)),
+      blur: 170,
+    );
+    _drawGlow(
+      canvas,
+      center: Offset(size.width * -.12, size.height * .78),
+      radius: size.shortestSide * .56,
+      color: _orange.withValues(alpha: _atmosphereAlpha(.050)),
+      blur: 140,
+    );
+  }
 
-    for (final continent in _continentBuilders) {
-      canvas.drawPath(continent(mapRect), paint);
+  void _drawGlow(
+    Canvas canvas, {
+    required Offset center,
+    required double radius,
+    required Color color,
+    required double blur,
+  }) {
+    canvas.drawCircle(
+      center,
+      radius,
+      Paint()
+        ..maskFilter = MaskFilter.blur(BlurStyle.normal, blur)
+        ..color = color,
+    );
+  }
+
+  void _drawAtmosphericOrbs(Canvas canvas, Size size) {
+    final specs = [
+      _OrbSpec(
+        Offset(size.width * .08, size.height * .28),
+        size.shortestSide * .62,
+        _blue,
+        .045,
+      ),
+      _OrbSpec(
+        Offset(size.width * .86, size.height * .62),
+        size.shortestSide * .54,
+        _purple,
+        .040,
+      ),
+      _OrbSpec(
+        Offset(size.width * .50, size.height * .44),
+        size.shortestSide * .42,
+        _white,
+        .024,
+      ),
+    ];
+
+    for (final spec in specs) {
+      final rect = Rect.fromCircle(center: spec.center, radius: spec.radius);
+      canvas.drawCircle(
+        spec.center,
+        spec.radius,
+        Paint()
+          ..shader = RadialGradient(
+            colors: [
+              spec.color.withValues(alpha: _atmosphereAlpha(spec.alpha)),
+              spec.color.withValues(alpha: _atmosphereAlpha(spec.alpha * .32)),
+              spec.color.withValues(alpha: 0),
+            ],
+            stops: const [0, .48, 1],
+          ).createShader(rect),
+      );
     }
   }
 
-  void _drawJapanGlow(Canvas canvas, Size size) {
-    final japan = _japanOffset(size);
-    canvas.drawCircle(
-      japan,
-      28,
-      Paint()
-        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 40)
-        ..color = _accent.withValues(alpha: _mapAlpha(.22)),
-    );
-    canvas.drawCircle(
-      japan,
-      2.4,
-      Paint()..color = const Color(0xFFE8FAFF).withValues(alpha: _mapAlpha(.42)),
-    );
-  }
-
-  Offset _japanOffset(Size size) {
-    final mapRect = Rect.fromCenter(
-      center: Offset(size.width * .52, size.height * .40),
-      width: size.width * 1.08,
-      height: size.height * .46,
-    );
-    return Offset(mapRect.left + mapRect.width * .82, mapRect.top + mapRect.height * .42);
-  }
-
-  void _drawSingleRoute(Canvas canvas, Size size) {
-    final japan = _japanOffset(size);
-    final globeCenter = _globeCenter(size);
-    final route = Path()
-      ..moveTo(japan.dx, japan.dy)
-      ..cubicTo(
-        size.width * .66,
-        size.height * .54,
-        size.width * .34,
-        size.height * .66,
-        globeCenter.dx + _globeRadius(size) * .28,
-        globeCenter.dy - _globeRadius(size) * .18,
-      );
-
-    _drawDashedPath(
+  void _drawGlassRings(Canvas canvas, Size size) {
+    _drawGlassRing(
       canvas,
-      route,
+      center: Offset(size.width * -.06, size.height * .88),
+      radius: size.shortestSide * .34,
+    );
+    _drawGlassRing(
+      canvas,
+      center: Offset(size.width * 1.03, size.height * .10),
+      radius: size.shortestSide * .28,
+    );
+    _drawGlassRing(
+      canvas,
+      center: Offset(size.width * .53, size.height * .48),
+      radius: size.shortestSide * .25,
+    );
+  }
+
+  void _drawGlassRing(
+    Canvas canvas, {
+    required Offset center,
+    required double radius,
+  }) {
+    final bounds = Rect.fromCircle(center: center, radius: radius);
+    canvas.drawCircle(
+      center,
+      radius,
       Paint()
         ..style = PaintingStyle.stroke
-        ..strokeWidth = .8
-        ..strokeCap = StrokeCap.round
-        ..color = _ice.withValues(alpha: .15),
-      dash: 3.5,
-      gap: 7,
-    );
-    _drawPlane(
-      canvas,
-      Offset(size.width * .55, size.height * .56),
-      2.34,
-      _ice.withValues(alpha: .10),
-    );
-  }
-
-  void _drawGlassGlobe(Canvas canvas, Size size) {
-    final r = _globeRadius(size);
-    final c = _globeCenter(size);
-    final bounds = Rect.fromCircle(center: c, radius: r);
-    final clip = Path()..addOval(bounds);
-
-    canvas.drawCircle(
-      c,
-      r * 1.08,
-      Paint()
-        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 28)
-        ..color = _ice.withValues(alpha: _globeAlpha(.035)),
-    );
-    canvas.drawCircle(
-      c,
-      r,
-      Paint()
-        ..shader = RadialGradient(
-          center: const Alignment(-.45, -.55),
+        ..strokeWidth = 1
+        ..shader = SweepGradient(
           colors: [
-            _ice.withValues(alpha: _globeAlpha(.10)),
-            _accent.withValues(alpha: _globeAlpha(.045)),
-            _ice.withValues(alpha: _globeAlpha(.012)),
+            _white.withValues(alpha: _ringAlpha(.012)),
+            _white.withValues(alpha: _ringAlpha(.050)),
+            _white.withValues(alpha: _ringAlpha(.018)),
+            _white.withValues(alpha: _ringAlpha(.050)),
+            _white.withValues(alpha: _ringAlpha(.012)),
           ],
-          stops: const [0, .48, 1],
+          stops: const [0, .24, .52, .78, 1],
         ).createShader(bounds),
     );
     canvas.drawCircle(
-      c,
-      r,
+      center,
+      radius * .965,
       Paint()
         ..style = PaintingStyle.stroke
-        ..strokeWidth = .8
-        ..color = _ice.withValues(alpha: _globeAlpha(.20)),
+        ..strokeWidth = .6
+        ..color = _white.withValues(alpha: _ringAlpha(.018)),
     );
+  }
 
-    canvas.save();
-    canvas.clipPath(clip);
-    final grid = Paint()
+  void _drawFineCurves(Canvas canvas, Size size) {
+    final paint = Paint()
       ..style = PaintingStyle.stroke
-      ..strokeWidth = .45
-      ..color = _ice.withValues(alpha: _globeAlpha(.16));
-    for (final y in const [-.60, -.32, 0, .32, .60]) {
-      canvas.drawOval(
-        Rect.fromCenter(
-          center: Offset(c.dx, c.dy + r * y),
-          width: r * 1.82,
-          height: r * .22 * math.cos(y.abs()),
+      ..strokeWidth = .8
+      ..strokeCap = StrokeCap.round
+      ..color = _white.withValues(alpha: _atmosphereAlpha(.055));
+
+    final paths = [
+      Path()
+        ..moveTo(size.width * -.08, size.height * .34)
+        ..cubicTo(
+          size.width * .24,
+          size.height * .20,
+          size.width * .62,
+          size.height * .24,
+          size.width * 1.08,
+          size.height * .08,
         ),
-        grid,
-      );
-    }
-    for (final x in const [-.58, -.28, 0, .28, .58]) {
-      canvas.drawOval(
-        Rect.fromCenter(
-          center: c,
-          width: r * 2 * math.cos(x.abs() * math.pi / 2.1),
-          height: r * 1.94,
+      Path()
+        ..moveTo(size.width * .16, size.height * .88)
+        ..cubicTo(
+          size.width * .42,
+          size.height * .66,
+          size.width * .70,
+          size.height * .68,
+          size.width * 1.10,
+          size.height * .44,
         ),
-        grid,
-      );
+      Path()
+        ..moveTo(size.width * -.10, size.height * .64)
+        ..cubicTo(
+          size.width * .18,
+          size.height * .52,
+          size.width * .48,
+          size.height * .58,
+          size.width * .74,
+          size.height * .42,
+        ),
+    ];
+
+    for (final path in paths) {
+      canvas.drawPath(path, paint);
     }
-    canvas.restore();
   }
 
-  Offset _globeCenter(Size size) => Offset(size.width * .15, size.height * .89);
+  void _drawAirParticles(Canvas canvas, Size size) {
+    const particles = [
+      Offset(.18, .22),
+      Offset(.34, .72),
+      Offset(.58, .18),
+      Offset(.72, .56),
+      Offset(.86, .32),
+      Offset(.92, .78),
+      Offset(.12, .60),
+    ];
 
-  double _globeRadius(Size size) => math.min(size.width, size.height) * .276;
-
-  void _drawPlane(Canvas canvas, Offset p, double angle, Color color) {
-    final path = Path()
-      ..moveTo(7, 0)
-      ..lineTo(-6, -3)
-      ..lineTo(-3.6, 0)
-      ..lineTo(-6, 3)
-      ..close();
-    canvas
-      ..save()
-      ..translate(p.dx, p.dy)
-      ..rotate(angle)
-      ..drawPath(path, Paint()..color = color)
-      ..restore();
-  }
-
-  void _drawDashedPath(
-    Canvas canvas,
-    Path path,
-    Paint paint, {
-    required double dash,
-    required double gap,
-  }) {
-    for (final metric in path.computeMetrics()) {
-      var distance = 0.0;
-      while (distance < metric.length) {
-        canvas.drawPath(
-          metric.extractPath(distance, math.min(distance + dash, metric.length)),
-          paint,
-        );
-        distance += dash + gap;
-      }
+    for (var i = 0; i < particles.length; i++) {
+      final unit = particles[i];
+      final radius = i.isEven ? .9 : .65;
+      canvas.drawCircle(
+        Offset(unit.dx * size.width, unit.dy * size.height),
+        radius,
+        Paint()..color = _white.withValues(alpha: _atmosphereAlpha(.070)),
+      );
     }
   }
 
   @override
   bool shouldRepaint(covariant _AppBackgroundPainter oldDelegate) =>
-      oldDelegate.worldMapOpacityFactor != worldMapOpacityFactor ||
-      oldDelegate.globeOpacityFactor != globeOpacityFactor;
+      oldDelegate.atmosphereOpacityFactor != atmosphereOpacityFactor ||
+      oldDelegate.ringOpacityFactor != ringOpacityFactor;
 }
 
-typedef _ContinentBuilder = Path Function(Rect rect);
+class _OrbSpec {
+  const _OrbSpec(this.center, this.radius, this.color, this.alpha);
 
-final List<_ContinentBuilder> _continentBuilders = [
-  _northAmerica,
-  _southAmerica,
-  _europe,
-  _africa,
-  _asia,
-  _australia,
-];
-
-Offset _p(Rect r, double x, double y) => Offset(r.left + r.width * x, r.top + r.height * y);
-
-void _move(Path path, Rect r, double x, double y) => path.moveTo(_p(r, x, y).dx, _p(r, x, y).dy);
-
-void _curve(
-  Path path,
-  Rect r,
-  double x1,
-  double y1,
-  double x2,
-  double y2,
-  double x3,
-  double y3,
-) {
-  path.cubicTo(
-    _p(r, x1, y1).dx,
-    _p(r, x1, y1).dy,
-    _p(r, x2, y2).dx,
-    _p(r, x2, y2).dy,
-    _p(r, x3, y3).dx,
-    _p(r, x3, y3).dy,
-  );
-}
-
-Path _northAmerica(Rect r) {
-  final path = Path();
-  _move(path, r, .06, .30);
-  _curve(path, r, .10, .16, .23, .12, .32, .20);
-  _curve(path, r, .39, .27, .36, .38, .27, .40);
-  _curve(path, r, .22, .42, .20, .53, .13, .47);
-  _curve(path, r, .07, .42, .03, .37, .06, .30);
-  return path..close();
-}
-
-Path _southAmerica(Rect r) {
-  final path = Path();
-  _move(path, r, .26, .50);
-  _curve(path, r, .34, .53, .37, .63, .34, .75);
-  _curve(path, r, .32, .85, .26, .94, .23, .84);
-  _curve(path, r, .20, .73, .19, .61, .26, .50);
-  return path..close();
-}
-
-Path _europe(Rect r) {
-  final path = Path();
-  _move(path, r, .43, .25);
-  _curve(path, r, .50, .18, .61, .20, .64, .30);
-  _curve(path, r, .60, .39, .50, .41, .43, .35);
-  _curve(path, r, .39, .31, .40, .28, .43, .25);
-  return path..close();
-}
-
-Path _africa(Rect r) {
-  final path = Path();
-  _move(path, r, .52, .38);
-  _curve(path, r, .62, .39, .69, .52, .66, .66);
-  _curve(path, r, .64, .77, .56, .80, .52, .69);
-  _curve(path, r, .47, .56, .45, .44, .52, .38);
-  return path..close();
-}
-
-Path _asia(Rect r) {
-  final path = Path();
-  _move(path, r, .63, .25);
-  _curve(path, r, .72, .15, .91, .22, .97, .36);
-  _curve(path, r, .92, .48, .82, .52, .74, .45);
-  _curve(path, r, .68, .40, .60, .38, .63, .25);
-  return path..close();
-}
-
-Path _australia(Rect r) {
-  final path = Path();
-  _move(path, r, .82, .66);
-  _curve(path, r, .89, .62, .98, .69, .95, .78);
-  _curve(path, r, .91, .86, .80, .83, .76, .74);
-  _curve(path, r, .76, .70, .79, .68, .82, .66);
-  return path..close();
+  final Offset center;
+  final double radius;
+  final Color color;
+  final double alpha;
 }
