@@ -9,6 +9,18 @@ class AppChromeTheme extends ThemeExtension<AppChromeTheme> {
     required this.decorationColor,
   });
 
+  /// Background color shared by the application's app bars.
+  final Color appBarColor;
+
+  /// Background color shared by the application's navigation bars.
+  final Color navigationBarColor;
+
+  /// Colors used to paint the page background.
+  final List<Color> backgroundGradient;
+
+  /// Color used for the decorative elements painted over the background.
+  final Color decorationColor;
+
   static const light = AppChromeTheme(
     appBarColor: Color(0xFFE9EAF8),
     navigationBarColor: Color(0xFFE9EAF8),
