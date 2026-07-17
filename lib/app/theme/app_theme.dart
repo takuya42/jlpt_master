@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
+import 'app_chrome_theme.dart';
 import 'vocabulary_card_theme.dart';
 
 class AppTheme {
@@ -23,13 +25,14 @@ class AppTheme {
       surface: isDark ? background : const Color(0xFFF4F7FC),
     );
     final cardColors = VocabularyCardTheme.forBrightness(brightness);
+    final chrome = isDark ? AppChromeTheme.dark : AppChromeTheme.light;
 
     return ThemeData(
       useMaterial3: true,
       brightness: brightness,
       colorScheme: colorScheme,
       scaffoldBackgroundColor: colorScheme.surface,
-      extensions: [cardColors],
+      extensions: [cardColors, chrome],
       visualDensity: VisualDensity.adaptivePlatformDensity,
       fontFamily: 'Roboto',
       textTheme: (isDark ? Typography.material2021().white : Typography.material2021().black).apply(
@@ -43,9 +46,10 @@ class AppTheme {
         centerTitle: false,
         elevation: 0,
         scrolledUnderElevation: 0,
-        backgroundColor: Colors.transparent,
+        backgroundColor: chrome.appBarColor,
         foregroundColor: colorScheme.onSurface,
         surfaceTintColor: Colors.transparent,
+        systemOverlayStyle: isDark ? SystemUiOverlayStyle.light : SystemUiOverlayStyle.dark,
       ),
       cardTheme: CardThemeData(
         clipBehavior: Clip.antiAlias,
@@ -86,7 +90,7 @@ class AppTheme {
       navigationBarTheme: NavigationBarThemeData(
         height: 72,
         elevation: 0,
-        backgroundColor: isDark ? surface : colorScheme.surfaceContainer,
+        backgroundColor: chrome.navigationBarColor,
         indicatorColor: accent.withValues(alpha: 0.16),
         labelBehavior: NavigationDestinationLabelBehavior.alwaysHide,
         iconTheme: WidgetStateProperty.resolveWith((states) => IconThemeData(size: 23, color: states.contains(WidgetState.selected) ? colorScheme.primary : colorScheme.onSurfaceVariant)),

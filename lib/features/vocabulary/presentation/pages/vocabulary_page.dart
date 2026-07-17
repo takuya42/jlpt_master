@@ -155,10 +155,7 @@ class _VocabularyPageState extends ConsumerState<VocabularyPage> with TickerProv
     final quiz = ref.watch(vocabularyQuizProvider);
 
     return Scaffold(
-      extendBodyBehindAppBar: true,
       appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
         actions: const [PremiumButton()],
       ),
       body: AppBackground(
@@ -222,7 +219,11 @@ class _VocabularyLevelFilters extends ConsumerWidget {
         filter: ImageFilter.blur(sigmaX: 18, sigmaY: 18),
         child: Container(
           padding: const EdgeInsets.all(6),
-          decoration: BoxDecoration(color: Colors.white.withOpacity(0.52), borderRadius: BorderRadius.circular(24), border: Border.all(color: Colors.white.withOpacity(0.72))),
+          decoration: BoxDecoration(
+            color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.72),
+            borderRadius: BorderRadius.circular(24),
+            border: Border.all(color: colorScheme.outlineVariant),
+          ),
           child: Row(
             children: [
               for (final level in vocabularyJlptLevels)

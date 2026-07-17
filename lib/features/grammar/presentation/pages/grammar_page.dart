@@ -106,8 +106,8 @@ class _GrammarHeader extends StatelessWidget {
             Container(
               width: 54,
               height: 54,
-              decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.86), borderRadius: BorderRadius.circular(18)),
-              child: Icon(Icons.subject_rounded, color: colorScheme.primary, size: 30),
+              decoration: BoxDecoration(color: colorScheme.surface.withValues(alpha: 0.86), borderRadius: BorderRadius.circular(18)),
+              child: Icon(Icons.subject_rounded, color: colorScheme.onSurface, size: 30),
             ),
             const SizedBox(width: 16),
             Expanded(

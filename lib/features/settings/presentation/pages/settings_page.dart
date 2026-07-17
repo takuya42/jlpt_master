@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../../app/navigation/app_route.dart';
 import '../../../../shared/presentation/widgets/app_background.dart';
+import '../../../../shared/presentation/widgets/premium_button.dart';
 import '../../../auth/presentation/providers/auth_providers.dart';
 import '../providers/theme_mode_provider.dart';
 
@@ -74,6 +75,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     return Scaffold(
+      appBar: AppBar(actions: const [PremiumButton()]),
       body: AppBackground(
         child: SafeArea(
           child: Center(
