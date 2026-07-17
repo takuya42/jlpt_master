@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:jlpt_master/app/theme/app_theme.dart';
+import 'package:jlpt_master/app/theme/app_chrome_theme.dart';
 import 'package:jlpt_master/app/theme/vocabulary_card_theme.dart';
 
 void main() {
@@ -12,6 +13,17 @@ void main() {
     expect(dark.brightness, Brightness.dark);
     expect(light.extension<VocabularyCardTheme>(), VocabularyCardTheme.light);
     expect(dark.extension<VocabularyCardTheme>(), VocabularyCardTheme.dark);
+  });
+
+  test('uses cohesive, brightness-specific app chrome colors', () {
+    final light = AppTheme.light.extension<AppChromeTheme>()!;
+    final dark = AppTheme.dark.extension<AppChromeTheme>()!;
+
+    expect(AppTheme.light.appBarTheme.backgroundColor, light.appBarColor);
+    expect(AppTheme.dark.appBarTheme.backgroundColor, dark.appBarColor);
+    expect(AppTheme.light.navigationBarTheme.backgroundColor, light.navigationBarColor);
+    expect(light.appBarColor, isNot(const Color(0xFFFFFFFF)));
+    expect(light.backgroundGradient, isNot(dark.backgroundGradient));
   });
 
   test('card text colors have readable contrast against their surfaces', () {

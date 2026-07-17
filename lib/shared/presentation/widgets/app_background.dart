@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../../../app/theme/app_chrome_theme.dart';
+
 class AppBackground extends StatelessWidget {
   const AppBackground({
     super.key,
@@ -14,11 +16,14 @@ class AppBackground extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final chrome = Theme.of(context).extension<AppChromeTheme>()!;
     return Stack(
       fit: StackFit.expand,
       children: [
         CustomPaint(
           painter: _AppBackgroundPainter(
+            gradientColors: chrome.backgroundGradient,
+            decorationColor: chrome.decorationColor,
             atmosphereOpacityFactor: worldMapOpacityFactor,
             ringOpacityFactor: globeOpacityFactor,
           ),
@@ -31,6 +36,8 @@ class AppBackground extends StatelessWidget {
 
 class _AppBackgroundPainter extends CustomPainter {
   const _AppBackgroundPainter({
+    required this.gradientColors,
+    required this.decorationColor,
     required this.atmosphereOpacityFactor,
     required this.ringOpacityFactor,
   });
@@ -38,10 +45,9 @@ class _AppBackgroundPainter extends CustomPainter {
   final double atmosphereOpacityFactor;
   final double ringOpacityFactor;
 
-  static const _top = Color(0xFF08111F);
-  static const _middle = Color(0xFF10213A);
-  static const _bottom = Color(0xFF050A14);
-  static const _white = Color(0xFFFFFFFF);
+  final List<Color> gradientColors;
+  final Color decorationColor;
+
   static const _blue = Color(0xFF4D9CFF);
   static const _purple = Color(0xFF9B6BFF);
   static const _orange = Color(0xFFFF9A45);
@@ -55,10 +61,10 @@ class _AppBackgroundPainter extends CustomPainter {
     canvas.drawRect(
       rect,
       Paint()
-        ..shader = const LinearGradient(
+        ..shader = LinearGradient(
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
-          colors: [_top, _middle, _bottom],
+          colors: gradientColors,
           stops: [0, .48, 1],
         ).createShader(rect),
     );
@@ -127,7 +133,7 @@ class _AppBackgroundPainter extends CustomPainter {
       _OrbSpec(
         Offset(size.width * .50, size.height * .44),
         size.shortestSide * .42,
-        _white,
+        decorationColor,
         .024,
       ),
     ];
@@ -182,11 +188,11 @@ class _AppBackgroundPainter extends CustomPainter {
         ..strokeWidth = 1
         ..shader = SweepGradient(
           colors: [
-            _white.withValues(alpha: _ringAlpha(.012)),
-            _white.withValues(alpha: _ringAlpha(.050)),
-            _white.withValues(alpha: _ringAlpha(.018)),
-            _white.withValues(alpha: _ringAlpha(.050)),
-            _white.withValues(alpha: _ringAlpha(.012)),
+            decorationColor.withValues(alpha: _ringAlpha(.012)),
+            decorationColor.withValues(alpha: _ringAlpha(.050)),
+            decorationColor.withValues(alpha: _ringAlpha(.018)),
+            decorationColor.withValues(alpha: _ringAlpha(.050)),
+            decorationColor.withValues(alpha: _ringAlpha(.012)),
           ],
           stops: const [0, .24, .52, .78, 1],
         ).createShader(bounds),
@@ -197,7 +203,7 @@ class _AppBackgroundPainter extends CustomPainter {
       Paint()
         ..style = PaintingStyle.stroke
         ..strokeWidth = .6
-        ..color = _white.withValues(alpha: _ringAlpha(.018)),
+        ..color = decorationColor.withValues(alpha: _ringAlpha(.018)),
     );
   }
 
@@ -206,7 +212,7 @@ class _AppBackgroundPainter extends CustomPainter {
       ..style = PaintingStyle.stroke
       ..strokeWidth = .8
       ..strokeCap = StrokeCap.round
-      ..color = _white.withValues(alpha: _atmosphereAlpha(.055));
+      ..color = decorationColor.withValues(alpha: _atmosphereAlpha(.055));
 
     final paths = [
       Path()
@@ -263,7 +269,7 @@ class _AppBackgroundPainter extends CustomPainter {
       canvas.drawCircle(
         Offset(unit.dx * size.width, unit.dy * size.height),
         radius,
-        Paint()..color = _white.withValues(alpha: _atmosphereAlpha(.070)),
+        Paint()..color = decorationColor.withValues(alpha: _atmosphereAlpha(.070)),
       );
     }
   }
@@ -271,7 +277,9 @@ class _AppBackgroundPainter extends CustomPainter {
   @override
   bool shouldRepaint(covariant _AppBackgroundPainter oldDelegate) =>
       oldDelegate.atmosphereOpacityFactor != atmosphereOpacityFactor ||
-      oldDelegate.ringOpacityFactor != ringOpacityFactor;
+      oldDelegate.ringOpacityFactor != ringOpacityFactor ||
+      oldDelegate.gradientColors != gradientColors ||
+      oldDelegate.decorationColor != decorationColor;
 }
 
 class _OrbSpec {
