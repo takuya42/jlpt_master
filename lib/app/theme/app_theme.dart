@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import 'vocabulary_card_theme.dart';
+
 class AppTheme {
   const AppTheme._();
 
@@ -10,39 +12,39 @@ class AppTheme {
   static const glass = Color(0x0DFFFFFF);
   static const glassBorder = Color(0x14FFFFFF);
 
-  static ThemeData get light => _buildTheme();
-  static ThemeData get dark => _buildTheme();
+  static ThemeData get light => _buildTheme(Brightness.light);
+  static ThemeData get dark => _buildTheme(Brightness.dark);
 
-  static ThemeData _buildTheme() {
-    const colorScheme = ColorScheme.dark(
-      primary: accent,
-      secondary: Color(0xFF9BE7FF),
-      surface: background,
-      onSurface: Colors.white,
-      outline: glassBorder,
-      outlineVariant: Color(0x228E99B3),
+  static ThemeData _buildTheme(Brightness brightness) {
+    final isDark = brightness == Brightness.dark;
+    final colorScheme = ColorScheme.fromSeed(
+      seedColor: accent,
+      brightness: brightness,
+      surface: isDark ? background : const Color(0xFFF4F7FC),
     );
+    final cardColors = VocabularyCardTheme.forBrightness(brightness);
 
     return ThemeData(
       useMaterial3: true,
-      brightness: Brightness.dark,
+      brightness: brightness,
       colorScheme: colorScheme,
-      scaffoldBackgroundColor: background,
+      scaffoldBackgroundColor: colorScheme.surface,
+      extensions: [cardColors],
       visualDensity: VisualDensity.adaptivePlatformDensity,
       fontFamily: 'Roboto',
-      textTheme: Typography.material2021().white.apply(
-            bodyColor: Colors.white,
-            displayColor: Colors.white,
+      textTheme: (isDark ? Typography.material2021().white : Typography.material2021().black).apply(
+            bodyColor: colorScheme.onSurface,
+            displayColor: colorScheme.onSurface,
           ).copyWith(
-            bodyMedium: Typography.material2021().white.bodyMedium?.copyWith(color: subText),
-            bodySmall: Typography.material2021().white.bodySmall?.copyWith(color: subText),
+            bodyMedium: TextStyle(color: colorScheme.onSurfaceVariant),
+            bodySmall: TextStyle(color: colorScheme.onSurfaceVariant),
           ),
-      appBarTheme: const AppBarTheme(
+      appBarTheme: AppBarTheme(
         centerTitle: false,
         elevation: 0,
         scrolledUnderElevation: 0,
         backgroundColor: Colors.transparent,
-        foregroundColor: Colors.white,
+        foregroundColor: colorScheme.onSurface,
         surfaceTintColor: Colors.transparent,
       ),
       cardTheme: CardThemeData(
@@ -50,7 +52,7 @@ class AppTheme {
         elevation: 0,
         shadowColor: Colors.transparent,
         margin: EdgeInsets.zero,
-        color: glass,
+        color: isDark ? glass : colorScheme.surfaceContainerHighest,
         surfaceTintColor: Colors.transparent,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(24),
@@ -65,7 +67,7 @@ class AppTheme {
       ),
       searchBarTheme: SearchBarThemeData(
         elevation: const WidgetStatePropertyAll(0),
-        backgroundColor: WidgetStatePropertyAll(Colors.white.withValues(alpha: 0.05)),
+        backgroundColor: WidgetStatePropertyAll(colorScheme.surfaceContainerHighest),
         surfaceTintColor: const WidgetStatePropertyAll(Colors.transparent),
         textStyle: WidgetStatePropertyAll(TextStyle(color: colorScheme.onSurface)),
         hintStyle: WidgetStatePropertyAll(TextStyle(color: colorScheme.onSurface.withValues(alpha: 0.45))),
@@ -77,24 +79,24 @@ class AppTheme {
           minimumSize: const Size(48, 52),
           textStyle: const TextStyle(fontWeight: FontWeight.w800),
           backgroundColor: accent,
-          foregroundColor: Colors.white,
+          foregroundColor: colorScheme.onPrimary,
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         ),
       ),
       navigationBarTheme: NavigationBarThemeData(
         height: 72,
         elevation: 0,
-        backgroundColor: surface,
+        backgroundColor: isDark ? surface : colorScheme.surfaceContainer,
         indicatorColor: accent.withValues(alpha: 0.16),
         labelBehavior: NavigationDestinationLabelBehavior.alwaysHide,
-        iconTheme: WidgetStateProperty.resolveWith((states) => IconThemeData(size: 23, color: states.contains(WidgetState.selected) ? accent : const Color(0xFF8E99B3))),
+        iconTheme: WidgetStateProperty.resolveWith((states) => IconThemeData(size: 23, color: states.contains(WidgetState.selected) ? colorScheme.primary : colorScheme.onSurfaceVariant)),
         labelTextStyle: const WidgetStatePropertyAll(TextStyle(fontSize: 11, fontWeight: FontWeight.w800)),
       ),
       dividerTheme: DividerThemeData(color: colorScheme.outlineVariant),
       segmentedButtonTheme: SegmentedButtonThemeData(
         style: ButtonStyle(
-          foregroundColor: WidgetStateProperty.resolveWith((states) => states.contains(WidgetState.selected) ? Colors.white : subText),
-          backgroundColor: WidgetStateProperty.resolveWith((states) => states.contains(WidgetState.selected) ? accent.withValues(alpha: .22) : Colors.white.withValues(alpha: .04)),
+          foregroundColor: WidgetStateProperty.resolveWith((states) => states.contains(WidgetState.selected) ? colorScheme.onPrimaryContainer : colorScheme.onSurfaceVariant),
+          backgroundColor: WidgetStateProperty.resolveWith((states) => states.contains(WidgetState.selected) ? colorScheme.primaryContainer : colorScheme.surfaceContainerHighest),
           side: const WidgetStatePropertyAll(BorderSide(color: glassBorder)),
         ),
       ),

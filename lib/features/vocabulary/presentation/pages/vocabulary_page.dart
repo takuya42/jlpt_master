@@ -8,6 +8,7 @@ import 'package:animations/animations.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../app/theme/vocabulary_card_theme.dart';
 import '../../../../shared/presentation/widgets/app_background.dart';
 import '../../../../shared/presentation/widgets/app_state_views.dart';
 import '../../../../shared/presentation/widgets/premium_button.dart';
@@ -361,6 +362,9 @@ class _BackCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final cardTheme = theme.extension<VocabularyCardTheme>() ??
+        VocabularyCardTheme.forBrightness(theme.brightness);
     final baseOffset = Offset(24.0 * index, 24.0 * index);
     final promotedOffset = index == 1 ? const Offset(8, 8) : const Offset(24, 24);
     final baseScale = index == 1 ? 0.96 : 0.92;
@@ -383,29 +387,15 @@ class _BackCard extends StatelessWidget {
               gradient: LinearGradient(
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
-                colors: index == 1
-                    ? const [Color(0xFFFBFDFF), Color(0xFFF7F0FF)]
-                    : const [Color(0xFFF8FAFC), Color(0xFFFFF6E8)],
+                colors: cardTheme.backCardGradient,
               ),
-              boxShadow: [BoxShadow(color: const Color(0xFF334155).withOpacity(index == 1 ? 0.12 : 0.08), blurRadius: index == 1 ? 30 : 22, offset: Offset(0, index == 1 ? 18 : 14))],
+              boxShadow: [BoxShadow(color: cardTheme.shadowColor.withValues(alpha: index == 1 ? .20 : .12), blurRadius: index == 1 ? 30 : 22, offset: Offset(0, index == 1 ? 18 : 14))],
             ),
           ),
         ),
       ),
     );
   }
-}
-
-class _VocabularyCardColors {
-  const _VocabularyCardColors._();
-
-  static const primaryText = Color(0xFF0F172A);
-  static const secondaryText = Color(0xFF334155);
-  static const inputFill = Color(0xFFF8FAFC);
-  static const inputBorder = Color(0xFFCBD5E1);
-  static const textShadow = [
-    Shadow(color: Color(0x66FFFFFF), blurRadius: 10, offset: Offset(0, 1)),
-  ];
 }
 
 class _VocabularyQuizCard extends ConsumerWidget {
@@ -418,6 +408,10 @@ class _VocabularyQuizCard extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
+    // The explicit brightness fallback keeps standalone cards correct even
+    // when embedded in an app that has not registered the extension yet.
+    final cardTheme = theme.extension<VocabularyCardTheme>() ??
+        VocabularyCardTheme.forBrightness(theme.brightness);
     final word = state.word!;
     final direction = ref.watch(quizDirectionProvider);
     final isAnswered = state.isCorrect != null;
@@ -427,20 +421,16 @@ class _VocabularyQuizCard extends ConsumerWidget {
       constraints: const BoxConstraints(maxWidth: 620, minHeight: 408, maxHeight: 428),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(36),
-        gradient: const LinearGradient(
+        gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [
-            Color(0xFFEAF1FA),
-            Color(0xFFE9E2D8),
-            Color(0xFFDCE8F6),
-          ],
+          colors: cardTheme.cardGradient,
           stops: [0, .48, 1],
         ),
-        border: Border.all(color: Colors.white.withOpacity(0.58), width: 1.2),
+        border: Border.all(color: cardTheme.borderColor, width: 1.2),
         boxShadow: [
-          BoxShadow(color: const Color(0x24334155).withOpacity(0.14 + dragProgress * 0.08), blurRadius: 44 + dragProgress * 18, offset: Offset(0, 28 + dragProgress * 8)),
-          const BoxShadow(color: Color(0x18FFFFFF), blurRadius: 8, offset: Offset(-4, -4)),
+          BoxShadow(color: cardTheme.shadowColor.withValues(alpha: 0.18 + dragProgress * 0.08), blurRadius: 44 + dragProgress * 18, offset: Offset(0, 28 + dragProgress * 8)),
+          BoxShadow(color: cardTheme.highlightColor, blurRadius: 6, offset: const Offset(-3, -3)),
         ],
       ),
       child: ClipRRect(
@@ -455,7 +445,7 @@ class _VocabularyQuizCard extends ConsumerWidget {
               height: 128,
               decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  color: const Color(0xFFFFF1D6).withOpacity(0.32),
+                  color: cardTheme.decorationColor,
                 ),
               ),
             ),
@@ -468,8 +458,8 @@ class _VocabularyQuizCard extends ConsumerWidget {
               decoration: BoxDecoration(
                   gradient: LinearGradient(
                     colors: [
-                      Colors.white.withOpacity(0.22),
-                      Colors.white.withOpacity(0),
+                      cardTheme.highlightColor,
+                      cardTheme.highlightColor.withValues(alpha: 0),
                     ],
                   ),
                 ),
@@ -484,7 +474,7 @@ class _VocabularyQuizCard extends ConsumerWidget {
                     mainAxisAlignment: MainAxisAlignment.center,
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Icon(Icons.menu_book_rounded, size: 22, color: _VocabularyCardColors.secondaryText),
+                      Icon(Icons.menu_book_rounded, size: 22, color: cardTheme.secondaryTextColor),
                       const SizedBox(width: 8),
                       Text(
                         'Vocabulary Quest',
@@ -492,8 +482,8 @@ class _VocabularyQuizCard extends ConsumerWidget {
                         style: theme.textTheme.titleMedium?.copyWith(
                           fontWeight: FontWeight.w900,
                           letterSpacing: 1.2,
-                          color: _VocabularyCardColors.secondaryText,
-                          shadows: _VocabularyCardColors.textShadow,
+                          color: cardTheme.secondaryTextColor,
+                          shadows: cardTheme.textShadow,
                         ),
                       ),
                     ],
@@ -533,9 +523,9 @@ class _VocabularyQuizCard extends ConsumerWidget {
                             children: [
                               Text(state.isCorrect == true ? 'Correct!' : 'Incorrect', style: theme.textTheme.titleLarge?.copyWith(color: state.isCorrect == true ? const Color(0xFF16A34A) : const Color(0xFFEF4444), fontWeight: FontWeight.w900)),
                               const SizedBox(height: 8),
-                              Text('Correct Answer', style: theme.textTheme.labelLarge?.copyWith(color: _VocabularyCardColors.secondaryText, fontWeight: FontWeight.w800)),
+                              Text('Correct Answer', style: theme.textTheme.labelLarge?.copyWith(color: cardTheme.secondaryTextColor, fontWeight: FontWeight.w800)),
                               const SizedBox(height: 4),
-                              Text(direction.correctAnswerFor(word), textAlign: TextAlign.center, style: theme.textTheme.headlineSmall?.copyWith(color: _VocabularyCardColors.primaryText, fontWeight: FontWeight.w900, shadows: _VocabularyCardColors.textShadow)),
+                              Text(direction.correctAnswerFor(word), textAlign: TextAlign.center, style: theme.textTheme.headlineSmall?.copyWith(color: cardTheme.primaryTextColor, fontWeight: FontWeight.w900, shadows: cardTheme.textShadow)),
                               const SizedBox(height: 10),
                               const _SwipeForNextHint(),
                             ],
@@ -605,6 +595,8 @@ class _VocabularyPrompt extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final cardTheme = theme.extension<VocabularyCardTheme>() ??
+        VocabularyCardTheme.forBrightness(theme.brightness);
     return Column(
       children: [
         Text(
@@ -613,8 +605,8 @@ class _VocabularyPrompt extends StatelessWidget {
           style: theme.textTheme.titleLarge?.copyWith(
             fontSize: 24,
             fontWeight: FontWeight.w900,
-            color: _VocabularyCardColors.secondaryText,
-            shadows: _VocabularyCardColors.textShadow,
+            color: cardTheme.secondaryTextColor,
+            shadows: cardTheme.textShadow,
           ),
         ),
         const SizedBox(height: 8),
@@ -629,9 +621,9 @@ class _VocabularyPrompt extends StatelessWidget {
                 style: theme.textTheme.displayMedium?.copyWith(
                   fontSize: 50,
                   fontWeight: FontWeight.w900,
-                  color: _VocabularyCardColors.primaryText,
+                  color: cardTheme.primaryTextColor,
                   letterSpacing: -1.4,
-                  shadows: _VocabularyCardColors.textShadow,
+                  shadows: cardTheme.textShadow,
                 ),
               ),
             ),
@@ -643,9 +635,9 @@ class _VocabularyPrompt extends StatelessWidget {
               textAlign: TextAlign.center,
               style: theme.textTheme.titleLarge?.copyWith(
                 fontSize: 22,
-                color: _VocabularyCardColors.secondaryText,
+                color: cardTheme.secondaryTextColor,
                 fontWeight: FontWeight.w800,
-                shadows: _VocabularyCardColors.textShadow,
+                shadows: cardTheme.textShadow,
               ),
             ),
           ],
@@ -656,9 +648,9 @@ class _VocabularyPrompt extends StatelessWidget {
             style: theme.textTheme.displaySmall?.copyWith(
               fontSize: 40,
               fontWeight: FontWeight.w900,
-              color: _VocabularyCardColors.primaryText,
+              color: cardTheme.primaryTextColor,
               letterSpacing: -1.1,
-              shadows: _VocabularyCardColors.textShadow,
+              shadows: cardTheme.textShadow,
             ),
           ),
       ],
@@ -718,11 +710,13 @@ class _GlassTextField extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
+    final cardTheme = theme.extension<VocabularyCardTheme>() ??
+        VocabularyCardTheme.forBrightness(theme.brightness);
 
     return TextField(
       controller: controller,
       style: theme.textTheme.bodyLarge?.copyWith(
-        color: _VocabularyCardColors.primaryText,
+        color: cardTheme.primaryTextColor,
         fontWeight: FontWeight.w700,
       ),
       enabled: enabled,
@@ -730,18 +724,18 @@ class _GlassTextField extends StatelessWidget {
       decoration: InputDecoration(
           labelText: labelText,
         labelStyle: theme.textTheme.bodyMedium?.copyWith(
-          color: _VocabularyCardColors.secondaryText,
+          color: cardTheme.secondaryTextColor,
           fontWeight: FontWeight.w700,
         ),
         filled: true,
-        fillColor: _VocabularyCardColors.inputFill,
+        fillColor: cardTheme.inputFillColor,
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(22),
           borderSide: BorderSide.none,
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(22),
-          borderSide: const BorderSide(color: _VocabularyCardColors.inputBorder),
+          borderSide: BorderSide(color: cardTheme.inputBorderColor),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(22),
@@ -770,6 +764,9 @@ class _PressScaleButtonState extends State<_PressScaleButton> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final cardTheme = theme.extension<VocabularyCardTheme>() ??
+        VocabularyCardTheme.forBrightness(theme.brightness);
     return AnimatedScale(
       scale: _pressed ? 0.965 : 1,
       duration: const Duration(milliseconds: 110),
@@ -789,12 +786,12 @@ class _PressScaleButtonState extends State<_PressScaleButton> {
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
                 colors: widget.enabled
-                    ? const [Color(0xFF111827), Color(0xFF334155), Color(0xFF7C3AED)]
-                    : const [Color(0xFF334155), Color(0xFF475569), Color(0xFF5B4B8A)],
+                    ? cardTheme.buttonGradient
+                    : cardTheme.disabledButtonGradient,
               ),
               boxShadow: [
                 BoxShadow(
-                  color: const Color(0xFF111827).withOpacity(widget.enabled ? (_pressed ? 0.18 : 0.32) : 0.18),
+                  color: cardTheme.shadowColor.withValues(alpha: widget.enabled ? (_pressed ? 0.18 : 0.32) : 0.18),
                   blurRadius: _pressed ? 10 : 24,
                   offset: Offset(0, _pressed ? 5 : 14),
                 ),
@@ -803,12 +800,12 @@ class _PressScaleButtonState extends State<_PressScaleButton> {
           child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(widget.icon, color: Colors.white),
+              Icon(widget.icon, color: cardTheme.buttonForegroundColor),
               const SizedBox(width: 10),
               Text(
                 widget.label,
-                style: const TextStyle(
-                  color: Colors.white,
+                style: TextStyle(
+                  color: cardTheme.buttonForegroundColor,
                   fontSize: 15,
                   fontWeight: FontWeight.w900,
                 ),
