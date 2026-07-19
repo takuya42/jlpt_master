@@ -11,7 +11,12 @@ import '../../../auth/presentation/providers/auth_providers.dart';
 import '../providers/theme_mode_provider.dart';
 
 class SettingsPage extends ConsumerStatefulWidget {
-  const SettingsPage({super.key});
+  const SettingsPage({
+    super.key,
+    this.urlLauncher = launchUrl,
+  });
+
+  final Future<bool> Function(Uri url, {LaunchMode mode}) urlLauncher;
 
   @override
   ConsumerState<SettingsPage> createState() => _SettingsPageState();
@@ -22,19 +27,37 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
 
   Future<void> _openTermsOfService() async {
     final url = Uri.parse(AppUrls.termsOfService);
-    var opened = false;
-
+    debugPrint('Opening Terms of Service: $url');
     try {
-      opened = await launchUrl(url, mode: LaunchMode.externalApplication);
-    } on Exception {
-      // url_launcher can throw when no application can handle the URL.
-    }
-
-    if (!opened && mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Unable to open Terms of Service.')),
+      // The Terms page must open in Safari/the user's default browser rather
+      // than an in-app browser, so externalApplication is intentional here.
+      final opened = await widget.urlLauncher(
+        url,
+        mode: LaunchMode.externalApplication,
       );
+
+      if (!opened) {
+        debugPrint(
+          'Failed to open Terms of Service: launchUrl returned false '
+          '(url: $url, mode: ${LaunchMode.externalApplication}).',
+        );
+        _showTermsLaunchFailure();
+      }
+    } on Exception catch (error, stackTrace) {
+      debugPrint(
+        'Failed to open Terms of Service with launchUrl '
+        '(url: $url, mode: ${LaunchMode.externalApplication}): $error',
+      );
+      debugPrintStack(stackTrace: stackTrace);
+      _showTermsLaunchFailure();
     }
+  }
+
+  void _showTermsLaunchFailure() {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Unable to open Terms of Service.')),
+    );
   }
 
   void _openPrivacyPolicy() {
