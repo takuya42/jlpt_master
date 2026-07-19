@@ -81,7 +81,21 @@ class _EmailLoginPageState extends ConsumerState<EmailLoginPage> {
 
   @override
   Widget build(BuildContext context) => Scaffold(
-    appBar: AppBar(title: const Text('Email Login / メールログイン')),
+    appBar: AppBar(
+      leading: IconButton(
+        constraints: const BoxConstraints(minWidth: 44, minHeight: 44),
+        icon: const Icon(Icons.arrow_back_ios_new_rounded),
+        tooltip: MaterialLocalizations.of(context).backButtonTooltip,
+        onPressed: () {
+          if (context.canPop()) {
+            context.pop();
+          } else {
+            context.go(AppRoute.home.path);
+          }
+        },
+      ),
+      title: const Text('Email Login / メールログイン'),
+    ),
     body: SafeArea(child: Center(child: ConstrainedBox(constraints: const BoxConstraints(maxWidth: 480), child: ListView(padding: const EdgeInsets.all(24), children: [
       _AuthTextField(controller: _email, label: 'Email', japaneseLabel: 'メールアドレス', icon: Icons.mail_outline_rounded, keyboardType: TextInputType.emailAddress, textInputAction: TextInputAction.next),
       const SizedBox(height: 16),
