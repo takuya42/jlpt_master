@@ -60,8 +60,39 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
     );
   }
 
-  void _openPrivacyPolicy() {
-    // TODO: Open Privacy Policy
+  Future<void> _openPrivacyPolicy() async {
+    final url = Uri.parse(AppUrls.privacyPolicy);
+    debugPrint('Opening Privacy Policy: $url');
+    try {
+      // The Privacy Policy page must open in Safari/the user's default browser
+      // rather than an in-app browser, so externalApplication is intentional.
+      final opened = await widget.urlLauncher(
+        url,
+        mode: LaunchMode.externalApplication,
+      );
+
+      if (!opened) {
+        debugPrint(
+          'Failed to open Privacy Policy: launchUrl returned false '
+          '(url: $url, mode: ${LaunchMode.externalApplication}).',
+        );
+        _showPrivacyPolicyLaunchFailure();
+      }
+    } on Exception catch (error, stackTrace) {
+      debugPrint(
+        'Failed to open Privacy Policy with launchUrl '
+        '(url: $url, mode: ${LaunchMode.externalApplication}): $error',
+      );
+      debugPrintStack(stackTrace: stackTrace);
+      _showPrivacyPolicyLaunchFailure();
+    }
+  }
+
+  void _showPrivacyPolicyLaunchFailure() {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Unable to open Privacy Policy.')),
+    );
   }
 
   Future<void> _confirmDeleteAccount() async {
