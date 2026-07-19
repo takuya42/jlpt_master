@@ -95,6 +95,41 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
     );
   }
 
+  Future<void> _openContactForm() async {
+    final url = Uri.parse(AppUrls.contactForm);
+    debugPrint('Opening Contact Form: $url');
+    try {
+      // The contact form must open in Safari/the user's default browser rather
+      // than an in-app browser, so externalApplication is intentional here.
+      final opened = await widget.urlLauncher(
+        url,
+        mode: LaunchMode.externalApplication,
+      );
+
+      if (!opened) {
+        debugPrint(
+          'Failed to open Contact Form: launchUrl returned false '
+          '(url: $url, mode: ${LaunchMode.externalApplication}).',
+        );
+        _showContactFormLaunchFailure();
+      }
+    } on Exception catch (error, stackTrace) {
+      debugPrint(
+        'Failed to open Contact Form with launchUrl '
+        '(url: $url, mode: ${LaunchMode.externalApplication}): $error',
+      );
+      debugPrintStack(stackTrace: stackTrace);
+      _showContactFormLaunchFailure();
+    }
+  }
+
+  void _showContactFormLaunchFailure() {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Unable to open Contact Form.')),
+    );
+  }
+
   Future<void> _confirmDeleteAccount() async {
     final shouldDelete = await showDialog<bool>(
       context: context,
@@ -181,6 +216,12 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
                           title: 'Privacy Policy',
                           subtitle: 'プライバシーポリシー',
                           onTap: _openPrivacyPolicy,
+                        ),
+                        _SettingsTile(
+                          icon: Icons.support_agent_outlined,
+                          title: 'Contact',
+                          subtitle: 'お問い合わせ',
+                          onTap: _openContactForm,
                         ),
                         if (ref.watch(authStateProvider).asData?.value != null)
                           _DeleteAccountTile(
