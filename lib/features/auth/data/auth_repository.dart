@@ -64,12 +64,16 @@ class AuthRepository {
 
   Future<void> _deleteUserData(String uid) async {
     final userRef = _userDoc(uid);
+    // Firestore does not cascade deletes to a document's subcollections. Keep
+    // this list in sync with every user-scoped collection created by the app.
     const collectionNames = [
       'favorites',
       'vocabulary_history',
       'grammar_history',
+      'learning_history',
       'study_progress',
       'statistics',
+      'settings',
     ];
 
     for (final collectionName in collectionNames) {

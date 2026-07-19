@@ -34,6 +34,9 @@ void main() {
     );
     await tester.pumpAndSettle();
 
+    expect(find.text('Log Out'), findsNothing);
+    expect(find.text('Delete Account'), findsNothing);
+
     final termsTile = find.text('Terms of Service');
     await tester.ensureVisible(termsTile);
     await tester.tap(termsTile);

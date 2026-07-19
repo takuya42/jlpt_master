@@ -24,6 +24,50 @@ class SettingsPage extends ConsumerStatefulWidget {
 
 class _SettingsPageState extends ConsumerState<SettingsPage> {
   bool _isDeletingAccount = false;
+  bool _isLoggingOut = false;
+
+  Future<void> _confirmLogOut() async {
+    final shouldLogOut = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Log Out\nログアウト'),
+        content: const Text(
+          'Are you sure you want to log out?\n'
+          'ログアウトしますか？',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text('Cancel\nキャンセル'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            child: const Text('Log Out\nログアウト'),
+          ),
+        ],
+      ),
+    );
+
+    if (shouldLogOut != true || !mounted) return;
+
+    setState(() => _isLoggingOut = true);
+    final messenger = ScaffoldMessenger.of(context);
+    try {
+      await ref.read(authRepositoryProvider).signOut();
+      if (!mounted) return;
+      context.go(AppRoute.home.path);
+      messenger.showSnackBar(
+        const SnackBar(content: Text('Logged out successfully.')),
+      );
+    } on Exception catch (error) {
+      if (!mounted) return;
+      messenger.showSnackBar(
+        SnackBar(content: Text('Failed to log out: $error')),
+      );
+    } finally {
+      if (mounted) setState(() => _isLoggingOut = false);
+    }
+  }
 
   Future<void> _openTermsOfService() async {
     final url = Uri.parse(AppUrls.termsOfService);
@@ -136,9 +180,9 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
       builder: (context) => AlertDialog(
         title: const Text('Delete Account\nアカウントを削除'),
         content: const Text(
-          'Are you sure you want to delete your account?\n'
+          'Are you sure you want to permanently delete your account?\n'
           'This action cannot be undone.\n\n'
-          'アカウントを削除しますか？\n'
+          'アカウントを完全に削除しますか？\n'
           'この操作は元に戻せません。',
         ),
         actions: [
@@ -161,13 +205,17 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
     if (shouldDelete != true || !mounted) return;
 
     setState(() => _isDeletingAccount = true);
+    final messenger = ScaffoldMessenger.of(context);
     try {
       await ref.read(authRepositoryProvider).deleteCurrentUserAccount();
       if (!mounted) return;
       context.go(AppRoute.home.path);
+      messenger.showSnackBar(
+        const SnackBar(content: Text('Account deleted successfully.')),
+      );
     } on Exception catch (error) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
+      messenger.showSnackBar(
         SnackBar(content: Text('Failed to delete account: $error')),
       );
     } finally {
@@ -223,15 +271,35 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
                           subtitle: 'お問い合わせ',
                           onTap: _openContactForm,
                         ),
-                        if (ref.watch(authStateProvider).asData?.value != null)
-                          _DeleteAccountTile(
-                            isDeleting: _isDeletingAccount,
-                            onTap: _confirmDeleteAccount,
-                          ),
                       ],
                     ),
                   ),
                 ),
+                if (ref.watch(authStateProvider).asData?.value != null) ...[
+                  const SizedBox(height: 18),
+                  Card(
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 8),
+                      child: Column(
+                        children: [
+                          _SettingsTile(
+                            icon: Icons.logout,
+                            title: 'Log Out',
+                            subtitle: 'ログアウト',
+                            enabled: !_isLoggingOut && !_isDeletingAccount,
+                            onTap: _confirmLogOut,
+                          ),
+                          const Divider(indent: 20, endIndent: 20),
+                          _DeleteAccountTile(
+                            isDeleting: _isDeletingAccount,
+                            enabled: !_isLoggingOut,
+                            onTap: _confirmDeleteAccount,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
               ],
             ),
           ),
@@ -400,9 +468,14 @@ class _ThemeModeTile extends ConsumerWidget {
 }
 
 class _DeleteAccountTile extends StatelessWidget {
-  const _DeleteAccountTile({required this.isDeleting, required this.onTap});
+  const _DeleteAccountTile({
+    required this.isDeleting,
+    required this.enabled,
+    required this.onTap,
+  });
 
   final bool isDeleting;
+  final bool enabled;
   final VoidCallback onTap;
 
   @override
@@ -422,18 +495,25 @@ class _DeleteAccountTile extends StatelessWidget {
       subtitle: Text('退会', maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(color: colorScheme.error)),
       trailing: Icon(Icons.chevron_right_rounded, color: colorScheme.error),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
-      enabled: !isDeleting,
-      onTap: isDeleting ? null : onTap,
+      enabled: enabled && !isDeleting,
+      onTap: enabled && !isDeleting ? onTap : null,
     );
   }
 }
 
 class _SettingsTile extends StatelessWidget {
-  const _SettingsTile({required this.icon, required this.title, required this.subtitle, this.onTap});
+  const _SettingsTile({
+    required this.icon,
+    required this.title,
+    required this.subtitle,
+    this.enabled = true,
+    this.onTap,
+  });
 
   final IconData icon;
   final String title;
   final String subtitle;
+  final bool enabled;
   final VoidCallback? onTap;
 
   @override
@@ -445,7 +525,8 @@ class _SettingsTile extends StatelessWidget {
       subtitle: Text(subtitle, maxLines: 1, overflow: TextOverflow.ellipsis, style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.75))),
       trailing: Icon(Icons.chevron_right_rounded, color: Theme.of(context).colorScheme.onSurfaceVariant),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
-      onTap: onTap,
+      enabled: enabled,
+      onTap: enabled ? onTap : null,
     );
   }
 }
