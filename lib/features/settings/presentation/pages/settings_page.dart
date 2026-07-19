@@ -22,7 +22,13 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
 
   Future<void> _openTermsOfService() async {
     final url = Uri.parse(AppUrls.termsOfService);
-    final opened = await launchUrl(url, mode: LaunchMode.externalApplication);
+    var opened = false;
+
+    try {
+      opened = await launchUrl(url, mode: LaunchMode.externalApplication);
+    } on Exception {
+      // url_launcher can throw when no application can handle the URL.
+    }
 
     if (!opened && mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
