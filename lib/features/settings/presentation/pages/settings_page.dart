@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:url_launcher/url_launcher.dart';
 
+import '../../../../app/constants/app_urls.dart';
 import '../../../../app/navigation/app_route.dart';
 import '../../../../shared/presentation/widgets/app_background.dart';
 import '../../../../shared/presentation/widgets/premium_button.dart';
@@ -18,8 +20,15 @@ class SettingsPage extends ConsumerStatefulWidget {
 class _SettingsPageState extends ConsumerState<SettingsPage> {
   bool _isDeletingAccount = false;
 
-  void _openTermsOfUse() {
-    // TODO: Open Terms of Use
+  Future<void> _openTermsOfService() async {
+    final url = Uri.parse(AppUrls.termsOfService);
+    final opened = await launchUrl(url, mode: LaunchMode.externalApplication);
+
+    if (!opened && mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Unable to open Terms of Service.')),
+      );
+    }
   }
 
   void _openPrivacyPolicy() {
@@ -103,9 +112,9 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
                         const _ThemeModeTile(),
                         _SettingsTile(
                           icon: Icons.description_outlined,
-                          title: 'Terms of Use',
+                          title: 'Terms of Service',
                           subtitle: '利用規約',
-                          onTap: _openTermsOfUse,
+                          onTap: _openTermsOfService,
                         ),
                         _SettingsTile(
                           icon: Icons.privacy_tip_outlined,
