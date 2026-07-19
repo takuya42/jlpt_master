@@ -68,6 +68,97 @@ void main() {
 
     expect(find.text('Unable to open Terms of Service.'), findsOneWidget);
   });
+
+  testWidgets('Privacy Policy tap launches the configured URL externally', (
+    tester,
+  ) async {
+    Uri? launchedUrl;
+    LaunchMode? launchMode;
+
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          authStateProvider.overrideWith((ref) => Stream.value(null)),
+          currentUserProvider.overrideWith((ref) => Stream.value(null)),
+          themeModeControllerProvider.overrideWith(() => _ThemeModeController()),
+        ],
+        child: MaterialApp(
+          home: SettingsPage(
+            urlLauncher: (url, {mode = LaunchMode.platformDefault}) async {
+              launchedUrl = url;
+              launchMode = mode;
+              return true;
+            },
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    final privacyPolicyTile = find.text('Privacy Policy');
+    await tester.ensureVisible(privacyPolicyTile);
+    await tester.tap(privacyPolicyTile);
+    await tester.pump();
+
+    expect(launchedUrl, Uri.parse(AppUrls.privacyPolicy));
+    expect(launchMode, LaunchMode.externalApplication);
+  });
+
+  testWidgets('shows an error when Privacy Policy launch returns false', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          authStateProvider.overrideWith((ref) => Stream.value(null)),
+          currentUserProvider.overrideWith((ref) => Stream.value(null)),
+          themeModeControllerProvider.overrideWith(() => _ThemeModeController()),
+        ],
+        child: MaterialApp(
+          home: SettingsPage(
+            urlLauncher: (url, {mode = LaunchMode.platformDefault}) async =>
+                false,
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    final privacyPolicyTile = find.text('Privacy Policy');
+    await tester.ensureVisible(privacyPolicyTile);
+    await tester.tap(privacyPolicyTile);
+    await tester.pump();
+
+    expect(find.text('Unable to open Privacy Policy.'), findsOneWidget);
+  });
+
+  testWidgets('shows an error when Privacy Policy launch throws', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          authStateProvider.overrideWith((ref) => Stream.value(null)),
+          currentUserProvider.overrideWith((ref) => Stream.value(null)),
+          themeModeControllerProvider.overrideWith(() => _ThemeModeController()),
+        ],
+        child: MaterialApp(
+          home: SettingsPage(
+            urlLauncher: (url, {mode = LaunchMode.platformDefault}) async =>
+                throw Exception('launch failed'),
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    final privacyPolicyTile = find.text('Privacy Policy');
+    await tester.ensureVisible(privacyPolicyTile);
+    await tester.tap(privacyPolicyTile);
+    await tester.pump();
+
+    expect(find.text('Unable to open Privacy Policy.'), findsOneWidget);
+  });
 }
 
 class _ThemeModeController extends ThemeModeController {
