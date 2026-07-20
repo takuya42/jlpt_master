@@ -8,7 +8,7 @@ import 'package:jlpt_master/features/grammar/presentation/providers/grammar_prov
 void main() {
   group('GoogleSheetGrammarRepository parser', () {
     test('keeps rows with optional trailing columns missing', () {
-      const csv = '''id,jlpt,grammar,meaning_en,meaning_ja,explanation_en,explanation_ja,example_jp,example_en,example_translation_ja
+      const csv = '''id,jlpt,grammar,meaning_en,meaning_ja,explanation_en,explanation_ja,example_jp,example_en,example_ja
 1,N5,です,is,です,,,,,
 2,N4,なら,if
 3,JLPT N3,ほど,to the extent
@@ -24,7 +24,7 @@ void main() {
 
     test('parses TSV and searches all requested fields after level filtering', () {
       const tsv =
-          'id\tlevel\tgrammar\tmeaning_en\tmeaning_ja\n1\tN4\t〜そうだ\tlooks like\t〜ように見える';
+          'id\tjlpt\tgrammar\tmeaning_en\tmeaning_ja\texplanation_en\texplanation_ja\texample_jp\texample_en\texample_ja\n1\tN4\t〜そうだ\tlooks like\t〜ように見える';
       final pattern = GoogleSheetGrammarRepository().parseText(tsv).single;
 
       expect(pattern.grammar, '〜そうだ');
@@ -33,9 +33,24 @@ void main() {
       expect(pattern.jlpt, 'N4');
     });
 
-    test('uses the named Grammar sheet rather than the N5 gid', () {
-      expect(GoogleSheetGrammarRepository.csvUrl, contains('sheet=Grammar'));
-      expect(GoogleSheetGrammarRepository.csvUrl, isNot(contains('gid=0')));
+    test('uses the dedicated published Grammar source', () {
+      expect(
+        GoogleSheetGrammarRepository.csvUrl,
+        contains('/spreadsheets/d/e/2PACX-'),
+      );
+      expect(
+        GoogleSheetGrammarRepository.csvUrl,
+        isNot(contains('1vl_IRVwh7FWgcT-C8fTQltTQWwx8ejRJG9HnCctW0BU')),
+      );
+    });
+
+    test('rejects a vocabulary header instead of parsing it as grammar', () {
+      const csv = 'id,category,word,reading,romaji\n1,noun,猫,ねこ,neko';
+
+      expect(
+        () => GoogleSheetGrammarRepository().parseText(csv),
+        throwsA(isA<GrammarRepositoryException>()),
+      );
     });
   });
 

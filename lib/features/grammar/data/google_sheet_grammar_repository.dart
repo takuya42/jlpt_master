@@ -14,11 +14,12 @@ class GoogleSheetGrammarRepository implements GrammarRepository {
   })  : _client = client,
         _csvUri = csvUri ?? _defaultCsvUri;
 
-  static const String spreadsheetId =
-      '1vl_IRVwh7FWgcT-C8fTQltTQWwx8ejRJG9HnCctW0BU';
-  static const String grammarSheetName = 'Grammar';
+  // This is the published Grammar-only data source. Do not replace it with the
+  // spreadsheet used by GoogleSheetVocabularyRepository: an unknown `sheet`
+  // parameter can silently fall back to that spreadsheet's first vocabulary
+  // tab.
   static const String csvUrl =
-      'https://docs.google.com/spreadsheets/d/$spreadsheetId/gviz/tq?tqx=out:csv&sheet=$grammarSheetName';
+      'https://docs.google.com/spreadsheets/d/e/2PACX-1vRmRT1zho5hgMAfNv7mDeukWnAh2dLC87TjNTOZJh1p7KzB7c1KjxmnqQQE5ZZ5lwvDVjpJryPccLFr/pub?gid=0&single=true&output=csv';
 
   static final Uri _defaultCsvUri = Uri.parse(csvUrl);
 
@@ -133,6 +134,9 @@ class GoogleSheetGrammarRepository implements GrammarRepository {
       debugPrint(
         'GoogleSheetGrammarRepository.fetchPatterns(): rows.first=${rows.first}',
       );
+      debugPrint(
+        'GoogleSheetGrammarRepository.fetchPatterns(): header=${rows.first}',
+      );
     }
 
     if (rows.isEmpty) {
@@ -149,6 +153,25 @@ class GoogleSheetGrammarRepository implements GrammarRepository {
       for (var index = 0; index < rows.first.length; index++)
         _headerName(rows.first[index].toString()): index,
     };
+    const requiredHeaders = <String>{
+      'id',
+      'jlpt',
+      'grammar',
+      'meaning_en',
+      'meaning_ja',
+      'explanation_en',
+      'explanation_ja',
+      'example_jp',
+      'example_en',
+      'example_ja',
+    };
+    final missingHeaders = requiredHeaders.difference(headers.keys.toSet());
+    if (missingHeaders.isNotEmpty) {
+      throw GrammarRepositoryException(
+        'Grammar CSV has an unexpected header. Missing: '
+        '${missingHeaders.join(', ')}. Actual: ${rows.first}',
+      );
+    }
     int column(List<String> names, int fallback) {
       for (final name in names) {
         final index = headers[_headerName(name)];
@@ -166,7 +189,7 @@ class GoogleSheetGrammarRepository implements GrammarRepository {
     final explanationJaColumn = column(const ['explanation_ja'], 6);
     final exampleJpColumn = column(const ['example_jp', 'example_ja'], 7);
     final exampleEnColumn = column(const ['example_en'], 8);
-    final exampleJaColumn = column(const ['example_translation_ja'], 9);
+    final exampleJaColumn = column(const ['example_ja'], 9);
     final requiredColumn = [idColumn, levelColumn, grammarColumn].reduce(
       (largest, value) => value > largest ? value : largest,
     );
