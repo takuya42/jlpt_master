@@ -1,8 +1,12 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:sign_in_with_apple/sign_in_with_apple.dart';
 
 import '../../../app/navigation/app_route.dart';
+import '../data/auth_repository.dart';
 import 'providers/auth_providers.dart';
 
 class LoginPage extends ConsumerWidget {
@@ -12,6 +16,8 @@ class LoginPage extends ConsumerWidget {
     try {
       await action();
       if (context.mounted) context.go(AppRoute.home.path);
+    } on AuthSignInCancelled {
+      // Closing the provider's authorization sheet is not an error.
     } catch (error) {
       if (context.mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(error.toString())));
     }
@@ -30,8 +36,19 @@ class LoginPage extends ConsumerWidget {
               const SizedBox(height: 48),
               _SocialSignInButton.google(onPressed: () => _run(context, ref, ref.read(authRepositoryProvider).signInWithGoogle)),
               const SizedBox(height: 14),
-              _SocialSignInButton.apple(onPressed: () => _run(context, ref, ref.read(authRepositoryProvider).signInWithApple)),
-              const SizedBox(height: 14),
+              if (Theme.of(context).platform == TargetPlatform.iOS) ...[
+                SignInWithAppleButton(
+                  onPressed: () => _run(
+                    context,
+                    ref,
+                    ref.read(authRepositoryProvider).signInWithApple,
+                  ),
+                  text: 'Continue with Apple',
+                  height: 56,
+                  borderRadius: const BorderRadius.all(Radius.circular(16)),
+                ),
+                const SizedBox(height: 14),
+              ],
               FilledButton.tonalIcon(
                 onPressed: () => context.go(AppRoute.emailLogin.path),
                 icon: const Icon(Icons.mail_outline_rounded),
@@ -149,8 +166,56 @@ class _PasswordResetDialog extends StatefulWidget { const _PasswordResetDialog({
 class _PasswordResetDialogState extends State<_PasswordResetDialog> { late final TextEditingController _controller = TextEditingController(text: widget.initialEmail); @override void dispose(){_controller.dispose(); super.dispose();} @override Widget build(BuildContext context)=>AlertDialog(title: const Text('Password Reset\nパスワード再設定'), content: _AuthTextField(controller: _controller, label: 'Email', japaneseLabel: 'メールアドレス', icon: Icons.mail_outline_rounded), actions: [TextButton(onPressed: ()=>Navigator.pop(context), child: const Text('Cancel')), FilledButton(onPressed: ()=>Navigator.pop(context, _controller.text), child: const Text('Send'))]); }
 
 class _LoginHeader extends StatelessWidget { const _LoginHeader(); @override Widget build(BuildContext context) { final theme = Theme.of(context); return Text('Welcome to JLPT Master\nJLPT Masterへようこそ', style: theme.textTheme.headlineMedium?.copyWith(fontWeight: FontWeight.w900, height: 1.18)); } }
-class _SocialSignInButton extends StatelessWidget { const _SocialSignInButton._({required this.label, required this.japaneseLabel, required this.logo, required this.onPressed, required this.backgroundColor, required this.foregroundColor, required this.borderColor}); factory _SocialSignInButton.google({required VoidCallback onPressed}) => _SocialSignInButton._(label: 'Continue with Google', japaneseLabel: 'Googleで続ける', logo: const _GoogleLogo(), onPressed: onPressed, backgroundColor: Colors.white, foregroundColor: const Color(0xFF1F1F1F), borderColor: const Color(0xFFDADCE0)); factory _SocialSignInButton.apple({required VoidCallback onPressed}) => _SocialSignInButton._(label: 'Continue with Apple', japaneseLabel: 'Appleで続ける', logo: const Icon(Icons.apple, size: 24), onPressed: onPressed, backgroundColor: Colors.black, foregroundColor: Colors.white, borderColor: Colors.black); final String label, japaneseLabel; final Widget logo; final VoidCallback onPressed; final Color backgroundColor, foregroundColor, borderColor; @override Widget build(BuildContext context)=>FilledButton(onPressed: onPressed, style: FilledButton.styleFrom(backgroundColor: backgroundColor, foregroundColor: foregroundColor, minimumSize: const Size.fromHeight(56), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16), side: BorderSide(color: borderColor))), child: Stack(alignment: Alignment.center, children: [Align(alignment: Alignment.centerLeft, child: logo), Text('$label\n$japaneseLabel', textAlign: TextAlign.center)])); }
+class _SocialSignInButton extends StatelessWidget { const _SocialSignInButton._({required this.label, required this.japaneseLabel, required this.logo, required this.onPressed, required this.backgroundColor, required this.foregroundColor, required this.borderColor}); factory _SocialSignInButton.google({required VoidCallback onPressed}) => _SocialSignInButton._(label: 'Continue with Google', japaneseLabel: 'Googleで続ける', logo: const _GoogleLogo(), onPressed: onPressed, backgroundColor: Colors.white, foregroundColor: const Color(0xFF1F1F1F), borderColor: const Color(0xFFDADCE0)); final String label, japaneseLabel; final Widget logo; final VoidCallback onPressed; final Color backgroundColor, foregroundColor, borderColor; @override Widget build(BuildContext context)=>FilledButton(onPressed: onPressed, style: FilledButton.styleFrom(backgroundColor: backgroundColor, foregroundColor: foregroundColor, minimumSize: const Size.fromHeight(56), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16), side: BorderSide(color: borderColor))), child: Stack(alignment: Alignment.center, children: [Align(alignment: Alignment.centerLeft, child: logo), Text('$label\n$japaneseLabel', textAlign: TextAlign.center)])); }
 class _AuthTextField extends StatelessWidget { const _AuthTextField({required this.controller, required this.label, required this.japaneseLabel, required this.icon, this.keyboardType, this.obscureText = false, this.textInputAction}); final TextEditingController controller; final String label, japaneseLabel; final IconData icon; final TextInputType? keyboardType; final bool obscureText; final TextInputAction? textInputAction; @override Widget build(BuildContext context)=>TextField(controller: controller, keyboardType: keyboardType, obscureText: obscureText, textInputAction: textInputAction, decoration: InputDecoration(labelText: '$label / $japaneseLabel', prefixIcon: Icon(icon), filled: true, contentPadding: const EdgeInsets.symmetric(horizontal: 18, vertical: 18), constraints: const BoxConstraints(minHeight: 56), border: OutlineInputBorder(borderRadius: BorderRadius.circular(16)))); }
 class _CreateAccountPrompt extends StatelessWidget { const _CreateAccountPrompt(); @override Widget build(BuildContext context)=>Column(children: [const Text('Don\'t have an account?\nアカウントをお持ちでないですか？', textAlign: TextAlign.center), TextButton(onPressed: () => context.go(AppRoute.register.path), child: const Text('Create Account\n新規登録', textAlign: TextAlign.center))]); }
 class _SignInPrompt extends StatelessWidget { const _SignInPrompt(); @override Widget build(BuildContext context)=>Column(children: [const Text('Already have an account?\nすでにアカウントをお持ちですか？', textAlign: TextAlign.center), TextButton(onPressed: () => context.go(AppRoute.login.path), child: const Text('Sign In\nログイン', textAlign: TextAlign.center))]); }
-class _GoogleLogo extends StatelessWidget { const _GoogleLogo(); @override Widget build(BuildContext context)=>const Text('G', style: TextStyle(color: Color(0xFF4285F4), fontSize: 24, fontWeight: FontWeight.w900, letterSpacing: -1)); }
+class _GoogleLogo extends StatelessWidget {
+  const _GoogleLogo();
+
+  @override
+  Widget build(BuildContext context) => const SizedBox.square(
+    dimension: 24,
+    child: CustomPaint(painter: _GoogleLogoPainter()),
+  );
+}
+
+class _GoogleLogoPainter extends CustomPainter {
+  const _GoogleLogoPainter();
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final strokeWidth = size.width * 0.19;
+    final oval = Offset.zero & size;
+    final paint = Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = strokeWidth
+      ..strokeCap = StrokeCap.butt;
+
+    canvas.drawArc(oval.deflate(strokeWidth / 2), -0.22, 1.62, false,
+        paint..color = const Color(0xFF4285F4));
+    canvas.drawArc(oval.deflate(strokeWidth / 2), 1.40, 1.04, false,
+        paint..color = const Color(0xFF34A853));
+    canvas.drawArc(oval.deflate(strokeWidth / 2), 2.44, 1.00, false,
+        paint..color = const Color(0xFFFBBC05));
+    canvas.drawArc(oval.deflate(strokeWidth / 2), 3.44, 1.26, false,
+        paint..color = const Color(0xFFEA4335));
+    canvas.drawLine(
+      Offset(size.width * 0.52, size.height * 0.5),
+      Offset(size.width, size.height * 0.5),
+      paint
+        ..color = const Color(0xFF4285F4)
+        ..strokeCap = StrokeCap.square,
+    );
+    canvas.drawArc(
+      oval.deflate(strokeWidth / 2),
+      -math.pi / 18,
+      math.pi / 2,
+      false,
+      paint..strokeCap = StrokeCap.butt,
+    );
+  }
+
+  @override
+  bool shouldRepaint(_GoogleLogoPainter oldDelegate) => false;
+}
