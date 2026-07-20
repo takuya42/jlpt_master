@@ -247,7 +247,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
                     padding: const EdgeInsets.symmetric(vertical: 8),
                     child: Column(
                       children: [
-                        _SettingsTile(icon: Icons.favorite_border, title: 'Favorite', subtitle: 'お気に入り', onTap: () => context.go(AppRoute.favorite.path)),
+                        _SettingsTile(icon: Icons.favorite, title: '❤️ Favorites', subtitle: 'お気に入り', onTap: () => context.go(AppRoute.favorite.path)),
                         _SettingsTile(icon: Icons.flag_outlined, title: 'Learning Goal', subtitle: '学習目標', onTap: () => context.go(AppRoute.learningGoal.path)),
                         const _ThemeModeTile(),
                         _SettingsTile(

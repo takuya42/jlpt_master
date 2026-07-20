@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../learning/data/user_learning_repository.dart';
-import '../../../learning/presentation/providers/learning_providers.dart';
+import '../../../favorites/presentation/providers/favorite_providers.dart';
+import '../../../grammar/domain/grammar_pattern.dart';
+import '../../../grammar/presentation/providers/grammar_providers.dart';
+import '../../../vocabulary/domain/vocabulary_word.dart';
+import '../../../vocabulary/presentation/providers/vocabulary_providers.dart';
 import '../../../../shared/presentation/widgets/app_state_views.dart';
 
 class FavoritePage extends ConsumerWidget {
@@ -10,73 +13,137 @@ class FavoritePage extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final favorites = ref.watch(favoriteEntriesProvider);
-    return Scaffold(
-      appBar: AppBar(title: const Text('Favorite / お気に入り')),
-      body: SafeArea(
-        child: favorites.when(
-          loading: () => const AppLoadingView(message: 'Loading favorites\nお気に入りを読み込み中'),
-          error: (error, stackTrace) => AppErrorView(title: 'Favorite\nお気に入り', message: error.toString(), onRetry: () => ref.invalidate(favoriteEntriesProvider)),
-          data: (items) => Center(
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 820),
-              child: items.isEmpty
-                  ? const _EmptyFavorites()
-                  : ListView.separated(
-                      padding: const EdgeInsets.fromLTRB(24, 28, 24, 36),
-                      itemCount: items.length + 1,
-                      separatorBuilder: (_, __) => const SizedBox(height: 12),
-                      itemBuilder: (context, index) {
-                        if (index == 0) {
-                          return Text('Favorite\nお気に入り', style: Theme.of(context).textTheme.headlineMedium?.copyWith(fontWeight: FontWeight.w900));
-                        }
-                        return _FavoriteTile(entry: items[index - 1]);
-                      },
-                    ),
-            ),
-          ),
+    return DefaultTabController(
+      length: 2,
+      child: Scaffold(
+        appBar: AppBar(
+          title: const Text('Favorites / お気に入り'),
+          bottom: const TabBar(tabs: [
+            Tab(text: 'Vocabulary'),
+            Tab(text: 'Grammar'),
+          ]),
+        ),
+        body: const SafeArea(
+          child: TabBarView(children: [
+            _VocabularyFavorites(),
+            _GrammarFavorites(),
+          ]),
         ),
       ),
     );
   }
 }
 
-class _FavoriteTile extends ConsumerWidget {
-  const _FavoriteTile({required this.entry});
-  final FavoriteEntry entry;
+class _VocabularyFavorites extends ConsumerWidget {
+  const _VocabularyFavorites();
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final isVocabulary = entry.type == 'vocabulary';
-    return Card(
-      child: ListTile(
-        contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-        leading: CircleAvatar(child: Icon(isVocabulary ? Icons.menu_book_outlined : Icons.subject_outlined)),
-        title: Text(entry.title, style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800)),
-        subtitle: Text([
-          isVocabulary ? 'Vocabulary / 単語' : 'Grammar / 文法',
-          if (entry.jlptLevel != null) entry.jlptLevel!,
-          if (entry.subtitle.isNotEmpty) entry.subtitle,
-        ].join(' • ')),
-        trailing: IconButton.filledTonal(
-          tooltip: 'Remove favorite / お気に入り解除',
-          onPressed: () => ref.read(userLearningRepositoryProvider).setFavorite(type: entry.type, itemId: entry.id, isFavorite: false),
-          icon: const Icon(Icons.favorite),
+    final ids = ref.watch(favoriteVocabularyProvider);
+    final words = ref.watch(vocabularyWordsProvider);
+    return ids.when(
+      loading: () => const AppLoadingView(message: 'Loading favorites'),
+      error: (error, _) => AppErrorView(
+        title: 'Could not load favorites',
+        message: error.toString(),
+        onRetry: () => ref.invalidate(favoriteVocabularyProvider),
+      ),
+      data: (favoriteIds) => words.when(
+        loading: () => const AppLoadingView(message: 'Loading vocabulary'),
+        error: (error, _) => AppErrorView(
+          title: 'Could not load vocabulary',
+          message: error.toString(),
+          onRetry: () => ref.invalidate(vocabularyWordsProvider),
+        ),
+        data: (items) => _FavoriteList<VocabularyWord>(
+          items: items.where((item) => favoriteIds.contains(item.id)).toList(),
+          id: (item) => item.id,
+          title: (item) => item.word,
+          level: (item) => item.jlptLevel,
+          onRemove: (item) => ref
+              .read(favoriteVocabularyProvider.notifier)
+              .remove(item.id),
         ),
       ),
     );
   }
 }
 
-class _EmptyFavorites extends StatelessWidget {
-  const _EmptyFavorites();
+class _GrammarFavorites extends ConsumerWidget {
+  const _GrammarFavorites();
+
   @override
-  Widget build(BuildContext context) => ListView(
-        padding: const EdgeInsets.fromLTRB(24, 28, 24, 36),
-        children: [
-          Text('Favorite\nお気に入り', style: Theme.of(context).textTheme.headlineMedium?.copyWith(fontWeight: FontWeight.w900)),
-          const SizedBox(height: 24),
-          const Card(child: Padding(padding: EdgeInsets.all(24), child: Text('No favorites yet.\n単語・文法のお気に入りはまだありません。'))),
-        ],
-      );
+  Widget build(BuildContext context, WidgetRef ref) {
+    final ids = ref.watch(favoriteGrammarProvider);
+    final patterns = ref.watch(grammarPatternsProvider);
+    return ids.when(
+      loading: () => const AppLoadingView(message: 'Loading favorites'),
+      error: (error, _) => AppErrorView(
+        title: 'Could not load favorites',
+        message: error.toString(),
+        onRetry: () => ref.invalidate(favoriteGrammarProvider),
+      ),
+      data: (favoriteIds) => patterns.when(
+        loading: () => const AppLoadingView(message: 'Loading grammar'),
+        error: (error, _) => AppErrorView(
+          title: 'Could not load grammar',
+          message: error.toString(),
+          onRetry: () => ref.invalidate(grammarPatternsProvider),
+        ),
+        data: (items) => _FavoriteList<GrammarPattern>(
+          items: items.where((item) => favoriteIds.contains(item.id)).toList(),
+          id: (item) => item.id,
+          title: (item) => item.grammar,
+          level: (item) => item.jlpt,
+          onRemove: (item) =>
+              ref.read(favoriteGrammarProvider.notifier).remove(item.id),
+        ),
+      ),
+    );
+  }
+}
+
+class _FavoriteList<T> extends StatelessWidget {
+  const _FavoriteList({
+    required this.items,
+    required this.id,
+    required this.title,
+    required this.level,
+    required this.onRemove,
+  });
+
+  final List<T> items;
+  final String Function(T) id;
+  final String Function(T) title;
+  final String Function(T) level;
+  final Future<void> Function(T) onRemove;
+
+  @override
+  Widget build(BuildContext context) {
+    if (items.isEmpty) {
+      return const Center(child: Text('No favorites yet.\nお気に入りはまだありません。'));
+    }
+    return ListView.separated(
+      padding: const EdgeInsets.all(24),
+      itemCount: items.length,
+      separatorBuilder: (_, __) => const SizedBox(height: 8),
+      itemBuilder: (context, index) {
+        final item = items[index];
+        return Card(
+          key: ValueKey(id(item)),
+          child: ListTile(
+            title: Text(title(item),
+                style: const TextStyle(fontWeight: FontWeight.w700)),
+            subtitle: Text(level(item).trim().toUpperCase()),
+            trailing: IconButton(
+              tooltip: 'Remove favorite / お気に入り解除',
+              color: Colors.red,
+              onPressed: () => onRemove(item),
+              icon: const Icon(Icons.favorite),
+            ),
+          ),
+        );
+      },
+    );
+  }
 }

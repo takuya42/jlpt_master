@@ -73,9 +73,11 @@ final filteredGrammarPatternsProvider = Provider<AsyncValue<List<GrammarPattern>
   final patterns = ref.watch(grammarPatternsProvider);
 
   return patterns.whenData((items) {
-    return items
+    final normalizedLevel = selectedLevel.trim().toUpperCase();
+    final filtered = items
         .where((pattern) =>
-            selectedLevel == 'All' || pattern.jlpt.toUpperCase() == selectedLevel)
+            normalizedLevel == 'ALL' ||
+            pattern.jlpt.trim().toUpperCase() == normalizedLevel)
         .where((pattern) {
           if (query.isEmpty) {
             return true;
@@ -87,6 +89,11 @@ final filteredGrammarPatternsProvider = Provider<AsyncValue<List<GrammarPattern>
               pattern.explanationJa.toLowerCase().contains(query);
         })
         .toList(growable: false);
+    debugPrint(
+      'filteredGrammarPatternsProvider: level=$normalizedLevel '
+      'repositoryCount=${items.length} filteredCount=${filtered.length}',
+    );
+    return filtered;
   });
 });
 
