@@ -7,7 +7,6 @@ import 'package:go_router/go_router.dart';
 import '../../../../shared/presentation/widgets/app_background.dart';
 import '../../../../shared/presentation/widgets/app_state_views.dart';
 import '../../../../app/navigation/app_route.dart';
-import '../../../../shared/presentation/widgets/premium_button.dart';
 import '../../domain/grammar_pattern.dart';
 import '../providers/grammar_providers.dart';
 import '../../../study_stats/presentation/providers/study_stats_provider.dart';
@@ -41,7 +40,7 @@ class _GrammarPageState extends ConsumerState<GrammarPage> {
 
     return Scaffold(
       backgroundColor: Colors.transparent,
-      appBar: AppBar(actions: const [PremiumButton()]),
+      appBar: AppBar(),
       body: AppBackground(
         child: SafeArea(
           child: Center(

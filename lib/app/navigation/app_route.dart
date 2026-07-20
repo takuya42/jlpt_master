@@ -10,8 +10,7 @@ enum AppRoute {
   notes('/notes', 'Notes（メモ）'),
   settings('/settings', 'Settings（設定）'),
   favorite('/favorite', 'Favorite（お気に入り）'),
-  learningGoal('/learning-goal', 'Learning Goal（学習目標）'),
-  premium('/premium', 'Premium');
+  learningGoal('/learning-goal', 'Learning Goal（学習目標）');
 
   const AppRoute(this.path, this.label);
 

@@ -14,8 +14,6 @@ class AppUser {
   final String email;
   final String plan;
 
-  bool get isPremium => plan == 'premium';
-
   factory AppUser.fromJson(Map<String, dynamic> json) => AppUser(
         uid: json['uid'] as String? ?? '',
         displayName: json['displayName'] as String? ?? '',

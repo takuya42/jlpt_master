@@ -3,7 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../shared/presentation/widgets/app_background.dart';
 import '../../../../shared/presentation/widgets/app_state_views.dart';
-import '../../../../shared/presentation/widgets/premium_button.dart';
 import '../providers/notes_providers.dart';
 
 class NotesPage extends ConsumerWidget {
@@ -13,7 +12,7 @@ class NotesPage extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final note = ref.watch(noteProvider);
     return Scaffold(
-      appBar: AppBar(actions: const [PremiumButton()]),
+      appBar: AppBar(),
       body: AppBackground(
         worldMapOpacityFactor: 0.42,
         globeOpacityFactor: 0.46,
