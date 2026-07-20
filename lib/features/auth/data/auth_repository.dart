@@ -1,15 +1,28 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:google_sign_in/google_sign_in.dart';
+import 'package:sign_in_with_apple/sign_in_with_apple.dart';
 
 import '../domain/app_user.dart';
 
+class AuthSignInCancelled implements Exception {
+  const AuthSignInCancelled();
+}
+
 class AuthRepository {
-  AuthRepository({FirebaseAuth? auth, FirebaseFirestore? firestore})
+  AuthRepository({
+    FirebaseAuth? auth,
+    FirebaseFirestore? firestore,
+    GoogleSignIn? googleSignIn,
+  })
       : _auth = auth ?? FirebaseAuth.instance,
-        _firestore = firestore ?? FirebaseFirestore.instance;
+        _firestore = firestore ?? FirebaseFirestore.instance,
+        _googleSignIn = googleSignIn ?? GoogleSignIn.instance;
 
   final FirebaseAuth _auth;
   final FirebaseFirestore _firestore;
+  final GoogleSignIn _googleSignIn;
+  Future<void>? _googleInitialization;
 
   Stream<User?> authStateChanges() => _auth.authStateChanges();
 
@@ -38,21 +51,76 @@ class AuthRepository {
   }
 
   Future<UserCredential> signInWithGoogle() async {
-    final credential = await _auth.signInWithProvider(GoogleAuthProvider());
-    await ensureUserDocument(credential.user);
-    return credential;
+    try {
+      await (_googleInitialization ??= _googleSignIn.initialize());
+      final googleUser = await _googleSignIn.authenticate();
+      final googleAuthentication = googleUser.authentication;
+      final firebaseCredential = GoogleAuthProvider.credential(
+        idToken: googleAuthentication.idToken,
+      );
+      final userCredential = await _auth.signInWithCredential(
+        firebaseCredential,
+      );
+      await ensureUserDocument(userCredential.user);
+      return userCredential;
+    } on GoogleSignInException catch (error) {
+      if (error.code == GoogleSignInExceptionCode.canceled) {
+        throw const AuthSignInCancelled();
+      }
+      rethrow;
+    }
   }
 
   Future<UserCredential> signInWithApple() async {
-    final provider = OAuthProvider('apple.com')..addScope('email')..addScope('name');
-    final credential = await _auth.signInWithProvider(provider);
-    await ensureUserDocument(credential.user);
-    return credential;
+    try {
+      final appleCredential = await SignInWithApple.getAppleIDCredential(
+        scopes: [
+          AppleIDAuthorizationScopes.email,
+          AppleIDAuthorizationScopes.fullName,
+        ],
+      );
+      final fullName = [
+        appleCredential.givenName,
+        appleCredential.familyName,
+      ].whereType<String>().where((part) => part.trim().isNotEmpty).join(' ');
+      final firebaseCredential = OAuthProvider('apple.com').credential(
+        idToken: appleCredential.identityToken,
+        accessToken: appleCredential.authorizationCode,
+      );
+      final userCredential = await _auth.signInWithCredential(
+        firebaseCredential,
+      );
+      if (fullName.isNotEmpty &&
+          (userCredential.user?.displayName?.isNotEmpty != true)) {
+        await userCredential.user?.updateDisplayName(fullName);
+      }
+      await ensureUserDocument(
+        userCredential.user,
+        displayName: fullName.isEmpty ? null : fullName,
+        email: appleCredential.email,
+      );
+      return userCredential;
+    } on SignInWithAppleAuthorizationException catch (error) {
+      if (error.code == AuthorizationErrorCode.canceled) {
+        throw const AuthSignInCancelled();
+      }
+      rethrow;
+    }
   }
 
   Future<void> sendPasswordResetEmail(String email) => _auth.sendPasswordResetEmail(email: email.trim());
 
-  Future<void> signOut() => _auth.signOut();
+  Future<void> signOut() async {
+    final signedInWithGoogle = _auth.currentUser?.providerData.any(
+          (provider) => provider.providerId == 'google.com',
+        ) ??
+        false;
+    if (signedInWithGoogle) {
+      await (_googleInitialization ??= _googleSignIn.initialize());
+      await _googleSignIn.signOut();
+    }
+    await _auth.signOut();
+  }
 
   Future<void> deleteCurrentUserAccount() async {
     final user = _auth.currentUser;
@@ -98,7 +166,11 @@ class AuthRepository {
     }
   }
 
-  Future<void> ensureUserDocument(User? user, {String? displayName}) async {
+  Future<void> ensureUserDocument(
+    User? user, {
+    String? displayName,
+    String? email,
+  }) async {
     if (user == null) return;
     final ref = _userDoc(user.uid);
     final snapshot = await ref.get();
@@ -107,7 +179,7 @@ class AuthRepository {
       await ref.set({
         'uid': user.uid,
         'displayName': displayName?.trim().isNotEmpty == true ? displayName!.trim() : (user.displayName ?? ''),
-        'email': user.email ?? '',
+        'email': email ?? user.email ?? '',
         'plan': 'free',
         'createdAt': now,
         'updatedAt': now,
@@ -126,7 +198,7 @@ class AuthRepository {
     }
     await ref.set({
       'displayName': displayName?.trim().isNotEmpty == true ? displayName!.trim() : (user.displayName ?? snapshot.data()?['displayName'] ?? ''),
-      'email': user.email ?? snapshot.data()?['email'] ?? '',
+      'email': email ?? user.email ?? snapshot.data()?['email'] ?? '',
       'updatedAt': now,
     }, SetOptions(merge: true));
   }
