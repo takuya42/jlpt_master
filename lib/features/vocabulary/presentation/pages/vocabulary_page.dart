@@ -414,6 +414,9 @@ class _VocabularyQuizCard extends ConsumerWidget {
     final cardTheme = theme.extension<VocabularyCardTheme>() ??
         VocabularyCardTheme.forBrightness(theme.brightness);
     final word = state.word!;
+    final favoriteIds = ref.watch(favoriteVocabularyIdsProvider).asData?.value ??
+        <String>{};
+    final isFavorite = favoriteIds.contains(word.id);
     final direction = ref.watch(quizDirectionProvider);
     final isAnswered = state.isCorrect != null;
 
@@ -488,6 +491,16 @@ class _VocabularyQuizCard extends ConsumerWidget {
                         ),
                       ),
                       const Spacer(),
+                      IconButton(
+                        tooltip: isFavorite
+                            ? 'Favorite / お気に入り解除'
+                            : 'Favorite / お気に入り追加',
+                        onPressed: () => toggleFavorite(ref, word),
+                        icon: Icon(
+                          isFavorite ? Icons.favorite : Icons.favorite_border,
+                          color: isFavorite ? Colors.red : Colors.grey,
+                        ),
+                      ),
                       IconButton(
                         tooltip: 'Details / 詳細',
                         onPressed: () => context.push(

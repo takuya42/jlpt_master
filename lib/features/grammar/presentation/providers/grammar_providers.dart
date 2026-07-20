@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../features/auth/presentation/providers/auth_providers.dart';
+import '../../../../features/favorites/presentation/providers/favorite_providers.dart';
 import '../../../../features/learning/presentation/providers/learning_providers.dart';
 import '../../../../features/study_stats/presentation/providers/study_stats_provider.dart';
 import '../../data/google_sheet_grammar_repository.dart';
@@ -59,10 +60,7 @@ class SelectedGrammarJlptLevelNotifier extends Notifier<String> {
   }
 }
 
-final favoriteGrammarIdsProvider = StreamProvider<Set<String>>((ref) {
-  ref.watch(authStateProvider);
-  return ref.watch(userLearningRepositoryProvider).watchFavoriteIds('grammar');
-});
+final favoriteGrammarIdsProvider = favoriteGrammarProvider;
 
 final studiedGrammarIdsProvider = StreamProvider<Set<String>>((ref) {
   ref.watch(authStateProvider);
@@ -76,7 +74,8 @@ final filteredGrammarPatternsProvider = Provider<AsyncValue<List<GrammarPattern>
 
   return patterns.whenData((items) {
     return items
-        .where((pattern) => selectedLevel == 'All' || pattern.jlpt == selectedLevel)
+        .where((pattern) =>
+            selectedLevel == 'All' || pattern.jlpt.toUpperCase() == selectedLevel)
         .where((pattern) {
           if (query.isEmpty) {
             return true;
@@ -92,15 +91,7 @@ final filteredGrammarPatternsProvider = Provider<AsyncValue<List<GrammarPattern>
 });
 
 Future<void> toggleGrammarFavorite(WidgetRef ref, GrammarPattern pattern) async {
-  final favorites = ref.read(favoriteGrammarIdsProvider).asData?.value ?? <String>{};
-  await ref.read(userLearningRepositoryProvider).setFavorite(
-        type: 'grammar',
-        itemId: pattern.id,
-        isFavorite: !favorites.contains(pattern.id),
-        title: pattern.grammar,
-        subtitle: pattern.meaningEn,
-        jlptLevel: pattern.jlpt,
-      );
+  await ref.read(favoriteGrammarProvider.notifier).toggle(pattern.id);
 }
 
 Future<void> toggleGrammarStudied(WidgetRef ref, GrammarPattern pattern) async {

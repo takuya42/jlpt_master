@@ -52,7 +52,7 @@ class GoogleSheetGrammarRepository implements GrammarRepository {
       debugPrint(
         'GoogleSheetGrammarRepository.fetchPatterns(): response.body.substring(0, 300)=${response.body.substring(0, response.body.length < 300 ? response.body.length : 300)}',
       );
-      final patterns = _parseCsv(csvText);
+      final patterns = parseText(csvText);
       debugPrint(
         'GoogleSheetGrammarRepository.fetchPatterns(): patterns.length=${patterns.length}',
       );
@@ -89,8 +89,16 @@ class GoogleSheetGrammarRepository implements GrammarRepository {
     return null;
   }
 
-  List<GrammarPattern> _parseCsv(String csvText) {
-    final rows = const CsvToListConverter().convert(csvText);
+  /// Parses the complete export. Google Sheets normally returns CSV, while a
+  /// checked-in/exported grammar.tsv uses tabs; both formats are supported.
+  List<GrammarPattern> parseText(String text) {
+    final lines = text.split(RegExp(r'\r?\n'));
+    final firstLine = lines.isEmpty ? '' : lines.first;
+    final delimiter = firstLine.contains('\t') ? '\t' : ',';
+    final rows = CsvToListConverter(
+      fieldDelimiter: delimiter,
+      shouldParseNumbers: false,
+    ).convert(text);
 
     debugPrint(
       'GoogleSheetGrammarRepository.fetchPatterns(): rows.length=${rows.length}',
@@ -111,33 +119,60 @@ class GoogleSheetGrammarRepository implements GrammarRepository {
       return const [];
     }
 
+    final headers = <String, int>{
+      for (var index = 0; index < rows.first.length; index++)
+        _headerName(rows.first[index].toString()): index,
+    };
+    int column(List<String> names, int fallback) {
+      for (final name in names) {
+        final index = headers[_headerName(name)];
+        if (index != null) return index;
+      }
+      return fallback;
+    }
+
+    final idColumn = column(const ['id'], 0);
+    final levelColumn = column(const ['jlpt', 'level', 'jlpt_level'], 1);
+    final grammarColumn = column(const ['grammar', 'pattern'], 2);
+    final meaningEnColumn = column(const ['meaning_en', 'english meaning'], 3);
+    final meaningJaColumn = column(const ['meaning_ja', 'japanese meaning'], 4);
+    final explanationEnColumn = column(const ['explanation_en'], 5);
+    final explanationJaColumn = column(const ['explanation_ja'], 6);
+    final exampleJpColumn = column(const ['example_jp', 'example_ja'], 7);
+    final exampleEnColumn = column(const ['example_en'], 8);
+    final exampleJaColumn = column(const ['example_translation_ja'], 9);
+    final requiredColumn = [idColumn, levelColumn, grammarColumn].reduce(
+      (largest, value) => value > largest ? value : largest,
+    );
+
     final grammarPatterns = <GrammarPattern>[];
     var skippedCount = 0;
 
     for (final row in rows.skip(1)) {
-      if (row.length < 10) {
+      if (row.length <= requiredColumn) {
         skippedCount++;
         continue;
       }
 
-      final grammar = _csvValue(row, 2);
-      if (grammar.isEmpty) {
+      final grammar = _csvValue(row, grammarColumn);
+      final level = _normalizeJlpt(_csvValue(row, levelColumn));
+      if (grammar.isEmpty || level == null) {
         skippedCount++;
         continue;
       }
 
       grammarPatterns.add(
         GrammarPattern(
-          id: _csvValue(row, 0),
-          jlpt: _csvValue(row, 1).toUpperCase(),
+          id: _csvValue(row, idColumn),
+          jlpt: level,
           grammar: grammar,
-          meaningEn: _csvValue(row, 3),
-          meaningJa: _csvValue(row, 4),
-          explanationEn: _csvValue(row, 5),
-          explanationJa: _csvValue(row, 6),
-          exampleJp: _csvValue(row, 7),
-          exampleEn: _csvValue(row, 8),
-          exampleJa: _csvValue(row, 9),
+          meaningEn: _csvValue(row, meaningEnColumn),
+          meaningJa: _csvValue(row, meaningJaColumn),
+          explanationEn: _csvValue(row, explanationEnColumn),
+          explanationJa: _csvValue(row, explanationJaColumn),
+          exampleJp: _csvValue(row, exampleJpColumn),
+          exampleEn: _csvValue(row, exampleEnColumn),
+          exampleJa: _csvValue(row, exampleJaColumn),
         ),
       );
     }
@@ -158,7 +193,19 @@ class GoogleSheetGrammarRepository implements GrammarRepository {
   }
 
   String _csvValue(List<dynamic> row, int index) =>
-      row[index].toString().trim();
+      index < row.length ? row[index].toString().trim() : '';
+
+  String _headerName(String value) => value
+      .replaceFirst('\ufeff', '')
+      .trim()
+      .toLowerCase()
+      .replaceAll(RegExp(r'[\s-]+'), '_');
+
+  String? _normalizeJlpt(String value) {
+    final match = RegExp(r'(?:JLPT\s*)?N?\s*([1-5])', caseSensitive: false)
+        .firstMatch(value.trim());
+    return match == null ? null : 'N${match.group(1)}';
+  }
 }
 
 class GrammarRepositoryException implements Exception {

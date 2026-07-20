@@ -209,9 +209,7 @@ class _GrammarCard extends ConsumerWidget {
                   onPressed: () => toggleGrammarFavorite(ref, pattern),
                   icon: Icon(
                     isFavorite ? Icons.favorite : Icons.favorite_border,
-                    color: isFavorite
-                        ? colorScheme.error
-                        : colorScheme.onSurfaceVariant,
+                    color: isFavorite ? Colors.red : Colors.grey,
                   ),
                 ),
               ],
