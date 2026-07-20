@@ -5,31 +5,39 @@ import '../../domain/vocabulary_word.dart';
 import '../../../notes/presentation/pages/notes_page.dart';
 import '../providers/vocabulary_providers.dart';
 
-class VocabularyDetailPage extends ConsumerWidget {
-  const VocabularyDetailPage({super.key, required this.wordId});
+class VocabularyDetailPage extends ConsumerStatefulWidget {
+  const VocabularyDetailPage({super.key, required this.wordId, this.word});
 
   final String wordId;
+  final VocabularyWord? word;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final word = ref.watch(vocabularyWordProvider(wordId));
+  ConsumerState<VocabularyDetailPage> createState() =>
+      _VocabularyDetailPageState();
+}
+
+class _VocabularyDetailPageState extends ConsumerState<VocabularyDetailPage> {
+  bool _recordedView = false;
+
+  @override
+  Widget build(BuildContext context) {
+    // Normal navigation passes the already-rendered object in `extra`. The
+    // provider lookup only supports restored/deep-linked routes and reads the
+    // list cache synchronously; it never fetches an individual word.
+    final word = widget.word ??
+        ref.watch(vocabularyWordByIdProvider(widget.wordId));
+
+    if (word != null && !_recordedView) {
+      _recordedView = true;
+      Future.microtask(() => recordVocabularyView(ref, word));
+    }
 
     return Scaffold(
       appBar: AppBar(title: const Text('Vocabulary Detail / 単語詳細')),
       body: SafeArea(
-        child: word.when(
-          data: (data) {
-            if (data == null) {
-              return const _WordNotFoundView();
-            }
-            Future.microtask(() => recordVocabularyView(ref, data));
-            return _VocabularyDetailContent(word: data);
-          },
-          error: (error, stackTrace) => Center(
-            child: Text('Could not load vocabulary detail. / 単語詳細を読み込めません。\n$error', textAlign: TextAlign.center),
-          ),
-          loading: () => const Center(child: CircularProgressIndicator()),
-        ),
+        child: word == null
+            ? const _WordNotFoundView()
+            : _VocabularyDetailContent(word: word),
       ),
     );
   }
