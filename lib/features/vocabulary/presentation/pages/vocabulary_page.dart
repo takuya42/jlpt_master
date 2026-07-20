@@ -11,7 +11,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../app/theme/vocabulary_card_theme.dart';
 import '../../../../shared/presentation/widgets/app_background.dart';
 import '../../../../shared/presentation/widgets/app_state_views.dart';
-import '../../../../shared/presentation/widgets/premium_button.dart';
 import '../../domain/vocabulary_word.dart';
 import '../providers/vocabulary_providers.dart';
 import '../../../study_stats/presentation/providers/study_stats_provider.dart';
@@ -155,9 +154,7 @@ class _VocabularyPageState extends ConsumerState<VocabularyPage> with TickerProv
     final quiz = ref.watch(vocabularyQuizProvider);
 
     return Scaffold(
-      appBar: AppBar(
-        actions: const [PremiumButton()],
-      ),
+      appBar: AppBar(),
       body: AppBackground(
         child: SafeArea(
           child: Center(

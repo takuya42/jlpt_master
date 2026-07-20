@@ -14,54 +14,21 @@ class JlptMasterApp extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final router = ref.watch(appRouterProvider);
     final themeMode = ref.watch(themeModeControllerProvider).asData?.value ?? ThemeMode.system;
-    RemoteConfigRepository? repository;
-    try {
-      repository = ref.read(remoteConfigRepositoryProvider);
-    } catch (_) {
-      // Widget tests and unsupported platforms can run without Firebase. The
-      // normal app remains available in that case, as it does after fetch errors.
-    }
-
-    if (repository == null) {
-      return MaterialApp.router(
-        title: 'JLPT Master',
-        debugShowCheckedModeBanner: false,
-        theme: AppTheme.light,
-        darkTheme: AppTheme.dark,
-        themeMode: themeMode,
-        routerConfig: router,
-      );
-    }
-
     return MaterialApp(
       title: 'JLPT Master',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.light,
       darkTheme: AppTheme.dark,
       themeMode: themeMode,
-      home: FutureBuilder<StartupDestination>(
-        future: resolveStartupDestination(repository),
-        builder: (context, snapshot) {
-          final destination = snapshot.data;
-          if (destination == StartupDestination.maintenance) {
-            return const MaintenancePage();
-          }
-          if (destination == StartupDestination.forceUpdate) {
-            return const ForceUpdatePage();
-          }
-          if (snapshot.connectionState != ConnectionState.done) {
-            return const Scaffold(
-              body: Center(child: CircularProgressIndicator()),
-            );
-          }
-          return MaterialApp.router(
-            debugShowCheckedModeBanner: false,
-            theme: AppTheme.light,
-            darkTheme: AppTheme.dark,
-            themeMode: themeMode,
-            routerConfig: router,
-          );
-        },
+      home: StartupGate(
+        repository: ref.read(remoteConfigRepositoryProvider),
+        child: MaterialApp.router(
+          debugShowCheckedModeBanner: false,
+          theme: AppTheme.light,
+          darkTheme: AppTheme.dark,
+          themeMode: themeMode,
+          routerConfig: router,
+        ),
       ),
     );
   }

@@ -6,9 +6,7 @@ import 'package:url_launcher/url_launcher.dart';
 import '../../../../app/constants/app_urls.dart';
 import '../../../../app/navigation/app_route.dart';
 import '../../../../shared/presentation/widgets/app_background.dart';
-import '../../../../shared/presentation/widgets/premium_button.dart';
 import '../../../auth/presentation/providers/auth_providers.dart';
-import '../../../remote_config/remote_config_repository.dart';
 import '../providers/theme_mode_provider.dart';
 
 class SettingsPage extends ConsumerStatefulWidget {
@@ -228,7 +226,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     return Scaffold(
-      appBar: AppBar(actions: const [PremiumButton()]),
+      appBar: AppBar(),
       body: AppBackground(
         child: SafeArea(
           child: Center(
@@ -244,10 +242,6 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
                 const SizedBox(height: 20),
                 const _AccountCard(),
                 const SizedBox(height: 18),
-                if (ref.watch(premiumEnabledProvider)) ...[
-                  const _GoPremiumCard(),
-                  const SizedBox(height: 18),
-                ],
                 Card(
                   child: Padding(
                     padding: const EdgeInsets.symmetric(vertical: 8),
@@ -359,48 +353,6 @@ class _AccountCard extends ConsumerWidget {
                 ),
               ),
               const SizedBox(width: 8),
-              Icon(Icons.chevron_right_rounded, color: colorScheme.onSurfaceVariant),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _GoPremiumCard extends StatelessWidget {
-  const _GoPremiumCard();
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
-
-    return Card(
-      child: InkWell(
-        borderRadius: BorderRadius.circular(24),
-        onTap: () => context.go(AppRoute.premium.path),
-        child: Padding(
-          padding: const EdgeInsets.all(22),
-          child: Row(
-            children: [
-              CircleAvatar(
-                radius: 28,
-                backgroundColor: colorScheme.primaryContainer,
-                foregroundColor: colorScheme.onPrimaryContainer,
-                child: const Icon(Icons.workspace_premium_outlined),
-              ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text('Go Premium', style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w900)),
-                    const SizedBox(height: 2),
-                    Text('プレミアムにアップグレード', style: theme.textTheme.bodyMedium?.copyWith(color: colorScheme.onSurfaceVariant)),
-                  ],
-                ),
-              ),
               Icon(Icons.chevron_right_rounded, color: colorScheme.onSurfaceVariant),
             ],
           ),

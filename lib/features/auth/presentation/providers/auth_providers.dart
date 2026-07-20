@@ -10,4 +10,3 @@ final currentUserProvider = StreamProvider<AppUser?>((ref) {
   ref.watch(authStateProvider);
   return ref.watch(authRepositoryProvider).watchCurrentUser();
 });
-final isPremiumProvider = Provider<bool>((ref) => ref.watch(currentUserProvider).asData?.value?.isPremium ?? false);

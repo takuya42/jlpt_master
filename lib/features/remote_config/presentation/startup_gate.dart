@@ -4,20 +4,6 @@ import 'package:url_launcher/url_launcher.dart';
 
 import '../remote_config_repository.dart';
 
-enum StartupDestination { app, maintenance, forceUpdate }
-
-Future<StartupDestination> resolveStartupDestination(
-  RemoteConfigRepository repository,
-) async {
-  if (repository.maintenanceMode) return StartupDestination.maintenance;
-
-  final packageInfo = await PackageInfo.fromPlatform();
-  if (isNewerVersion(repository.minimumVersion, packageInfo.version)) {
-    return StartupDestination.forceUpdate;
-  }
-  return StartupDestination.app;
-}
-
 bool isNewerVersion(String requiredVersion, String currentVersion) {
   List<int> parts(String value) => value
       .split(RegExp(r'[^0-9]+'))
@@ -38,12 +24,44 @@ bool isNewerVersion(String requiredVersion, String currentVersion) {
   return false;
 }
 
-class MaintenancePage extends StatelessWidget {
-  const MaintenancePage({super.key});
+class StartupGate extends StatefulWidget {
+  const StartupGate({required this.repository, required this.child, super.key});
+
+  final RemoteConfigRepository repository;
+  final Widget child;
 
   @override
-  Widget build(BuildContext context) => const Scaffold(
-    body: Center(child: Text('現在メンテナンス中です')),
+  State<StartupGate> createState() => _StartupGateState();
+}
+
+class _StartupGateState extends State<StartupGate> {
+  late final Future<bool> _requiresUpdate = _checkForUpdate();
+
+  Future<bool> _checkForUpdate() async {
+    try {
+      await widget.repository.initialize();
+      await widget.repository.fetchAndActivate();
+      final packageInfo = await PackageInfo.fromPlatform();
+      return isNewerVersion(
+        widget.repository.minimumVersion,
+        packageInfo.version,
+      );
+    } on Exception catch (error) {
+      debugPrint('Remote Config startup check failed: $error');
+      return false;
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) => FutureBuilder<bool>(
+    future: _requiresUpdate,
+    builder: (context, snapshot) {
+      if (snapshot.data ?? false) return const ForceUpdatePage();
+      if (snapshot.connectionState != ConnectionState.done) {
+        return const Scaffold(body: Center(child: CircularProgressIndicator()));
+      }
+      return widget.child;
+    },
   );
 }
 
