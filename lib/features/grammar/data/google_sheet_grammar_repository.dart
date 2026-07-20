@@ -102,7 +102,7 @@ class GoogleSheetGrammarRepository implements GrammarRepository {
       fieldDelimiter: delimiter,
       shouldParseNumbers: false,
     );
-    final List<List<dynamic>> rows;
+    List<List<dynamic>> rows;
     try {
       rows = converter.convert(text);
     } on FormatException catch (error) {
