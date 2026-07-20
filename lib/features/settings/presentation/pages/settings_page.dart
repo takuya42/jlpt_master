@@ -8,6 +8,7 @@ import '../../../../app/navigation/app_route.dart';
 import '../../../../shared/presentation/widgets/app_background.dart';
 import '../../../../shared/presentation/widgets/premium_button.dart';
 import '../../../auth/presentation/providers/auth_providers.dart';
+import '../../../remote_config/remote_config_repository.dart';
 import '../providers/theme_mode_provider.dart';
 
 class SettingsPage extends ConsumerStatefulWidget {
@@ -243,8 +244,10 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
                 const SizedBox(height: 20),
                 const _AccountCard(),
                 const SizedBox(height: 18),
-                const _GoPremiumCard(),
-                const SizedBox(height: 18),
+                if (ref.watch(premiumEnabledProvider)) ...[
+                  const _GoPremiumCard(),
+                  const SizedBox(height: 18),
+                ],
                 Card(
                   child: Padding(
                     padding: const EdgeInsets.symmetric(vertical: 8),

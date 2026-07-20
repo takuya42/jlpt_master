@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../shared/presentation/widgets/app_background.dart';
 import '../../../../shared/presentation/widgets/app_state_views.dart';
 import '../../../../shared/presentation/widgets/premium_button.dart';
+import '../../../remote_config/remote_config_repository.dart';
 import '../../domain/home_content.dart';
 import '../providers/home_content_provider.dart';
 
@@ -12,13 +13,17 @@ class HomePage extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final homeContent = ref.watch(homeContentProvider);
+    final announcementMessage = ref.watch(announcementMessageProvider).trim();
 
     return Scaffold(
       appBar: AppBar(actions: const [PremiumButton()]),
       body: AppBackground(
         child: SafeArea(
           child: homeContent.when(
-            data: (content) => _HomeContentView(content: content),
+            data: (content) => _HomeContentView(
+              content: content,
+              announcementMessage: announcementMessage,
+            ),
             error: (error, stackTrace) => AppErrorView(
               title: 'Home\nホームを読み込めません',
               message: error.toString(),
@@ -33,9 +38,13 @@ class HomePage extends ConsumerWidget {
 }
 
 class _HomeContentView extends StatelessWidget {
-  const _HomeContentView({required this.content});
+  const _HomeContentView({
+    required this.content,
+    required this.announcementMessage,
+  });
 
   final HomeContent content;
+  final String announcementMessage;
 
   @override
   Widget build(BuildContext context) {
@@ -45,6 +54,10 @@ class _HomeContentView extends StatelessWidget {
         child: ListView(
           padding: const EdgeInsets.fromLTRB(24, 28, 24, 36),
           children: [
+            if (announcementMessage.isNotEmpty) ...[
+              _InformationCard(message: announcementMessage),
+              const SizedBox(height: 18),
+            ],
             _TodayGoalCard(status: content.studyStatus),
             const SizedBox(height: 18),
             _ProgressCard(levels: content.levels),
@@ -69,6 +82,34 @@ class _HomeContentView extends StatelessWidget {
                 ],
               ),
             ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _InformationCard extends StatelessWidget {
+  const _InformationCard({required this.message});
+
+  final String message;
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    return Card(
+      color: colorScheme.secondaryContainer,
+      child: Padding(
+        padding: const EdgeInsets.all(20),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Icon(
+              Icons.info_outline_rounded,
+              color: colorScheme.onSecondaryContainer,
+            ),
+            const SizedBox(width: 14),
+            Expanded(child: Text(message)),
           ],
         ),
       ),

@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../app/navigation/app_route.dart';
 import '../../../features/auth/presentation/providers/auth_providers.dart';
+import '../../../features/remote_config/remote_config_repository.dart';
 
 class PremiumButton extends ConsumerWidget {
   const PremiumButton({super.key});
@@ -11,6 +12,7 @@ class PremiumButton extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final isPremium = ref.watch(isPremiumProvider);
+    if (!ref.watch(premiumEnabledProvider)) return const SizedBox.shrink();
     return Padding(
       padding: const EdgeInsetsDirectional.only(end: 12),
       child: FilledButton.tonalIcon(
