@@ -7,7 +7,9 @@ import 'package:flutter/services.dart';
 import 'package:animations/animations.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
+import '../../../../app/navigation/app_route.dart';
 import '../../../../app/theme/vocabulary_card_theme.dart';
 import '../../../../shared/presentation/widgets/app_background.dart';
 import '../../../../shared/presentation/widgets/app_state_views.dart';
@@ -159,6 +161,7 @@ class _VocabularyPageState extends ConsumerState<VocabularyPage> with TickerProv
         child: SafeArea(
           child: Center(
             child: SingleChildScrollView(
+              key: const PageStorageKey<String>('vocabulary-page-scroll'),
               padding: const EdgeInsets.fromLTRB(20, 10, 20, 24),
               child: ConstrainedBox(
                 constraints: const BoxConstraints(maxWidth: 680),
@@ -483,6 +486,15 @@ class _VocabularyQuizCard extends ConsumerWidget {
                           color: cardTheme.secondaryTextColor,
                           shadows: cardTheme.textShadow,
                         ),
+                      ),
+                      const Spacer(),
+                      IconButton(
+                        tooltip: 'Details / 詳細',
+                        onPressed: () => context.push(
+                          AppRoute.vocabularyDetailPath(word.id),
+                          extra: word,
+                        ),
+                        icon: const Icon(Icons.open_in_new_rounded),
                       ),
                     ],
                   ),

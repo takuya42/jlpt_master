@@ -262,10 +262,10 @@ final vocabularyWordsProvider = FutureProvider<List<VocabularyWord>>((ref) async
   try {
     final repository = ref.read(vocabularyRepositoryProvider);
     debugPrint('vocabularyWordsProvider repository=${repository.runtimeType}');
-    final selectedLevel = ref.watch(selectedVocabularyJlptProvider);
-    final words = await repository.fetchWords(
-      jlpt: selectedLevel == 'All' ? null : selectedLevel,
-    );
+    // Fetch the complete list once. JLPT level and text filtering are applied
+    // locally by [filteredVocabularyWordsProvider], so changing a filter never
+    // causes another network request.
+    final words = await repository.fetchWords();
     debugPrint('vocabularyWordsProvider fetched count=${words.length}');
     debugPrint('vocabularyWordsProvider completed ${words.length}');
     return words;
@@ -277,17 +277,18 @@ final vocabularyWordsProvider = FutureProvider<List<VocabularyWord>>((ref) async
   }
 });
 
-final vocabularyWordProvider =
-    FutureProvider.family<VocabularyWord?, String>((ref, id) async {
-  final word = await ref.watch(vocabularyRepositoryProvider).fetchWordById(id);
+final vocabularyWordByIdProvider =
+    Provider.family<VocabularyWord?, String>((ref, id) {
+  final words = ref.watch(vocabularyWordsProvider).asData?.value;
   final favoriteIds =
       ref.watch(favoriteVocabularyIdsProvider).asData?.value ?? <String>{};
 
-  if (word == null) {
-    return null;
+  for (final word in words ?? const <VocabularyWord>[]) {
+    if (word.id == id) {
+      return word.copyWith(isFavorite: favoriteIds.contains(word.id));
+    }
   }
-
-  return word.copyWith(isFavorite: favoriteIds.contains(word.id));
+  return null;
 });
 
 final vocabularySearchQueryProvider = NotifierProvider<VocabularySearchQueryNotifier, String>(
