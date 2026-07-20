@@ -3,7 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../data/google_sheet_vocabulary_repository.dart';
 import '../../data/vocabulary_repository.dart';
-import '../../../../features/auth/presentation/providers/auth_providers.dart';
+import '../../../../features/favorites/presentation/providers/favorite_providers.dart';
 import '../../../../features/learning/presentation/providers/learning_providers.dart';
 import '../../../../features/study_stats/presentation/providers/study_stats_provider.dart';
 import '../../domain/vocabulary_word.dart';
@@ -335,10 +335,7 @@ class SelectedVocabularyJlptNotifier extends Notifier<String> {
   }
 }
 
-final favoriteVocabularyIdsProvider = StreamProvider<Set<String>>((ref) {
-  ref.watch(authStateProvider);
-  return ref.watch(userLearningRepositoryProvider).watchFavoriteIds('vocabulary');
-});
+final favoriteVocabularyIdsProvider = favoriteVocabularyProvider;
 
 final filteredVocabularyWordsProvider =
     Provider<AsyncValue<List<VocabularyWord>>>((ref) {
@@ -369,15 +366,7 @@ final filteredVocabularyWordsProvider =
 });
 
 Future<void> toggleFavorite(WidgetRef ref, VocabularyWord word) async {
-  final favorites = ref.read(favoriteVocabularyIdsProvider).asData?.value ?? <String>{};
-  await ref.read(userLearningRepositoryProvider).setFavorite(
-        type: 'vocabulary',
-        itemId: word.id,
-        isFavorite: !favorites.contains(word.id),
-        title: word.word,
-        subtitle: word.meaning,
-        jlptLevel: word.jlptLevel,
-      );
+  await ref.read(favoriteVocabularyProvider.notifier).toggle(word.id);
 }
 
 Future<void> recordVocabularyView(WidgetRef ref, VocabularyWord word) {

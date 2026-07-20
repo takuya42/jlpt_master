@@ -139,7 +139,7 @@ class _GrammarDetailContent extends ConsumerWidget {
                             child: Icon(
                               isFavorite ? Icons.favorite : Icons.favorite_border,
                               key: ValueKey(isFavorite),
-                              color: isFavorite ? colorScheme.error : null,
+                              color: isFavorite ? Colors.red : Colors.grey,
                             ),
                           ),
                         ),

@@ -53,6 +53,9 @@ class _VocabularyDetailContent extends ConsumerWidget {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
     final width = MediaQuery.sizeOf(context).width;
+    final favoriteIds = ref.watch(favoriteVocabularyIdsProvider).asData?.value ??
+        <String>{};
+    final isFavorite = favoriteIds.contains(word.id);
 
     return Center(
       child: ConstrainedBox(
@@ -94,10 +97,13 @@ class _VocabularyDetailContent extends ConsumerWidget {
                         ),
                         const SizedBox(width: 8),
                         IconButton.filledTonal(
-                          tooltip: word.isFavorite ? 'Favorite / お気に入り解除' : 'Favorite / お気に入り追加',
+                          tooltip: isFavorite ? 'Favorite / お気に入り解除' : 'Favorite / お気に入り追加',
                           onPressed: () => toggleFavorite(ref, word),
                           iconSize: 28,
-                          icon: Icon(word.isFavorite ? Icons.favorite : Icons.favorite_border),
+                          icon: Icon(
+                            isFavorite ? Icons.favorite : Icons.favorite_border,
+                            color: isFavorite ? Colors.red : Colors.grey,
+                          ),
                         ),
                       ],
                     ),
