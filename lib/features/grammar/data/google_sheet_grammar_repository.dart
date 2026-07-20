@@ -14,8 +14,11 @@ class GoogleSheetGrammarRepository implements GrammarRepository {
   })  : _client = client,
         _csvUri = csvUri ?? _defaultCsvUri;
 
+  static const String spreadsheetId =
+      '1vl_IRVwh7FWgcT-C8fTQltTQWwx8ejRJG9HnCctW0BU';
+  static const String grammarSheetName = 'Grammar';
   static const String csvUrl =
-      'https://docs.google.com/spreadsheets/d/e/2PACX-1vRmRT1zho5hgMAfNv7mDeukWnAh2dLC87TjNTOZJh1p7KzB7c1KjxmnqQQE5ZZ5lwvDVjpJryPccLFr/pub?gid=0&single=true&output=csv';
+      'https://docs.google.com/spreadsheets/d/$spreadsheetId/gviz/tq?tqx=out:csv&sheet=$grammarSheetName';
 
   static final Uri _defaultCsvUri = Uri.parse(csvUrl);
 
@@ -95,10 +98,33 @@ class GoogleSheetGrammarRepository implements GrammarRepository {
     final lines = text.split(RegExp(r'\r?\n'));
     final firstLine = lines.isEmpty ? '' : lines.first;
     final delimiter = firstLine.contains('\t') ? '\t' : ',';
-    final rows = CsvToListConverter(
+    final converter = CsvToListConverter(
       fieldDelimiter: delimiter,
       shouldParseNumbers: false,
-    ).convert(text);
+    );
+    final List<List<dynamic>> rows;
+    try {
+      rows = converter.convert(text);
+    } on FormatException catch (error) {
+      // One corrupt record must not prevent all records after it from loading.
+      debugPrint(
+        'GoogleSheetGrammarRepository.parseText(): full parse failed; '
+        'retrying each physical row: $error',
+      );
+      rows = <List<dynamic>>[];
+      for (var lineNumber = 0; lineNumber < lines.length; lineNumber++) {
+        final line = lines[lineNumber];
+        if (line.trim().isEmpty) continue;
+        try {
+          rows.add(converter.convert(line).single);
+        } on FormatException catch (rowError) {
+          debugPrint(
+            'GoogleSheetGrammarRepository.parseText(): '
+            'skipped malformed line ${lineNumber + 1}: $rowError',
+          );
+        }
+      }
+    }
 
     debugPrint(
       'GoogleSheetGrammarRepository.fetchPatterns(): rows.length=${rows.length}',
@@ -188,6 +214,15 @@ class GoogleSheetGrammarRepository implements GrammarRepository {
     debugPrint(
       'GoogleSheetGrammarRepository.fetchPatterns(): rows.length=${rows.length}, 成功件数=${grammarPatterns.length}, スキップ件数=$skippedCount',
     );
+    final counts = <String, int>{
+      for (final level in const ['N5', 'N4', 'N3', 'N2', 'N1']) level: 0,
+    };
+    for (final pattern in grammarPatterns) {
+      counts[pattern.jlpt] = (counts[pattern.jlpt] ?? 0) + 1;
+    }
+    debugPrint(
+      'GoogleSheetGrammarRepository.fetchPatterns(): JLPT別取得件数=$counts',
+    );
 
     return grammarPatterns;
   }
@@ -202,8 +237,9 @@ class GoogleSheetGrammarRepository implements GrammarRepository {
       .replaceAll(RegExp(r'[\s-]+'), '_');
 
   String? _normalizeJlpt(String value) {
+    final normalized = value.trim().toUpperCase();
     final match = RegExp(r'(?:JLPT\s*)?N?\s*([1-5])', caseSensitive: false)
-        .firstMatch(value.trim());
+        .firstMatch(normalized);
     return match == null ? null : 'N${match.group(1)}';
   }
 }

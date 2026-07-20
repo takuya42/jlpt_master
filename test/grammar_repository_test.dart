@@ -1,5 +1,9 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:jlpt_master/features/grammar/data/google_sheet_grammar_repository.dart';
+import 'package:jlpt_master/features/grammar/data/grammar_repository.dart';
+import 'package:jlpt_master/features/grammar/domain/grammar_pattern.dart';
+import 'package:jlpt_master/features/grammar/presentation/providers/grammar_providers.dart';
 
 void main() {
   group('GoogleSheetGrammarRepository parser', () {
@@ -28,5 +32,64 @@ void main() {
       expect(pattern.meaningJa, '〜ように見える');
       expect(pattern.jlpt, 'N4');
     });
+
+    test('uses the named Grammar sheet rather than the N5 gid', () {
+      expect(GoogleSheetGrammarRepository.csvUrl, contains('sheet=Grammar'));
+      expect(GoogleSheetGrammarRepository.csvUrl, isNot(contains('gid=0')));
+    });
   });
+
+  test('All and every JLPT filter use the complete repository result', () async {
+    final patterns = List.generate(5, (index) {
+      final level = 5 - index;
+      return GrammarPattern(
+        id: 'grammar-$level',
+        jlpt: ' n$level ',
+        grammar: '文法$level',
+        meaningEn: '',
+        meaningJa: '',
+        explanationEn: '',
+        explanationJa: '',
+        exampleJp: '',
+        exampleEn: '',
+        exampleJa: '',
+      );
+    });
+    final container = ProviderContainer(overrides: [
+      grammarRepositoryProvider.overrideWithValue(_GrammarRepository(patterns)),
+    ]);
+    addTearDown(container.dispose);
+
+    await container.read(grammarPatternsProvider.future);
+    expect(
+      container.read(filteredGrammarPatternsProvider).requireValue,
+      hasLength(5),
+    );
+    for (final level in const ['N5', 'N4', 'N3', 'N2', 'N1']) {
+      container
+          .read(selectedGrammarJlptLevelProvider.notifier)
+          .selectLevel(level);
+      expect(
+        container.read(filteredGrammarPatternsProvider).requireValue,
+        hasLength(1),
+        reason: '$level must not be skipped',
+      );
+    }
+  });
+}
+
+class _GrammarRepository implements GrammarRepository {
+  const _GrammarRepository(this.patterns);
+  final List<GrammarPattern> patterns;
+
+  @override
+  Future<GrammarPattern?> fetchPatternById(String id) async {
+    for (final pattern in patterns) {
+      if (pattern.id == id) return pattern;
+    }
+    return null;
+  }
+
+  @override
+  Future<List<GrammarPattern>> fetchPatterns() async => patterns;
 }
