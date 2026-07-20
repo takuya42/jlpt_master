@@ -8,6 +8,7 @@ import '../../features/grammar/presentation/pages/grammar_page.dart';
 import '../../features/home/presentation/pages/home_page.dart';
 import '../../features/learning/presentation/pages/learning_goal_page.dart';
 import '../../features/premium/presentation/pages/premium_page.dart';
+import '../../features/remote_config/remote_config_repository.dart';
 import '../../features/settings/presentation/pages/settings_page.dart';
 import '../../features/notes/presentation/pages/notes_page.dart';
 import '../../features/shell/presentation/main_shell.dart';
@@ -16,6 +17,7 @@ import '../../features/vocabulary/presentation/pages/vocabulary_page.dart';
 import 'app_route.dart';
 
 final appRouterProvider = Provider<GoRouter>((ref) {
+  final premiumEnabled = ref.watch(premiumEnabledProvider);
   return GoRouter(
     initialLocation: AppRoute.home.path,
     routes: [
@@ -78,6 +80,8 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       ),
       GoRoute(
         path: AppRoute.premium.path,
+        redirect: (context, state) =>
+            premiumEnabled ? null : AppRoute.home.path,
         builder: (context, state) => const PremiumPage(),
       ),
     ],
