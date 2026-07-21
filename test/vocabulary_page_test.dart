@@ -1,0 +1,43 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_test/flutter_test.dart';
+import 'package:jlpt_master/features/vocabulary/data/mock_vocabulary_repository.dart';
+import 'package:jlpt_master/features/vocabulary/presentation/pages/vocabulary_page.dart';
+import 'package:jlpt_master/features/vocabulary/presentation/providers/vocabulary_providers.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
+void main() {
+  TestWidgetsFlutterBinding.ensureInitialized();
+
+  testWidgets('Vocabulary Quest header does not overflow on iPhone widths', (
+    tester,
+  ) async {
+    SharedPreferences.setMockInitialValues({});
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
+    for (final size in <Size>[
+      const Size(320, 568),
+      const Size(375, 667),
+      const Size(430, 932),
+    ]) {
+      tester.view.physicalSize = size;
+      tester.view.devicePixelRatio = 1;
+
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [
+            vocabularyRepositoryProvider.overrideWithValue(
+              MockVocabularyRepository(),
+            ),
+          ],
+          child: const MaterialApp(home: VocabularyPage()),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.text('Vocabulary Quest'), findsOneWidget);
+      expect(tester.takeException(), isNull, reason: 'viewport: $size');
+    }
+  });
+}
