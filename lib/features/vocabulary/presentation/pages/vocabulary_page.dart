@@ -474,42 +474,76 @@ class _VocabularyQuizCard extends ConsumerWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(Icons.menu_book_rounded, size: 22, color: cardTheme.secondaryTextColor),
-                      const SizedBox(width: 8),
-                      Text(
-                        'Vocabulary Quest',
-                        textAlign: TextAlign.center,
-                        style: theme.textTheme.titleMedium?.copyWith(
-                          fontWeight: FontWeight.w900,
-                          letterSpacing: 1.2,
-                          color: cardTheme.secondaryTextColor,
-                          shadows: cardTheme.textShadow,
+                  SizedBox(
+                    height: 48,
+                    child: Stack(
+                      alignment: Alignment.center,
+                      children: [
+                        Padding(
+                          padding: const EdgeInsets.only(right: 96),
+                          child: Row(
+                            children: [
+                              Icon(
+                                Icons.menu_book_rounded,
+                                size: 22,
+                                color: cardTheme.secondaryTextColor,
+                              ),
+                              const SizedBox(width: 8),
+                              Expanded(
+                                child: Text(
+                                  'Vocabulary Quest',
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: theme.textTheme.titleMedium?.copyWith(
+                                    fontWeight: FontWeight.w900,
+                                    letterSpacing: 1.2,
+                                    color: cardTheme.secondaryTextColor,
+                                    shadows: cardTheme.textShadow,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
-                      ),
-                      const Spacer(),
-                      IconButton(
-                        tooltip: isFavorite
-                            ? 'Favorite / お気に入り解除'
-                            : 'Favorite / お気に入り追加',
-                        onPressed: () => toggleFavorite(ref, word),
-                        icon: Icon(
-                          isFavorite ? Icons.favorite : Icons.favorite_border,
-                          color: isFavorite ? Colors.red : Colors.grey,
+                        Positioned(
+                          top: 0,
+                          right: 0,
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              IconButton(
+                                constraints: const BoxConstraints(
+                                  minWidth: 48,
+                                  minHeight: 48,
+                                ),
+                                tooltip: isFavorite
+                                    ? 'Favorite / お気に入り解除'
+                                    : 'Favorite / お気に入り追加',
+                                onPressed: () => toggleFavorite(ref, word),
+                                icon: Icon(
+                                  isFavorite
+                                      ? Icons.favorite
+                                      : Icons.favorite_border,
+                                  color: isFavorite ? Colors.red : Colors.grey,
+                                ),
+                              ),
+                              IconButton(
+                                constraints: const BoxConstraints(
+                                  minWidth: 48,
+                                  minHeight: 48,
+                                ),
+                                tooltip: 'Details / 詳細',
+                                onPressed: () => context.push(
+                                  AppRoute.vocabularyDetailPath(word.id),
+                                  extra: word,
+                                ),
+                                icon: const Icon(Icons.open_in_new_rounded),
+                              ),
+                            ],
+                          ),
                         ),
-                      ),
-                      IconButton(
-                        tooltip: 'Details / 詳細',
-                        onPressed: () => context.push(
-                          AppRoute.vocabularyDetailPath(word.id),
-                          extra: word,
-                        ),
-                        icon: const Icon(Icons.open_in_new_rounded),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
                   const SizedBox(height: 10),
                   AnimatedSwitcher(
