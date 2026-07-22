@@ -8,6 +8,37 @@ import 'package:jlpt_master/features/settings/presentation/providers/theme_mode_
 import 'package:url_launcher/url_launcher.dart';
 
 void main() {
+  testWidgets('Favorites uses only the Material heart icon and plain label', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          authStateProvider.overrideWith((ref) => Stream.value(null)),
+          currentUserProvider.overrideWith((ref) => Stream.value(null)),
+          themeModeControllerProvider.overrideWith(() => _ThemeModeController()),
+        ],
+        child: MaterialApp(
+          home: SettingsPage(urlLauncher: (_, {mode}) async => true),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    final favoritesTile = find.widgetWithText(ListTile, 'Favorites');
+
+    expect(favoritesTile, findsOneWidget);
+    expect(
+      find.descendant(
+        of: favoritesTile,
+        matching: find.byIcon(Icons.favorite_border),
+      ),
+      findsOneWidget,
+    );
+    expect(find.text('❤️ Favorites'), findsNothing);
+    expect(find.text('?'), findsNothing);
+  });
+
   testWidgets('Terms of Service tap launches the configured URL externally', (
     tester,
   ) async {
