@@ -35,14 +35,20 @@ void main() {
       expect(pattern.jlpt, 'N4');
     });
 
-    test('uses the dedicated published Grammar source', () {
+    test('uses the Grammar spreadsheet and the configured gids', () {
       expect(
-        GoogleSheetGrammarRepository.csvUrl,
-        contains('/spreadsheets/d/e/2PACX-'),
+        GoogleSheetGrammarRepository.spreadsheetId,
+        '1PrFQcdbLOBz9joBSFEwiOCk1dIcN8jPoLZ7rhtaMzHA',
       );
       expect(
-        GoogleSheetGrammarRepository.csvUrl,
-        isNot(contains('1vl_IRVwh7FWgcT-C8fTQltTQWwx8ejRJG9HnCctW0BU')),
+        GoogleSheetGrammarRepository.sheetGids,
+        {
+          'N5': '0',
+          'N4': '1728345069',
+          'N3': '100469504',
+          'N2': '747217293',
+          'N1': '1122889536',
+        },
       );
     });
 
@@ -56,10 +62,19 @@ void main() {
     });
 
     test('fetches and combines every JLPT sheet', () async {
-      final requestedSheets = <String>[];
+      final requestedGids = <String>[];
       final client = MockClient((request) async {
-        final sheet = request.url.queryParameters['sheet'];
-        requestedSheets.add(sheet!);
+        expect(
+          request.url.path,
+          contains('/spreadsheets/d/test-spreadsheet/export'),
+        );
+        expect(request.url.queryParameters['format'], 'csv');
+        expect(request.url.queryParameters, isNot(contains('sheet')));
+        final gid = request.url.queryParameters['gid']!;
+        requestedGids.add(gid);
+        final sheet = GoogleSheetGrammarRepository.sheetGids.entries
+            .singleWhere((entry) => entry.value == gid)
+            .key;
         return http.Response(
           'id,jlpt,grammar,meaning_en,meaning_ja,explanation_en,'
           'explanation_ja,example_jp,example_en,example_ja\n'
@@ -69,12 +84,21 @@ void main() {
       });
       final repository = GoogleSheetGrammarRepository(
         client: client,
-        csvUri: Uri.parse('https://example.com/grammar?gid=0&output=csv'),
+        spreadsheetId: 'test-spreadsheet',
       );
 
       final patterns = await repository.fetchPatterns();
 
-      expect(requestedSheets, orderedEquals(['N5', 'N4', 'N3', 'N2', 'N1']));
+      expect(
+        requestedGids,
+        orderedEquals([
+          '0',
+          '1728345069',
+          '100469504',
+          '747217293',
+          '1122889536',
+        ]),
+      );
       expect(patterns, hasLength(5));
       expect(
         patterns.map((pattern) => pattern.jlpt),
@@ -84,10 +108,10 @@ void main() {
   });
 
   test('All and every JLPT filter use the complete repository result', () async {
-    final patterns = List.generate(5, (index) {
-      final level = 5 - index;
+    final patterns = List.generate(300, (index) {
+      final level = 5 - (index % 5);
       return GrammarPattern(
-        id: 'grammar-$level',
+        id: 'grammar-$level-$index',
         jlpt: ' n$level ',
         grammar: '文法$level',
         meaningEn: '',
@@ -107,7 +131,7 @@ void main() {
     await container.read(grammarPatternsProvider.future);
     expect(
       container.read(filteredGrammarPatternsProvider).requireValue,
-      hasLength(5),
+      hasLength(300),
     );
     for (final level in const ['N5', 'N4', 'N3', 'N2', 'N1']) {
       container
@@ -115,7 +139,7 @@ void main() {
           .selectLevel(level);
       expect(
         container.read(filteredGrammarPatternsProvider).requireValue,
-        hasLength(1),
+        hasLength(60),
         reason: '$level must not be skipped',
       );
     }

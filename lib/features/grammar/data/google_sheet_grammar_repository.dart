@@ -10,28 +10,28 @@ import 'grammar_repository.dart';
 class GoogleSheetGrammarRepository implements GrammarRepository {
   GoogleSheetGrammarRepository({
     http.Client? client,
-    Uri? csvUri,
+    String spreadsheetId = GoogleSheetGrammarRepository.spreadsheetId,
   })  : _client = client,
-        _csvUri = csvUri ?? _defaultCsvUri;
+        _spreadsheetId = spreadsheetId;
 
-  // This is the published Grammar-only data source. Do not replace it with the
-  // spreadsheet used by GoogleSheetVocabularyRepository: an unknown `sheet`
-  // parameter can silently fall back to that spreadsheet's first vocabulary
-  // tab.
-  static const String csvUrl =
-      'https://docs.google.com/spreadsheets/d/e/2PACX-1vRmRT1zho5hgMAfNv7mDeukWnAh2dLC87TjNTOZJh1p7KzB7c1KjxmnqQQE5ZZ5lwvDVjpJryPccLFr/pub?gid=0&single=true&output=csv';
-  static const List<String> _jlptSheets = ['N5', 'N4', 'N3', 'N2', 'N1'];
-
-  static final Uri _defaultCsvUri = Uri.parse(csvUrl);
+  static const String spreadsheetId =
+      '1PrFQcdbLOBz9joBSFEwiOCk1dIcN8jPoLZ7rhtaMzHA';
+  static const Map<String, String> sheetGids = {
+    'N5': '0',
+    'N4': '1728345069',
+    'N3': '100469504',
+    'N2': '747217293',
+    'N1': '1122889536',
+  };
 
   final http.Client? _client;
-  final Uri _csvUri;
+  final String _spreadsheetId;
 
   @override
   Future<List<GrammarPattern>> fetchPatterns() async {
     try {
       final patterns = <GrammarPattern>[];
-      for (final sheet in _jlptSheets) {
+      for (final sheet in sheetGids.keys) {
         patterns.addAll(await _fetchSheetPatterns(sheet));
       }
 
@@ -51,6 +51,7 @@ class GoogleSheetGrammarRepository implements GrammarRepository {
   }
 
   Future<List<GrammarPattern>> _fetchSheetPatterns(String sheetName) async {
+    final gid = sheetGids[sheetName]!;
     final uri = _sheetCsvUri(sheetName);
     debugPrint(
       'GoogleSheetGrammarRepository.fetchPatterns(): sheet=$sheetName HTTP開始 $uri',
@@ -70,31 +71,37 @@ class GoogleSheetGrammarRepository implements GrammarRepository {
     }
 
     final patterns = parseText(utf8.decode(response.bodyBytes));
+    final counts = _jlptCounts(patterns);
     debugPrint(
       'GoogleSheetGrammarRepository.fetchPatterns(): '
-      'sheet=$sheetName patterns.length=${patterns.length}',
+      'sheet=$sheetName gid=$gid 取得件数=${patterns.length} JLPT別件数=$counts',
     );
     return patterns;
   }
 
   Uri _sheetCsvUri(String sheetName) {
-    final query = Map<String, String>.from(_csvUri.queryParameters)
-      ..remove('gid')
-      ..remove('single')
-      ..['output'] = 'csv'
-      ..['sheet'] = sheetName;
-    return _csvUri.replace(queryParameters: query);
+    final gid = sheetGids[sheetName]!;
+    return Uri.parse(
+      'https://docs.google.com/spreadsheets/d/$_spreadsheetId/'
+      'export?format=csv&gid=$gid',
+    );
   }
 
   void _logJlptCounts(List<GrammarPattern> patterns) {
-    final counts = <String, int>{};
-    for (final level in _jlptSheets) {
-      final count = patterns.where((pattern) => pattern.jlpt == level).length;
-      if (count > 0) counts[level] = count;
-    }
     debugPrint(
-      'GoogleSheetGrammarRepository.fetchPatterns(): JLPT別取得件数=$counts',
+      'GoogleSheetGrammarRepository.fetchPatterns(): '
+      'JLPT別取得件数=${_jlptCounts(patterns)}',
     );
+  }
+
+  Map<String, int> _jlptCounts(List<GrammarPattern> patterns) {
+    final counts = {for (final level in sheetGids.keys) level: 0};
+    for (final pattern in patterns) {
+      if (counts.containsKey(pattern.jlpt)) {
+        counts[pattern.jlpt] = counts[pattern.jlpt]! + 1;
+      }
+    }
+    return counts;
   }
 
   @override
