@@ -16,6 +16,7 @@ import '../../../../shared/presentation/widgets/app_state_views.dart';
 import '../../domain/vocabulary_word.dart';
 import '../providers/vocabulary_providers.dart';
 import '../widgets/vocabulary_onboarding_widget.dart';
+import '../widgets/vocabulary_swipe_motion.dart';
 import '../../../study_stats/presentation/providers/study_stats_provider.dart';
 
 class VocabularyPage extends ConsumerStatefulWidget {
@@ -335,7 +336,11 @@ class _VocabularyCardStack extends ConsumerWidget {
                     final lift = state.isCorrect == true ? -18.0 * Curves.easeOutCubic.transform(resultController.value) : 0.0;
                     final shake = state.isCorrect == false ? math.sin(shakeController.value * math.pi * 8) * 10 * (1 - shakeController.value) : 0.0;
                     final dragProgress = (dragOffset.dx / 180).clamp(0, 1).toDouble();
-                    final rotation = (dragOffset.dx / math.max(width, 1) * 0.28).clamp(-0.14, 0.14);
+                    final rotation =
+                        (dragOffset.dx /
+                                math.max(width, 1) *
+                                vocabularySwipeRotation)
+                            .clamp(0.0, vocabularySwipeRotation);
                     final card = Opacity(
                       opacity: entrance.clamp(0, 1).toDouble(),
                       child: Transform.translate(

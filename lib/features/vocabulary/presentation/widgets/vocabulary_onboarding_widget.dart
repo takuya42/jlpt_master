@@ -3,6 +3,8 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'vocabulary_swipe_motion.dart';
+
 /// Shows the same study guide used by onboarding and the AppBar help action.
 Future<void> showVocabularyStudyDialog(BuildContext context) {
   return showDialog<void>(
@@ -23,8 +25,8 @@ class _VocabularyStudyDialogState extends State<VocabularyStudyDialog>
     with SingleTickerProviderStateMixin {
   late final AnimationController _gestureController = AnimationController(
     vsync: this,
-    duration: const Duration(milliseconds: 1600),
-  )..repeat(reverse: true);
+    duration: const Duration(milliseconds: 1800),
+  )..repeat();
 
   @override
   void dispose() {
@@ -42,7 +44,7 @@ class _VocabularyStudyDialogState extends State<VocabularyStudyDialog>
       backgroundColor: colors.surfaceContainerHigh,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
       title: Text(
-        '🎓 How to Study',
+        'How to Study',
         style: theme.textTheme.headlineSmall?.copyWith(
           color: colors.onSurface,
           fontWeight: FontWeight.w800,
@@ -69,32 +71,39 @@ class _VocabularyStudyDialogState extends State<VocabularyStudyDialog>
                   height: 1.5,
                 ),
               ),
-              const SizedBox(height: 20),
-              const Text(
-                '・右へスワイプ → 次の単語\n'
-                '・左へスワイプ → 前の単語（対応している場合）\n'
-                '・入力して「Check Answer」で答え合わせ\n'
-                '・♡ボタンでお気に入り登録',
-              ),
-              const SizedBox(height: 18),
+              const SizedBox(height: 24),
               SizedBox(
-                height: 56,
+                height: 178,
                 child: AnimatedBuilder(
                   animation: _gestureController,
-                  builder: (context, child) => Transform.translate(
-                    offset: Offset(
-                      Curves.easeInOut.transform(_gestureController.value) *
-                              64 -
-                          32,
-                      0,
-                    ),
-                    child: child,
-                  ),
-                  child: Icon(
-                    Icons.arrow_forward_rounded,
-                    size: 44,
-                    color: colors.primary,
-                  ),
+                  builder: (context, child) {
+                    final progress = TweenSequence<double>([
+                      TweenSequenceItem(
+                        tween: Tween(begin: 0.0, end: 1.0).chain(
+                          CurveTween(curve: Curves.easeOutCubic),
+                        ),
+                        weight: 42,
+                      ),
+                      TweenSequenceItem(
+                        tween: ConstantTween(1.0),
+                        weight: 16,
+                      ),
+                      TweenSequenceItem(
+                        tween: Tween(begin: 1.0, end: 0.0).chain(
+                          CurveTween(curve: Curves.easeOutBack),
+                        ),
+                        weight: 42,
+                      ),
+                    ]).transform(_gestureController.value);
+                    return Transform.translate(
+                      offset: Offset(52 * progress, 0),
+                      child: Transform.rotate(
+                        angle: vocabularySwipeRotation * progress,
+                        child: child,
+                      ),
+                    );
+                  },
+                  child: const _MiniVocabularyCard(),
                 ),
               ),
             ],
@@ -104,10 +113,85 @@ class _VocabularyStudyDialogState extends State<VocabularyStudyDialog>
       actions: [
         FilledButton(
           onPressed: () => Navigator.of(context).pop(),
-          child: const Text('Got it'),
+          child: const Text('Start Learning'),
         ),
       ],
       actionsPadding: const EdgeInsets.fromLTRB(24, 0, 24, 20),
+    );
+  }
+}
+
+class _MiniVocabularyCard extends StatelessWidget {
+  const _MiniVocabularyCard();
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colors = theme.colorScheme;
+    return Center(
+      child: Container(
+        key: const ValueKey('tutorial-vocabulary-card'),
+        width: 168,
+        height: 142,
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(24),
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [colors.surfaceContainerHighest, colors.surfaceContainer],
+          ),
+          border: Border.all(color: colors.outlineVariant),
+          boxShadow: [
+            BoxShadow(
+              color: colors.shadow.withValues(alpha: .28),
+              blurRadius: 24,
+              offset: const Offset(0, 14),
+            ),
+          ],
+        ),
+        child: Stack(
+          children: [
+            Positioned(
+              right: -22,
+              top: -28,
+              child: DecoratedBox(
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: colors.primaryContainer.withValues(alpha: .45),
+                ),
+                child: const SizedBox.square(dimension: 78),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.all(18),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Icon(
+                    Icons.menu_book_rounded,
+                    size: 18,
+                    color: colors.onSurfaceVariant,
+                  ),
+                  const Spacer(),
+                  Text(
+                    '勉強',
+                    style: theme.textTheme.headlineMedium?.copyWith(
+                      color: colors.onSurface,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                  Text(
+                    'study',
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      color: colors.onSurfaceVariant,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }
