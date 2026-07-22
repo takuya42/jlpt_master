@@ -22,6 +22,10 @@ void main() {
       expect(patterns, hasLength(5));
       expect(patterns.map((pattern) => pattern.jlpt),
           orderedEquals(['N5', 'N4', 'N3', 'N2', 'N1']));
+      expect(
+        patterns.map((pattern) => pattern.id),
+        orderedEquals(['N5_1', 'N4_2', 'N3_3', 'N2_4', 'N1_5']),
+      );
     });
 
     test('parses TSV and searches all requested fields after level filtering', () {
@@ -33,6 +37,7 @@ void main() {
       expect(pattern.meaningEn, 'looks like');
       expect(pattern.meaningJa, '〜ように見える');
       expect(pattern.jlpt, 'N4');
+      expect(pattern.id, 'N4_1');
     });
 
     test('uses the Grammar spreadsheet and the configured gids', () {

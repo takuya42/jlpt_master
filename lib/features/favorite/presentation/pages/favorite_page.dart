@@ -1,145 +1,144 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
+import '../../../../app/navigation/app_route.dart';
+import '../../../../shared/presentation/widgets/app_background.dart';
+import '../../../../shared/presentation/widgets/app_state_views.dart';
 import '../../../favorites/presentation/providers/favorite_providers.dart';
 import '../../../grammar/domain/grammar_pattern.dart';
 import '../../../grammar/presentation/providers/grammar_providers.dart';
-import '../../../vocabulary/domain/vocabulary_word.dart';
-import '../../../vocabulary/presentation/providers/vocabulary_providers.dart';
-import '../../../../shared/presentation/widgets/app_state_views.dart';
 
-class FavoritePage extends ConsumerWidget {
+const _favoriteLevels = ['ALL', 'N5', 'N4', 'N3', 'N2', 'N1'];
+
+/// Displays grammar favorites saved with their globally unique JLPT/id key.
+class FavoritePage extends ConsumerStatefulWidget {
   const FavoritePage({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    return DefaultTabController(
-      length: 2,
-      child: Scaffold(
-        appBar: AppBar(
-          title: const Text('Favorites / お気に入り'),
-          bottom: const TabBar(tabs: [
-            Tab(text: 'Vocabulary'),
-            Tab(text: 'Grammar'),
-          ]),
-        ),
-        body: const SafeArea(
-          child: TabBarView(children: [
-            _VocabularyFavorites(),
-            _GrammarFavorites(),
-          ]),
-        ),
-      ),
-    );
-  }
+  ConsumerState<FavoritePage> createState() => _FavoritePageState();
 }
 
-class _VocabularyFavorites extends ConsumerWidget {
-  const _VocabularyFavorites();
+class _FavoritePageState extends ConsumerState<FavoritePage> {
+  String _selectedLevel = 'ALL';
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final ids = ref.watch(favoriteVocabularyProvider);
-    final words = ref.watch(vocabularyWordsProvider);
-    return ids.when(
-      loading: () => const AppLoadingView(message: 'Loading favorites'),
-      error: (error, _) => AppErrorView(
-        title: 'Could not load favorites',
-        message: error.toString(),
-        onRetry: () => ref.invalidate(favoriteVocabularyProvider),
-      ),
-      data: (favoriteIds) => words.when(
-        loading: () => const AppLoadingView(message: 'Loading vocabulary'),
-        error: (error, _) => AppErrorView(
-          title: 'Could not load vocabulary',
-          message: error.toString(),
-          onRetry: () => ref.invalidate(vocabularyWordsProvider),
-        ),
-        data: (items) => _FavoriteList<VocabularyWord>(
-          items: items.where((item) => favoriteIds.contains(item.id)).toList(),
-          id: (item) => item.id,
-          title: (item) => item.word,
-          level: (item) => item.jlptLevel,
-          onRemove: (item) => ref
-              .read(favoriteVocabularyProvider.notifier)
-              .remove(item.id),
-        ),
-      ),
-    );
-  }
-}
-
-class _GrammarFavorites extends ConsumerWidget {
-  const _GrammarFavorites();
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final ids = ref.watch(favoriteGrammarProvider);
+  Widget build(BuildContext context) {
+    final favoriteIds = ref.watch(favoriteGrammarProvider);
     final patterns = ref.watch(grammarPatternsProvider);
-    return ids.when(
-      loading: () => const AppLoadingView(message: 'Loading favorites'),
-      error: (error, _) => AppErrorView(
-        title: 'Could not load favorites',
-        message: error.toString(),
-        onRetry: () => ref.invalidate(favoriteGrammarProvider),
-      ),
-      data: (favoriteIds) => patterns.when(
-        loading: () => const AppLoadingView(message: 'Loading grammar'),
-        error: (error, _) => AppErrorView(
-          title: 'Could not load grammar',
-          message: error.toString(),
-          onRetry: () => ref.invalidate(grammarPatternsProvider),
-        ),
-        data: (items) => _FavoriteList<GrammarPattern>(
-          items: items.where((item) => favoriteIds.contains(item.id)).toList(),
-          id: (item) => item.id,
-          title: (item) => item.grammar,
-          level: (item) => item.jlpt,
-          onRemove: (item) =>
-              ref.read(favoriteGrammarProvider.notifier).remove(item.id),
+
+    return Scaffold(
+      appBar: AppBar(title: const Text('Grammar Favorites\n文法のお気に入り')),
+      body: AppBackground(
+        child: SafeArea(
+          child: Center(
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 840),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  SingleChildScrollView(
+                    scrollDirection: Axis.horizontal,
+                    padding: const EdgeInsets.fromLTRB(20, 16, 20, 8),
+                    child: Row(
+                      children: _favoriteLevels.map((level) {
+                        return Padding(
+                          padding: const EdgeInsets.only(right: 8),
+                          child: FilterChip(
+                            label: Text(level),
+                            selected: _selectedLevel == level,
+                            showCheckmark: false,
+                            onSelected: (_) =>
+                                setState(() => _selectedLevel = level),
+                          ),
+                        );
+                      }).toList(growable: false),
+                    ),
+                  ),
+                  Expanded(
+                    child: favoriteIds.when(
+                      loading: () => const AppLoadingView(
+                        message: 'Loading favorites',
+                      ),
+                      error: (error, _) => AppErrorView(
+                        title: 'Could not load favorites',
+                        message: error.toString(),
+                        onRetry: () => ref.invalidate(favoriteGrammarProvider),
+                      ),
+                      data: (ids) => patterns.when(
+                        loading: () => const AppLoadingView(
+                          message: 'Loading grammar',
+                        ),
+                        error: (error, _) => AppErrorView(
+                          title: 'Could not load grammar',
+                          message: error.toString(),
+                          onRetry: () => ref.invalidate(grammarPatternsProvider),
+                        ),
+                        data: (items) => _GrammarFavoriteList(
+                          items: items.where((pattern) {
+                            return ids.contains(pattern.id) &&
+                                (_selectedLevel == 'ALL' ||
+                                    pattern.jlpt.toUpperCase() ==
+                                        _selectedLevel);
+                          }).toList(growable: false),
+                          onRemove: (pattern) => ref
+                              .read(favoriteGrammarProvider.notifier)
+                              .remove(pattern.id),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
         ),
       ),
     );
   }
 }
 
-class _FavoriteList<T> extends StatelessWidget {
-  const _FavoriteList({
-    required this.items,
-    required this.id,
-    required this.title,
-    required this.level,
-    required this.onRemove,
-  });
+class _GrammarFavoriteList extends StatelessWidget {
+  const _GrammarFavoriteList({required this.items, required this.onRemove});
 
-  final List<T> items;
-  final String Function(T) id;
-  final String Function(T) title;
-  final String Function(T) level;
-  final Future<void> Function(T) onRemove;
+  final List<GrammarPattern> items;
+  final Future<void> Function(GrammarPattern) onRemove;
 
   @override
   Widget build(BuildContext context) {
     if (items.isEmpty) {
-      return const Center(child: Text('No favorites yet.\nお気に入りはまだありません。'));
+      return const Center(
+        child: Text(
+          'No grammar favorites yet.\n文法のお気に入りはまだありません。',
+          textAlign: TextAlign.center,
+        ),
+      );
     }
+
+    final colorScheme = Theme.of(context).colorScheme;
     return ListView.separated(
-      padding: const EdgeInsets.all(24),
+      padding: const EdgeInsets.fromLTRB(20, 8, 20, 24),
       itemCount: items.length,
       separatorBuilder: (_, __) => const SizedBox(height: 8),
       itemBuilder: (context, index) {
-        final item = items[index];
+        final pattern = items[index];
         return Card(
-          key: ValueKey(id(item)),
+          key: ValueKey(pattern.id),
+          color: colorScheme.surfaceContainerHigh,
           child: ListTile(
-            title: Text(title(item),
-                style: const TextStyle(fontWeight: FontWeight.w700)),
-            subtitle: Text(level(item).trim().toUpperCase()),
+            contentPadding: const EdgeInsets.fromLTRB(20, 8, 8, 8),
+            onTap: () => context.push(
+              AppRoute.grammarDetailPath(pattern.id),
+            ),
+            title: Text(
+              pattern.grammar,
+              style: const TextStyle(fontWeight: FontWeight.w700),
+            ),
+            subtitle: Text(pattern.jlpt.toUpperCase()),
             trailing: IconButton(
               tooltip: 'Remove favorite / お気に入り解除',
-              color: Colors.red,
-              onPressed: () => onRemove(item),
-              icon: const Icon(Icons.favorite),
+              onPressed: () => onRemove(pattern),
+              icon: const Icon(Icons.favorite, color: Colors.redAccent),
             ),
           ),
         );

@@ -236,7 +236,10 @@ class GoogleSheetGrammarRepository implements GrammarRepository {
 
       grammarPatterns.add(
         GrammarPattern(
-          id: _csvValue(row, idColumn),
+          // Row ids restart at 1 in every JLPT sheet. Prefixing the level
+          // makes the id safe to use in local storage, Firestore document
+          // ids, provider state, and navigation paths.
+          id: _uniqueId(level, _csvValue(row, idColumn)),
           jlpt: level,
           grammar: grammar,
           meaningEn: _csvValue(row, meaningEnColumn),
@@ -282,6 +285,11 @@ class GoogleSheetGrammarRepository implements GrammarRepository {
       .trim()
       .toLowerCase()
       .replaceAll(RegExp(r'[\s-]+'), '_');
+
+  String _uniqueId(String level, String id) {
+    final prefix = '${level}_';
+    return id.toUpperCase().startsWith(prefix) ? id : '$prefix$id';
+  }
 
   String? _normalizeJlpt(String value) {
     final normalized = value.trim().toUpperCase();
