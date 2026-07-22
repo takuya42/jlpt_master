@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../app/navigation/app_route.dart';
+import '../../../../shared/presentation/widgets/memo_button.dart';
 import '../../../notes/presentation/pages/notes_page.dart';
 import '../../domain/grammar_pattern.dart';
 import '../providers/grammar_providers.dart';
@@ -212,9 +213,8 @@ class _GrammarActions extends StatelessWidget {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        FilledButton.tonal(
+        MemoButton(
           onPressed: onMemoPressed,
-          child: const Text('Memo'),
         ),
         const SizedBox(width: 8),
         IconButton.filledTonal(

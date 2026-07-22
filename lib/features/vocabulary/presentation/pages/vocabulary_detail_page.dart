@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../shared/presentation/widgets/memo_button.dart';
 import '../../domain/vocabulary_word.dart';
 import '../../../notes/presentation/pages/notes_page.dart';
 import '../providers/vocabulary_providers.dart';
@@ -91,9 +92,8 @@ class _VocabularyDetailContent extends ConsumerWidget {
                             ],
                           ),
                         ),
-                        FilledButton.tonal(
+                        MemoButton(
                           onPressed: () => showMemoBottomSheet(context),
-                          child: const Text('📝 Memo'),
                         ),
                         const SizedBox(width: 8),
                         IconButton.filledTonal(
