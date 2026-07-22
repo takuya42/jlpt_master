@@ -40,4 +40,34 @@ void main() {
       expect(tester.takeException(), isNull, reason: 'viewport: $size');
     }
   });
+
+  testWidgets('shows onboarding once and persists its dismissal', (
+    tester,
+  ) async {
+    SharedPreferences.setMockInitialValues({});
+
+    Widget buildPage() => ProviderScope(
+      overrides: [
+        vocabularyRepositoryProvider.overrideWithValue(
+          MockVocabularyRepository(),
+        ),
+      ],
+      child: const MaterialApp(home: VocabularyPage()),
+    );
+
+    await tester.pumpWidget(buildPage());
+    await tester.pumpAndSettle();
+
+    expect(find.text('How to Study'), findsOneWidget);
+    expect(find.text('Start Learning'), findsOneWidget);
+
+    await tester.tap(find.text('Start Learning'));
+    await tester.pumpAndSettle();
+    expect(find.text('How to Study'), findsNothing);
+
+    await tester.pumpWidget(const SizedBox.shrink());
+    await tester.pumpWidget(buildPage());
+    await tester.pumpAndSettle();
+    expect(find.text('How to Study'), findsNothing);
+  });
 }

@@ -15,6 +15,7 @@ import '../../../../shared/presentation/widgets/app_background.dart';
 import '../../../../shared/presentation/widgets/app_state_views.dart';
 import '../../domain/vocabulary_word.dart';
 import '../providers/vocabulary_providers.dart';
+import '../widgets/vocabulary_onboarding_widget.dart';
 import '../../../study_stats/presentation/providers/study_stats_provider.dart';
 
 class VocabularyPage extends ConsumerStatefulWidget {
@@ -155,46 +156,48 @@ class _VocabularyPageState extends ConsumerState<VocabularyPage> with TickerProv
 
     final quiz = ref.watch(vocabularyQuizProvider);
 
-    return Scaffold(
-      appBar: AppBar(),
-      body: AppBackground(
-        child: SafeArea(
-          child: Center(
-            child: SingleChildScrollView(
-              key: const PageStorageKey<String>('vocabulary-page-scroll'),
-              padding: const EdgeInsets.fromLTRB(20, 10, 20, 24),
-              child: ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: 680),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    const _VocabularyLevelFilters(),
-                    const SizedBox(height: 14),
-                    quiz.when(
-                      data: (state) => state.word == null
-                          ? const _EmptyVocabularyQuizView()
-                          : _VocabularyCardStack(
-                              state: state,
-                              answerController: _answerController,
-                              entranceController: _cardEntranceController,
-                              resultController: _resultController,
-                              shakeController: _shakeController,
-                              confettiController: _confettiController,
-                              swipeController: _swipeController,
-                              dragOffset: _dragOffset,
-                              onDragStart: _handleCardDragStart,
-                              onDragUpdate: _handleCardDragUpdate,
-                              onDragEnd: _handleCardDragEnd,
-                            ),
-                      error: (error, stackTrace) => AppErrorView(
-                        title: 'Could not load Vocabulary Quiz / 単語クイズを読み込めません',
-                        message: error.toString(),
-                        onRetry: () => ref.invalidate(vocabularyQuizProvider),
+    return VocabularyOnboardingWidget(
+      child: Scaffold(
+        appBar: AppBar(),
+        body: AppBackground(
+          child: SafeArea(
+            child: Center(
+              child: SingleChildScrollView(
+                key: const PageStorageKey<String>('vocabulary-page-scroll'),
+                padding: const EdgeInsets.fromLTRB(20, 10, 20, 24),
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 680),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      const _VocabularyLevelFilters(),
+                      const SizedBox(height: 14),
+                      quiz.when(
+                        data: (state) => state.word == null
+                            ? const _EmptyVocabularyQuizView()
+                            : _VocabularyCardStack(
+                                state: state,
+                                answerController: _answerController,
+                                entranceController: _cardEntranceController,
+                                resultController: _resultController,
+                                shakeController: _shakeController,
+                                confettiController: _confettiController,
+                                swipeController: _swipeController,
+                                dragOffset: _dragOffset,
+                                onDragStart: _handleCardDragStart,
+                                onDragUpdate: _handleCardDragUpdate,
+                                onDragEnd: _handleCardDragEnd,
+                              ),
+                        error: (error, stackTrace) => AppErrorView(
+                          title: 'Could not load Vocabulary Quiz / 単語クイズを読み込めません',
+                          message: error.toString(),
+                          onRetry: () => ref.invalidate(vocabularyQuizProvider),
+                        ),
+                        loading: () => const SizedBox(height: 500),
                       ),
-                      loading: () => const SizedBox(height: 500),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               ),
             ),
