@@ -158,7 +158,15 @@ class _VocabularyPageState extends ConsumerState<VocabularyPage> with TickerProv
 
     return VocabularyOnboardingWidget(
       child: Scaffold(
-        appBar: AppBar(),
+        appBar: AppBar(
+          actions: [
+            IconButton(
+              tooltip: '使い方',
+              icon: const Icon(Icons.help_outline_rounded),
+              onPressed: () => showVocabularyStudyDialog(context),
+            ),
+          ],
+        ),
         body: AppBackground(
           child: SafeArea(
             child: Center(

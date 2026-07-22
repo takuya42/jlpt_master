@@ -3,7 +3,116 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-/// Displays the Vocabulary study instructions once, on top of [child].
+/// Shows the same study guide used by onboarding and the AppBar help action.
+Future<void> showVocabularyStudyDialog(BuildContext context) {
+  return showDialog<void>(
+    context: context,
+    builder: (context) => const VocabularyStudyDialog(),
+  );
+}
+
+/// Material 3 study instructions shared by onboarding and on-demand help.
+class VocabularyStudyDialog extends StatefulWidget {
+  const VocabularyStudyDialog({super.key});
+
+  @override
+  State<VocabularyStudyDialog> createState() => _VocabularyStudyDialogState();
+}
+
+class _VocabularyStudyDialogState extends State<VocabularyStudyDialog>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _gestureController = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 1600),
+  )..repeat(reverse: true);
+
+  @override
+  void dispose() {
+    _gestureController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colors = theme.colorScheme;
+
+    return AlertDialog(
+      key: const ValueKey('vocabulary-study-dialog'),
+      backgroundColor: colors.surfaceContainerHigh,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
+      title: Text(
+        '🎓 How to Study',
+        style: theme.textTheme.headlineSmall?.copyWith(
+          color: colors.onSurface,
+          fontWeight: FontWeight.w800,
+        ),
+      ),
+      content: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 440),
+        child: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Text(
+                'Swipe right to move to the next card.',
+                textAlign: TextAlign.center,
+                style: theme.textTheme.bodyLarge?.copyWith(height: 1.45),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                '右にスワイプすると次のカードへ進みます。',
+                textAlign: TextAlign.center,
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  color: colors.onSurfaceVariant,
+                  height: 1.5,
+                ),
+              ),
+              const SizedBox(height: 20),
+              const Text(
+                '・右へスワイプ → 次の単語\n'
+                '・左へスワイプ → 前の単語（対応している場合）\n'
+                '・入力して「Check Answer」で答え合わせ\n'
+                '・♡ボタンでお気に入り登録',
+              ),
+              const SizedBox(height: 18),
+              SizedBox(
+                height: 56,
+                child: AnimatedBuilder(
+                  animation: _gestureController,
+                  builder: (context, child) => Transform.translate(
+                    offset: Offset(
+                      Curves.easeInOut.transform(_gestureController.value) *
+                              64 -
+                          32,
+                      0,
+                    ),
+                    child: child,
+                  ),
+                  child: Icon(
+                    Icons.arrow_forward_rounded,
+                    size: 44,
+                    color: colors.primary,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+      actions: [
+        FilledButton(
+          onPressed: () => Navigator.of(context).pop(),
+          child: const Text('Got it'),
+        ),
+      ],
+      actionsPadding: const EdgeInsets.fromLTRB(24, 0, 24, 20),
+    );
+  }
+}
+
+/// Displays the Vocabulary study dialog once, on top of [child].
 class VocabularyOnboardingWidget extends StatefulWidget {
   const VocabularyOnboardingWidget({required this.child, super.key});
 
@@ -17,169 +126,25 @@ class VocabularyOnboardingWidget extends StatefulWidget {
 }
 
 class _VocabularyOnboardingWidgetState
-    extends State<VocabularyOnboardingWidget>
-    with SingleTickerProviderStateMixin {
-  late final AnimationController _gestureController;
-  bool _isVisible = false;
-
+    extends State<VocabularyOnboardingWidget> {
   @override
   void initState() {
     super.initState();
-    _gestureController = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 1600),
-    );
-    unawaited(_loadVisibility());
+    unawaited(_showOnboardingIfNeeded());
   }
 
-  Future<void> _loadVisibility() async {
+  Future<void> _showOnboardingIfNeeded() async {
     final preferences = await SharedPreferences.getInstance();
     final hasSeen =
         preferences.getBool(VocabularyOnboardingWidget.preferencesKey) ?? false;
-    if (mounted && !hasSeen) {
-      setState(() => _isVisible = true);
-      _gestureController.repeat(reverse: true);
-    }
-  }
+    if (!mounted || hasSeen) return;
 
-  Future<void> _dismiss() async {
-    _gestureController.stop();
-    setState(() => _isVisible = false);
-    final preferences = await SharedPreferences.getInstance();
-    await preferences.setBool(
-      VocabularyOnboardingWidget.preferencesKey,
-      true,
-    );
+    await WidgetsBinding.instance.endOfFrame;
+    if (!mounted) return;
+    await showVocabularyStudyDialog(context);
+    await preferences.setBool(VocabularyOnboardingWidget.preferencesKey, true);
   }
 
   @override
-  void dispose() {
-    _gestureController.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Stack(
-      children: [
-        widget.child,
-        if (_isVisible)
-          Positioned.fill(
-            child: Material(
-              key: const ValueKey('vocabulary-onboarding'),
-              color: Colors.black.withValues(alpha: 0.76),
-              child: SafeArea(
-                child: Center(
-                  child: SingleChildScrollView(
-                    padding: const EdgeInsets.all(24),
-                    child: _OnboardingCard(
-                      gestureController: _gestureController,
-                      onDismiss: _dismiss,
-                    ),
-                  ),
-                ),
-              ),
-            ),
-          ),
-      ],
-    );
-  }
-}
-
-class _OnboardingCard extends StatelessWidget {
-  const _OnboardingCard({
-    required this.gestureController,
-    required this.onDismiss,
-  });
-
-  final Animation<double> gestureController;
-  final VoidCallback onDismiss;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final colors = theme.colorScheme;
-
-    return ConstrainedBox(
-      constraints: const BoxConstraints(maxWidth: 440),
-      child: Card(
-        elevation: 16,
-        color: colors.surfaceContainerHigh,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(28),
-          side: BorderSide(color: colors.primary.withValues(alpha: 0.5)),
-        ),
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(28, 30, 28, 24),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(Icons.school, size: 40, color: colors.primary),
-              const SizedBox(height: 14),
-              Text(
-                'How to Study',
-                style: theme.textTheme.headlineSmall?.copyWith(
-                  color: colors.onSurface,
-                  fontWeight: FontWeight.w800,
-                ),
-              ),
-              const SizedBox(height: 20),
-              Text(
-                'Swipe right to move to the next card.',
-                textAlign: TextAlign.center,
-                style: theme.textTheme.bodyLarge?.copyWith(
-                  color: colors.onSurface,
-                  height: 1.45,
-                ),
-              ),
-              const SizedBox(height: 8),
-              Text(
-                '右にスワイプして次のカードへ進みます。',
-                textAlign: TextAlign.center,
-                style: theme.textTheme.bodyMedium?.copyWith(
-                  color: colors.onSurfaceVariant,
-                  height: 1.5,
-                ),
-              ),
-              const SizedBox(height: 26),
-              SizedBox(
-                height: 64,
-                child: AnimatedBuilder(
-                  animation: gestureController,
-                  builder: (context, child) {
-                    final progress = Curves.easeInOut.transform(
-                      gestureController.value,
-                    );
-                    return Transform.translate(
-                      offset: Offset((progress * 64) - 32, 0),
-                      child: child,
-                    );
-                  },
-                  child: Icon(
-                    Icons.arrow_forward_rounded,
-                    size: 44,
-                    color: colors.primary,
-                  ),
-                ),
-              ),
-              const SizedBox(height: 20),
-              SizedBox(
-                width: double.infinity,
-                child: FilledButton(
-                  onPressed: onDismiss,
-                  style: FilledButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(vertical: 15),
-                    textStyle: theme.textTheme.labelLarge?.copyWith(
-                      fontWeight: FontWeight.w800,
-                    ),
-                  ),
-                  child: const Text('Start Learning'),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
+  Widget build(BuildContext context) => widget.child;
 }
