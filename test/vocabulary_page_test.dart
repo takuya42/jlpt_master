@@ -60,25 +60,50 @@ void main() {
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 100));
 
-    expect(find.text('How to Study'), findsOneWidget);
-    expect(find.text('Start Learning'), findsOneWidget);
+    expect(find.text('🎓 How to Study'), findsOneWidget);
+    expect(find.text('Got it'), findsOneWidget);
     expect(
       find.text('Swipe right to move to the next card.'),
       findsOneWidget,
     );
-    expect(find.text('右にスワイプして次のカードへ進みます。'), findsOneWidget);
-    expect(find.byIcon(Icons.school), findsOneWidget);
+    expect(find.text('右にスワイプすると次のカードへ進みます。'), findsOneWidget);
+    expect(find.textContaining('・♡ボタンでお気に入り登録'), findsOneWidget);
     expect(find.byIcon(Icons.arrow_forward_rounded), findsOneWidget);
     expect(find.byIcon(Icons.play_arrow_rounded), findsNothing);
     expect(find.textContaining('☝'), findsNothing);
 
-    await tester.tap(find.text('Start Learning'));
+    await tester.tap(find.text('Got it'));
     await tester.pumpAndSettle();
-    expect(find.text('How to Study'), findsNothing);
+    expect(find.text('🎓 How to Study'), findsNothing);
 
     await tester.pumpWidget(const SizedBox.shrink());
     await tester.pumpWidget(buildPage());
     await tester.pumpAndSettle();
-    expect(find.text('How to Study'), findsNothing);
+    expect(find.text('🎓 How to Study'), findsNothing);
+  });
+
+  testWidgets('help action reopens the shared study dialog', (tester) async {
+    SharedPreferences.setMockInitialValues({
+      'hasSeenVocabularyOnboarding': true,
+    });
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          vocabularyRepositoryProvider.overrideWithValue(
+            MockVocabularyRepository(),
+          ),
+        ],
+        child: const MaterialApp(home: VocabularyPage()),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.byIcon(Icons.help_outline_rounded), findsOneWidget);
+    expect(find.text('🎓 How to Study'), findsNothing);
+    await tester.tap(find.byTooltip('使い方'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('🎓 How to Study'), findsOneWidget);
+    expect(find.text('Got it'), findsOneWidget);
   });
 }
