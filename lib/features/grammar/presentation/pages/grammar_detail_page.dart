@@ -90,60 +90,68 @@ class _GrammarDetailContent extends ConsumerWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
+                    LayoutBuilder(
+                      builder: (context, constraints) {
+                        final grammar = Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Grammar',
+                              style: theme.textTheme.labelLarge?.copyWith(
+                                color: colorScheme.primary,
+                                fontWeight: FontWeight.w900,
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            Text(
+                              pattern.grammar,
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                              style: theme.textTheme.displaySmall?.copyWith(
+                                fontSize: 32,
+                                fontWeight: FontWeight.w900,
+                              ),
+                            ),
+                            const SizedBox(height: 20),
+                            Text(
+                              'Meaning',
+                              style: theme.textTheme.labelLarge?.copyWith(
+                                color: colorScheme.primary,
+                                fontWeight: FontWeight.w900,
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            Text(pattern.meaningEn, style: theme.textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.w800)),
+                            const SizedBox(height: 4),
+                            Text(pattern.meaningJa, style: theme.textTheme.titleMedium?.copyWith(color: colorScheme.onSurfaceVariant)),
+                          ],
+                        );
+                        final actions = _GrammarActions(
+                          isFavorite: isFavorite,
+                          onMemoPressed: () => showMemoBottomSheet(context),
+                          onFavoritePressed: () => toggleGrammarFavorite(ref, pattern),
+                        );
+
+                        if (constraints.maxWidth < 500) {
+                          return Column(
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
                             children: [
-                              Text(
-                                'Grammar',
-                                style: theme.textTheme.labelLarge?.copyWith(
-                                  color: colorScheme.primary,
-                                  fontWeight: FontWeight.w900,
-                                ),
-                              ),
-                              const SizedBox(height: 8),
-                              Text(pattern.grammar, style: theme.textTheme.displaySmall?.copyWith(fontWeight: FontWeight.w900)),
-                              const SizedBox(height: 20),
-                              Text(
-                                'Meaning',
-                                style: theme.textTheme.labelLarge?.copyWith(
-                                  color: colorScheme.primary,
-                                  fontWeight: FontWeight.w900,
-                                ),
-                              ),
-                              const SizedBox(height: 8),
-                              Text(pattern.meaningEn, style: theme.textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.w800)),
-                              const SizedBox(height: 4),
-                              Text(pattern.meaningJa, style: theme.textTheme.titleMedium?.copyWith(color: colorScheme.onSurfaceVariant)),
+                              grammar,
+                              const SizedBox(height: 16),
+                              Align(alignment: Alignment.centerRight, child: actions),
                             ],
-                          ),
-                        ),
-                        FilledButton.tonal(
-                          onPressed: () => showMemoBottomSheet(context),
-                          child: const Text('📝 Memo'),
-                        ),
-                        const SizedBox(width: 8),
-                        IconButton.filledTonal(
-                          tooltip: isFavorite ? 'Favorite / お気に入り解除' : 'Favorite / お気に入り追加',
-                          onPressed: () => toggleGrammarFavorite(ref, pattern),
-                          iconSize: 28,
-                          icon: AnimatedSwitcher(
-                            duration: const Duration(milliseconds: 220),
-                            transitionBuilder: (child, animation) => ScaleTransition(
-                              scale: animation,
-                              child: FadeTransition(opacity: animation, child: child),
-                            ),
-                            child: Icon(
-                              isFavorite ? Icons.favorite : Icons.favorite_border,
-                              key: ValueKey(isFavorite),
-                              color: isFavorite ? Colors.red : Colors.grey,
-                            ),
-                          ),
-                        ),
-                      ],
+                          );
+                        }
+
+                        return Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Expanded(child: grammar),
+                            const SizedBox(width: 16),
+                            actions,
+                          ],
+                        );
+                      },
                     ),
                     const SizedBox(height: 20),
                     Wrap(
@@ -184,6 +192,49 @@ class _GrammarDetailContent extends ConsumerWidget {
           ],
         ),
       ),
+    );
+  }
+}
+
+class _GrammarActions extends StatelessWidget {
+  const _GrammarActions({
+    required this.isFavorite,
+    required this.onMemoPressed,
+    required this.onFavoritePressed,
+  });
+
+  final bool isFavorite;
+  final VoidCallback onMemoPressed;
+  final VoidCallback onFavoritePressed;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        FilledButton.tonal(
+          onPressed: onMemoPressed,
+          child: const Text('Memo'),
+        ),
+        const SizedBox(width: 8),
+        IconButton.filledTonal(
+          tooltip: isFavorite ? 'Favorite / お気に入り解除' : 'Favorite / お気に入り追加',
+          onPressed: onFavoritePressed,
+          iconSize: 28,
+          icon: AnimatedSwitcher(
+            duration: const Duration(milliseconds: 220),
+            transitionBuilder: (child, animation) => ScaleTransition(
+              scale: animation,
+              child: FadeTransition(opacity: animation, child: child),
+            ),
+            child: Icon(
+              isFavorite ? Icons.favorite : Icons.favorite_border,
+              key: ValueKey(isFavorite),
+              color: isFavorite ? Colors.red : Colors.grey,
+            ),
+          ),
+        ),
+      ],
     );
   }
 }
