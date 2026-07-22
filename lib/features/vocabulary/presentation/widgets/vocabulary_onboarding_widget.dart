@@ -21,33 +21,29 @@ class _VocabularyOnboardingWidgetState
     with SingleTickerProviderStateMixin {
   late final AnimationController _gestureController;
   bool _isVisible = false;
-  int _gestureCycles = 0;
 
   @override
   void initState() {
     super.initState();
     _gestureController = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 1250),
-    )..addStatusListener(_handleGestureStatus);
-    _gestureController.forward();
+      duration: const Duration(milliseconds: 1600),
+    );
     unawaited(_loadVisibility());
-  }
-
-  void _handleGestureStatus(AnimationStatus status) {
-    if (status != AnimationStatus.completed || _gestureCycles >= 2) return;
-    _gestureCycles += 1;
-    _gestureController.forward(from: 0);
   }
 
   Future<void> _loadVisibility() async {
     final preferences = await SharedPreferences.getInstance();
     final hasSeen =
         preferences.getBool(VocabularyOnboardingWidget.preferencesKey) ?? false;
-    if (mounted && !hasSeen) setState(() => _isVisible = true);
+    if (mounted && !hasSeen) {
+      setState(() => _isVisible = true);
+      _gestureController.repeat(reverse: true);
+    }
   }
 
   Future<void> _dismiss() async {
+    _gestureController.stop();
     setState(() => _isVisible = false);
     final preferences = await SharedPreferences.getInstance();
     await preferences.setBool(
@@ -118,7 +114,7 @@ class _OnboardingCard extends StatelessWidget {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(Icons.school_rounded, size: 36, color: colors.primary),
+              Icon(Icons.school, size: 40, color: colors.primary),
               const SizedBox(height: 14),
               Text(
                 'How to Study',
@@ -129,7 +125,7 @@ class _OnboardingCard extends StatelessWidget {
               ),
               const SizedBox(height: 20),
               Text(
-                '☝️  Swipe right to move to the next card.',
+                'Swipe right to move to the next card.',
                 textAlign: TextAlign.center,
                 style: theme.textTheme.bodyLarge?.copyWith(
                   color: colors.onSurface,
@@ -138,7 +134,7 @@ class _OnboardingCard extends StatelessWidget {
               ),
               const SizedBox(height: 8),
               Text(
-                '☝️  右にスワイプすると次のカードへ進みます。',
+                '右にスワイプして次のカードへ進みます。',
                 textAlign: TextAlign.center,
                 style: theme.textTheme.bodyMedium?.copyWith(
                   color: colors.onSurfaceVariant,
@@ -155,40 +151,29 @@ class _OnboardingCard extends StatelessWidget {
                       gestureController.value,
                     );
                     return Transform.translate(
-                      offset: Offset((progress * 90) - 45, 0),
-                      child: Opacity(
-                        opacity: 0.45 + (0.55 * (1 - progress)),
-                        child: child,
-                      ),
+                      offset: Offset((progress * 64) - 32, 0),
+                      child: child,
                     );
                   },
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      const Text('☝️', style: TextStyle(fontSize: 32)),
-                      const SizedBox(width: 8),
-                      Icon(
-                        Icons.arrow_forward_rounded,
-                        size: 40,
-                        color: colors.primary,
-                      ),
-                    ],
+                  child: Icon(
+                    Icons.arrow_forward_rounded,
+                    size: 44,
+                    color: colors.primary,
                   ),
                 ),
               ),
               const SizedBox(height: 20),
               SizedBox(
                 width: double.infinity,
-                child: FilledButton.icon(
+                child: FilledButton(
                   onPressed: onDismiss,
-                  icon: const Icon(Icons.play_arrow_rounded),
-                  label: const Text('Start Learning'),
                   style: FilledButton.styleFrom(
                     padding: const EdgeInsets.symmetric(vertical: 15),
                     textStyle: theme.textTheme.labelLarge?.copyWith(
                       fontWeight: FontWeight.w800,
                     ),
                   ),
+                  child: const Text('Start Learning'),
                 ),
               ),
             ],
