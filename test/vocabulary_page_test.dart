@@ -63,7 +63,7 @@ void main() {
     expect(find.text('How to Study'), findsOneWidget);
     expect(find.text('Start Learning'), findsOneWidget);
     expect(
-      find.text('Swipe right to move to the next card.'),
+      find.text('Swipe right to go to the next card.'),
       findsOneWidget,
     );
     expect(find.text('右にスワイプすると次のカードへ進みます。'), findsOneWidget);
@@ -84,6 +84,42 @@ void main() {
     await tester.pumpWidget(buildPage());
     await tester.pumpAndSettle();
     expect(find.text('How to Study'), findsNothing);
+  });
+
+  testWidgets('study guide copy stays on one line across iPhone widths', (
+    tester,
+  ) async {
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
+    for (final size in <Size>[
+      const Size(320, 568),
+      const Size(375, 667),
+      const Size(430, 932),
+    ]) {
+      tester.view.physicalSize = size;
+      tester.view.devicePixelRatio = 1;
+
+      await tester.pumpWidget(
+        const MaterialApp(home: Scaffold(body: VocabularyStudyDialog())),
+      );
+      await tester.pump();
+
+      for (final key in const <String>[
+        'study-guide-english',
+        'study-guide-japanese',
+      ]) {
+        final paragraph = tester.renderObject<RenderParagraph>(
+          find.byKey(ValueKey(key)),
+        );
+        expect(
+          paragraph.textPainter.computeLineMetrics(),
+          hasLength(1),
+          reason: '$key should fit on one line at $size',
+        );
+      }
+      expect(tester.takeException(), isNull, reason: 'viewport: $size');
+    }
   });
 
   testWidgets('help action reopens the shared study dialog', (tester) async {

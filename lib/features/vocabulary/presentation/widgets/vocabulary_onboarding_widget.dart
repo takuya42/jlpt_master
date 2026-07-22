@@ -41,6 +41,8 @@ class _VocabularyStudyDialogState extends State<VocabularyStudyDialog>
 
     return AlertDialog(
       key: const ValueKey('vocabulary-study-dialog'),
+      insetPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 24),
+      contentPadding: const EdgeInsets.fromLTRB(16, 20, 16, 24),
       backgroundColor: colors.surfaceContainerHigh,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
       title: Text(
@@ -53,60 +55,72 @@ class _VocabularyStudyDialogState extends State<VocabularyStudyDialog>
       content: ConstrainedBox(
         constraints: const BoxConstraints(maxWidth: 440),
         child: SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Text(
-                'Swipe right to move to the next card.',
-                textAlign: TextAlign.center,
-                style: theme.textTheme.bodyLarge?.copyWith(height: 1.45),
-              ),
-              const SizedBox(height: 8),
-              Text(
-                '右にスワイプすると次のカードへ進みます。',
-                textAlign: TextAlign.center,
-                style: theme.textTheme.bodyMedium?.copyWith(
-                  color: colors.onSurfaceVariant,
-                  height: 1.5,
-                ),
-              ),
-              const SizedBox(height: 24),
-              SizedBox(
-                height: 178,
-                child: AnimatedBuilder(
-                  animation: _gestureController,
-                  builder: (context, child) {
-                    final progress = TweenSequence<double>([
-                      TweenSequenceItem(
-                        tween: Tween(begin: 0.0, end: 1.0).chain(
-                          CurveTween(curve: Curves.easeOutCubic),
-                        ),
-                        weight: 42,
-                      ),
-                      TweenSequenceItem(
-                        tween: ConstantTween(1.0),
-                        weight: 16,
-                      ),
-                      TweenSequenceItem(
-                        tween: Tween(begin: 1.0, end: 0.0).chain(
-                          CurveTween(curve: Curves.easeOutBack),
-                        ),
-                        weight: 42,
-                      ),
-                    ]).transform(_gestureController.value);
-                    return Transform.translate(
-                      offset: Offset(52 * progress, 0),
-                      child: Transform.rotate(
-                        angle: vocabularySwipeRotation * progress,
-                        child: child,
-                      ),
-                    );
-                  },
-                  child: const _MiniVocabularyCard(),
-                ),
-              ),
-            ],
+          child: LayoutBuilder(
+            builder: (context, constraints) {
+              final compact = constraints.maxWidth < 280;
+              return Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Text(
+                    'Swipe right to go to the next card.',
+                    key: const ValueKey('study-guide-english'),
+                    textAlign: TextAlign.center,
+                    style: theme.textTheme.bodyLarge?.copyWith(
+                      fontSize: compact ? 13 : 15,
+                      height: 1.45,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    '右にスワイプすると次のカードへ進みます。',
+                    key: const ValueKey('study-guide-japanese'),
+                    textAlign: TextAlign.center,
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      color: colors.onSurfaceVariant,
+                      fontSize: compact ? 13 : 14,
+                      height: 1.5,
+                      letterSpacing: 0,
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+                  SizedBox(
+                    height: 178,
+                    child: AnimatedBuilder(
+                      animation: _gestureController,
+                      builder: (context, child) {
+                        final progress = TweenSequence<double>([
+                          TweenSequenceItem(
+                            tween: Tween(begin: 0.0, end: 1.0).chain(
+                              CurveTween(curve: Curves.easeOutCubic),
+                            ),
+                            weight: 42,
+                          ),
+                          TweenSequenceItem(
+                            tween: ConstantTween(1.0),
+                            weight: 16,
+                          ),
+                          TweenSequenceItem(
+                            tween: Tween(begin: 1.0, end: 0.0).chain(
+                              CurveTween(curve: Curves.easeOutBack),
+                            ),
+                            weight: 42,
+                          ),
+                        ]).transform(_gestureController.value);
+                        return Transform.translate(
+                          offset: Offset(52 * progress, 0),
+                          child: Transform.rotate(
+                            angle: vocabularySwipeRotation * progress,
+                            child: child,
+                          ),
+                        );
+                      },
+                      child: const _MiniVocabularyCard(),
+                    ),
+                  ),
+                ],
+              );
+            },
           ),
         ),
       ),
