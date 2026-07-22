@@ -20,6 +20,7 @@ class GoogleSheetGrammarRepository implements GrammarRepository {
   // tab.
   static const String csvUrl =
       'https://docs.google.com/spreadsheets/d/e/2PACX-1vRmRT1zho5hgMAfNv7mDeukWnAh2dLC87TjNTOZJh1p7KzB7c1KjxmnqQQE5ZZ5lwvDVjpJryPccLFr/pub?gid=0&single=true&output=csv';
+  static const List<String> _jlptSheets = ['N5', 'N4', 'N3', 'N2', 'N1'];
 
   static final Uri _defaultCsvUri = Uri.parse(csvUrl);
 
@@ -28,47 +29,16 @@ class GoogleSheetGrammarRepository implements GrammarRepository {
 
   @override
   Future<List<GrammarPattern>> fetchPatterns() async {
-    debugPrint(
-      'GoogleSheetGrammarRepository.fetchPatterns(): HTTP開始 $_csvUri',
-    );
-
     try {
-      final client = _client;
-      final response = client == null
-          ? await http.get(_csvUri)
-          : await client.get(_csvUri);
-      debugPrint('GoogleSheetGrammarRepository.fetchPatterns(): HTTP終了');
-      debugPrint(
-        'GoogleSheetGrammarRepository.fetchPatterns(): statusCode=${response.statusCode}',
-      );
-
-      if (response.statusCode < 200 || response.statusCode >= 300) {
-        throw GrammarRepositoryException(
-          'Failed to load grammar CSV from $_csvUri. Status code: ${response.statusCode}',
-        );
+      final patterns = <GrammarPattern>[];
+      for (final sheet in _jlptSheets) {
+        patterns.addAll(await _fetchSheetPatterns(sheet));
       }
 
-      final csvText = utf8.decode(response.bodyBytes);
-      debugPrint('GoogleSheetGrammarRepository.fetchPatterns(): CSV取得完了');
-      debugPrint(
-        'GoogleSheetGrammarRepository.fetchPatterns(): CSV文字数=${csvText.length}',
-      );
-      debugPrint(
-        'GoogleSheetGrammarRepository.fetchPatterns(): response.body.substring(0, 300)=${response.body.substring(0, response.body.length < 300 ? response.body.length : 300)}',
-      );
-      final patterns = parseText(csvText);
       debugPrint(
         'GoogleSheetGrammarRepository.fetchPatterns(): patterns.length=${patterns.length}',
       );
-
-      if (patterns.isEmpty) {
-        debugPrint(
-          'GoogleSheetGrammarRepository.fetchPatterns(): patterns.length=0 のためCSV内容を出力します',
-        );
-        debugPrint(
-          'GoogleSheetGrammarRepository.fetchPatterns(): csvText=$csvText',
-        );
-      }
+      _logJlptCounts(patterns);
 
       return patterns;
     } catch (error, stackTrace) {
@@ -78,6 +48,53 @@ class GoogleSheetGrammarRepository implements GrammarRepository {
       debugPrint(stackTrace.toString());
       rethrow;
     }
+  }
+
+  Future<List<GrammarPattern>> _fetchSheetPatterns(String sheetName) async {
+    final uri = _sheetCsvUri(sheetName);
+    debugPrint(
+      'GoogleSheetGrammarRepository.fetchPatterns(): sheet=$sheetName HTTP開始 $uri',
+    );
+    final client = _client;
+    final response = client == null ? await http.get(uri) : await client.get(uri);
+    debugPrint(
+      'GoogleSheetGrammarRepository.fetchPatterns(): sheet=$sheetName '
+      'statusCode=${response.statusCode}',
+    );
+
+    if (response.statusCode < 200 || response.statusCode >= 300) {
+      throw GrammarRepositoryException(
+        'Failed to load grammar CSV sheet=$sheetName from $uri. '
+        'Status code: ${response.statusCode}',
+      );
+    }
+
+    final patterns = parseText(utf8.decode(response.bodyBytes));
+    debugPrint(
+      'GoogleSheetGrammarRepository.fetchPatterns(): '
+      'sheet=$sheetName patterns.length=${patterns.length}',
+    );
+    return patterns;
+  }
+
+  Uri _sheetCsvUri(String sheetName) {
+    final query = Map<String, String>.from(_csvUri.queryParameters)
+      ..remove('gid')
+      ..remove('single')
+      ..['output'] = 'csv'
+      ..['sheet'] = sheetName;
+    return _csvUri.replace(queryParameters: query);
+  }
+
+  void _logJlptCounts(List<GrammarPattern> patterns) {
+    final counts = <String, int>{};
+    for (final level in _jlptSheets) {
+      final count = patterns.where((pattern) => pattern.jlpt == level).length;
+      if (count > 0) counts[level] = count;
+    }
+    debugPrint(
+      'GoogleSheetGrammarRepository.fetchPatterns(): JLPT別取得件数=$counts',
+    );
   }
 
   @override
