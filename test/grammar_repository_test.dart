@@ -9,6 +9,33 @@ import 'package:jlpt_master/features/grammar/presentation/providers/grammar_prov
 
 void main() {
   group('GoogleSheetGrammarRepository parser', () {
+    test('GrammarPattern factories preserve every map jlpt value', () {
+      for (final level in const ['N5', 'N4', 'N3', 'N2', 'N1']) {
+        final fromMap = GrammarPattern.fromMap({
+          'id': level,
+          'jlpt': level,
+          'grammar': 'grammar-$level',
+        });
+        final fromCsv = GrammarPattern.fromCsv(
+          [level, level, 'grammar-$level'],
+          const ['id', 'jlpt', 'grammar'],
+        );
+
+        expect(fromMap.jlpt, level);
+        expect(fromCsv.jlpt, level);
+      }
+    });
+
+    test('GrammarPattern factories do not default a missing jlpt to N5', () {
+      expect(
+        () => GrammarPattern.fromMap(const {
+          'id': 'missing-level',
+          'grammar': 'grammar',
+        }),
+        throwsFormatException,
+      );
+    });
+
     test('keeps rows with optional trailing columns missing', () {
       const csv = '''id,jlpt,grammar,meaning_en,meaning_ja,explanation_en,explanation_ja,example_jp,example_en,example_ja
 1,N5,です,is,です,,,,,

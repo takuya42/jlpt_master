@@ -189,58 +189,30 @@ class GoogleSheetGrammarRepository implements GrammarRepository {
         '${missingHeaders.join(', ')}. Actual: ${rows.first}',
       );
     }
-    int column(List<String> names, int fallback) {
-      for (final name in names) {
-        final index = headers[_headerName(name)];
-        if (index != null) return index;
-      }
-      return fallback;
-    }
-
-    final idColumn = column(const ['id'], 0);
-    final levelColumn = column(const ['jlpt', 'level', 'jlpt_level'], 1);
-    final grammarColumn = column(const ['grammar', 'pattern'], 2);
-    final meaningEnColumn = column(const ['meaning_en', 'english meaning'], 3);
-    final meaningJaColumn = column(const ['meaning_ja', 'japanese meaning'], 4);
-    final explanationEnColumn = column(const ['explanation_en'], 5);
-    final explanationJaColumn = column(const ['explanation_ja'], 6);
-    final exampleJpColumn = column(const ['example_jp', 'example_ja'], 7);
-    final exampleEnColumn = column(const ['example_en'], 8);
-    final exampleJaColumn = column(const ['example_ja'], 9);
-    final requiredColumn = [idColumn, levelColumn, grammarColumn].reduce(
-      (largest, value) => value > largest ? value : largest,
-    );
+    final normalizedHeaders = rows.first
+        .map((header) => _headerName(header.toString()))
+        .toList(growable: false);
 
     final grammarPatterns = <GrammarPattern>[];
     var skippedCount = 0;
 
     for (final row in rows.skip(1)) {
-      if (row.length <= requiredColumn) {
+      final map = <String, String>{};
+      for (var index = 0; index < normalizedHeaders.length; index++) {
+        map[normalizedHeaders[index]] = _csvValue(row, index);
+      }
+      if ((map['grammar'] ?? '').isEmpty || (map['jlpt'] ?? '').isEmpty) {
         skippedCount++;
         continue;
       }
 
-      final grammar = _csvValue(row, grammarColumn);
-      final level = _normalizeJlpt(_csvValue(row, levelColumn));
-      if (grammar.isEmpty || level == null) {
+      try {
+        final pattern = GrammarPattern.fromCsv(row, normalizedHeaders);
+        grammarPatterns.add(pattern);
+        debugPrint('${pattern.jlpt} ${pattern.grammar}');
+      } on FormatException {
         skippedCount++;
-        continue;
       }
-
-      grammarPatterns.add(
-        GrammarPattern(
-          id: _csvValue(row, idColumn),
-          jlpt: level,
-          grammar: grammar,
-          meaningEn: _csvValue(row, meaningEnColumn),
-          meaningJa: _csvValue(row, meaningJaColumn),
-          explanationEn: _csvValue(row, explanationEnColumn),
-          explanationJa: _csvValue(row, explanationJaColumn),
-          exampleJp: _csvValue(row, exampleJpColumn),
-          exampleEn: _csvValue(row, exampleEnColumn),
-          exampleJa: _csvValue(row, exampleJaColumn),
-        ),
-      );
     }
 
     debugPrint(
@@ -275,13 +247,6 @@ class GoogleSheetGrammarRepository implements GrammarRepository {
       .trim()
       .toLowerCase()
       .replaceAll(RegExp(r'[\s-]+'), '_');
-
-  String? _normalizeJlpt(String value) {
-    final normalized = value.trim().toUpperCase();
-    final match = RegExp(r'(?:JLPT\s*)?N?\s*([1-5])', caseSensitive: false)
-        .firstMatch(normalized);
-    return match == null ? null : 'N${match.group(1)}';
-  }
 }
 
 class GrammarRepositoryException implements Exception {
