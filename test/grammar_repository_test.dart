@@ -1,5 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:http/http.dart' as http;
+import 'package:http/testing.dart';
 import 'package:jlpt_master/features/grammar/data/google_sheet_grammar_repository.dart';
 import 'package:jlpt_master/features/grammar/data/grammar_repository.dart';
 import 'package:jlpt_master/features/grammar/domain/grammar_pattern.dart';
@@ -50,6 +52,33 @@ void main() {
       expect(
         () => GoogleSheetGrammarRepository().parseText(csv),
         throwsA(isA<GrammarRepositoryException>()),
+      );
+    });
+
+    test('fetches and combines every JLPT sheet', () async {
+      final requestedSheets = <String>[];
+      final client = MockClient((request) async {
+        final sheet = request.url.queryParameters['sheet'];
+        requestedSheets.add(sheet!);
+        return http.Response(
+          'id,jlpt,grammar,meaning_en,meaning_ja,explanation_en,'
+          'explanation_ja,example_jp,example_en,example_ja\n'
+          '$sheet-1,$sheet,grammar-$sheet,,,,,,,',
+          200,
+        );
+      });
+      final repository = GoogleSheetGrammarRepository(
+        client: client,
+        csvUri: Uri.parse('https://example.com/grammar?gid=0&output=csv'),
+      );
+
+      final patterns = await repository.fetchPatterns();
+
+      expect(requestedSheets, orderedEquals(['N5', 'N4', 'N3', 'N2', 'N1']));
+      expect(patterns, hasLength(5));
+      expect(
+        patterns.map((pattern) => pattern.jlpt),
+        orderedEquals(['N5', 'N4', 'N3', 'N2', 'N1']),
       );
     });
   });
