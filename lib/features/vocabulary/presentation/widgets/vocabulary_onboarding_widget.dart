@@ -1,16 +1,18 @@
 import 'dart:async';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'vocabulary_swipe_motion.dart';
 
 /// Shows the same study guide used by onboarding and the AppBar help action.
-Future<void> showVocabularyStudyDialog(BuildContext context) {
-  return showDialog<void>(
+Future<bool> showVocabularyStudyDialog(BuildContext context) async {
+  final dismissedWithButton = await showDialog<bool>(
     context: context,
     builder: (context) => const VocabularyStudyDialog(),
   );
+  return dismissedWithButton ?? false;
 }
 
 /// Material 3 study instructions shared by onboarding and on-demand help.
@@ -126,8 +128,8 @@ class _VocabularyStudyDialogState extends State<VocabularyStudyDialog>
       ),
       actions: [
         FilledButton(
-          onPressed: () => Navigator.of(context).pop(),
-          child: const Text('Start Learning'),
+          onPressed: () => Navigator.of(context).pop(true),
+          child: const Text('Close / 閉じる'),
         ),
       ],
       actionsPadding: const EdgeInsets.fromLTRB(24, 0, 24, 20),
@@ -212,11 +214,22 @@ class _MiniVocabularyCard extends StatelessWidget {
 
 /// Displays the Vocabulary study dialog once, on top of [child].
 class VocabularyOnboardingWidget extends StatefulWidget {
-  const VocabularyOnboardingWidget({required this.child, super.key});
+  const VocabularyOnboardingWidget({
+    required this.child,
+    this.forceShow = forceShowForDebugging,
+    super.key,
+  });
 
   static const preferencesKey = 'hasSeenVocabularyOnboarding';
 
+  /// Pass `--dart-define=SHOW_VOCABULARY_ONBOARDING=true` in a debug run to
+  /// display the guide on every visit without clearing app data.
+  static const forceShowForDebugging = bool.fromEnvironment(
+    'SHOW_VOCABULARY_ONBOARDING',
+  );
+
   final Widget child;
+  final bool forceShow;
 
   @override
   State<VocabularyOnboardingWidget> createState() =>
@@ -228,19 +241,25 @@ class _VocabularyOnboardingWidgetState
   @override
   void initState() {
     super.initState();
-    unawaited(_showOnboardingIfNeeded());
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      unawaited(_showOnboardingIfNeeded());
+    });
   }
 
   Future<void> _showOnboardingIfNeeded() async {
     final preferences = await SharedPreferences.getInstance();
     final hasSeen =
         preferences.getBool(VocabularyOnboardingWidget.preferencesKey) ?? false;
-    if (!mounted || hasSeen) return;
+    final forceShow = kDebugMode && widget.forceShow;
+    if (!mounted || (hasSeen && !forceShow)) return;
 
-    await WidgetsBinding.instance.endOfFrame;
-    if (!mounted) return;
-    await showVocabularyStudyDialog(context);
-    await preferences.setBool(VocabularyOnboardingWidget.preferencesKey, true);
+    final dismissedWithButton = await showVocabularyStudyDialog(context);
+    if (dismissedWithButton && !forceShow) {
+      await preferences.setBool(
+        VocabularyOnboardingWidget.preferencesKey,
+        true,
+      );
+    }
   }
 
   @override
