@@ -9,7 +9,7 @@ import '../../../../app/theme/vocabulary_card_theme.dart';
 const _tutorialSwipeDistance = 52.0;
 const _tutorialSwipeRotation = 0.3141592653589793; // 18 degrees.
 
-/// Shows the same study guide used by onboarding and the AppBar help action.
+/// Shows the study guide used by onboarding.
 Future<bool> showVocabularyStudyDialog(BuildContext context) async {
   final dismissedWithButton = await showDialog<bool>(
     context: context,
@@ -19,7 +19,7 @@ Future<bool> showVocabularyStudyDialog(BuildContext context) async {
   return dismissedWithButton ?? false;
 }
 
-/// Material 3 study instructions shared by onboarding and on-demand help.
+/// Material 3 study instructions for onboarding.
 class VocabularyStudyDialog extends StatefulWidget {
   const VocabularyStudyDialog({super.key});
 
