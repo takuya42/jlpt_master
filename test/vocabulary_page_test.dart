@@ -145,6 +145,54 @@ void main() {
 
     expect(find.text('How to Study'), findsOneWidget);
     expect(find.text('Close / 閉じる'), findsOneWidget);
+
+    await tester.tap(find.text('Close / 閉じる'));
+    await tester.pumpAndSettle();
+    expect(find.text('How to Study'), findsNothing);
+
+    await tester.tap(find.byTooltip('使い方'));
+    await tester.pumpAndSettle();
+    expect(find.text('How to Study'), findsOneWidget);
+
+    final preferences = await SharedPreferences.getInstance();
+    expect(preferences.getBool('hasSeenVocabularyOnboarding'), isTrue);
+  });
+
+  testWidgets('help action uses the root navigator from a nested navigator', (
+    tester,
+  ) async {
+    SharedPreferences.setMockInitialValues({
+      'hasSeenVocabularyOnboarding': true,
+    });
+    final nestedNavigatorKey = GlobalKey<NavigatorState>();
+
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          vocabularyRepositoryProvider.overrideWithValue(
+            MockVocabularyRepository(),
+          ),
+        ],
+        child: MaterialApp(
+          home: Navigator(
+            key: nestedNavigatorKey,
+            onGenerateRoute: (_) => MaterialPageRoute<void>(
+              builder: (_) => const VocabularyPage(),
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byTooltip('使い方'));
+    await tester.pumpAndSettle();
+    expect(find.text('How to Study'), findsOneWidget);
+
+    await tester.tap(find.text('Close / 閉じる'));
+    await tester.pumpAndSettle();
+    expect(find.text('How to Study'), findsNothing);
+    expect(nestedNavigatorKey.currentState!.canPop(), isFalse);
   });
 
   testWidgets('barrier dismissal does not mark onboarding as seen', (

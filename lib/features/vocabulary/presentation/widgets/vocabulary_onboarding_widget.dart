@@ -10,6 +10,7 @@ import 'vocabulary_swipe_motion.dart';
 Future<bool> showVocabularyStudyDialog(BuildContext context) async {
   final dismissedWithButton = await showDialog<bool>(
     context: context,
+    useRootNavigator: true,
     builder: (context) => const VocabularyStudyDialog(),
   );
   return dismissedWithButton ?? false;
@@ -128,7 +129,10 @@ class _VocabularyStudyDialogState extends State<VocabularyStudyDialog>
       ),
       actions: [
         FilledButton(
-          onPressed: () => Navigator.of(context).pop(true),
+          onPressed: () => Navigator.of(
+            context,
+            rootNavigator: true,
+          ).pop(true),
           child: const Text('Close / 閉じる'),
         ),
       ],
