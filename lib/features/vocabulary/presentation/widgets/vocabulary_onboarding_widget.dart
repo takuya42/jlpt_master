@@ -4,7 +4,10 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import 'vocabulary_swipe_motion.dart';
+import '../../../../app/theme/vocabulary_card_theme.dart';
+
+const _tutorialSwipeDistance = 52.0;
+const _tutorialSwipeRotation = 0.3141592653589793; // 18 degrees.
 
 /// Shows the same study guide used by onboarding and the AppBar help action.
 Future<bool> showVocabularyStudyDialog(BuildContext context) async {
@@ -38,7 +41,7 @@ class _VocabularyStudyDialogState extends State<VocabularyStudyDialog>
     super.initState();
     _gestureController = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 1800),
+      duration: const Duration(seconds: 2),
     );
     debugPrint('dialog animation start');
     _gestureController.repeat();
@@ -109,25 +112,29 @@ class _VocabularyStudyDialogState extends State<VocabularyStudyDialog>
                         final progress = TweenSequence<double>([
                           TweenSequenceItem(
                             tween: Tween(begin: 0.0, end: 1.0).chain(
-                              CurveTween(curve: Curves.easeOutCubic),
+                              CurveTween(curve: Curves.easeInOut),
                             ),
-                            weight: 42,
+                            weight: 20,
                           ),
                           TweenSequenceItem(
                             tween: ConstantTween(1.0),
-                            weight: 16,
+                            weight: 10,
                           ),
                           TweenSequenceItem(
                             tween: Tween(begin: 1.0, end: 0.0).chain(
-                              CurveTween(curve: Curves.easeOutBack),
+                              CurveTween(curve: Curves.easeInOut),
                             ),
-                            weight: 42,
+                            weight: 20,
+                          ),
+                          const TweenSequenceItem(
+                            tween: ConstantTween(0.0),
+                            weight: 50,
                           ),
                         ]).transform(_gestureController.value);
                         return Transform.translate(
-                          offset: Offset(52 * progress, 0),
+                          offset: Offset(_tutorialSwipeDistance * progress, 0),
                           child: Transform.rotate(
-                            angle: vocabularySwipeRotation * progress,
+                            angle: _tutorialSwipeRotation * progress,
                             child: child,
                           ),
                         );
@@ -161,7 +168,8 @@ class _MiniVocabularyCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final colors = theme.colorScheme;
+    final cardTheme = theme.extension<VocabularyCardTheme>() ??
+        VocabularyCardTheme.forBrightness(theme.brightness);
     return Center(
       child: Container(
         key: const ValueKey('tutorial-vocabulary-card'),
@@ -172,14 +180,20 @@ class _MiniVocabularyCard extends StatelessWidget {
           gradient: LinearGradient(
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
-            colors: [colors.surfaceContainerHighest, colors.surfaceContainer],
+            colors: cardTheme.cardGradient,
+            stops: const [0, .48, 1],
           ),
-          border: Border.all(color: colors.outlineVariant),
+          border: Border.all(color: cardTheme.borderColor, width: 1.2),
           boxShadow: [
             BoxShadow(
-              color: colors.shadow.withValues(alpha: .28),
+              color: cardTheme.shadowColor.withValues(alpha: .24),
               blurRadius: 24,
               offset: const Offset(0, 14),
+            ),
+            BoxShadow(
+              color: cardTheme.highlightColor,
+              blurRadius: 4,
+              offset: const Offset(-2, -2),
             ),
           ],
         ),
@@ -191,7 +205,7 @@ class _MiniVocabularyCard extends StatelessWidget {
               child: DecoratedBox(
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  color: colors.primaryContainer.withValues(alpha: .45),
+                  color: cardTheme.decorationColor,
                 ),
                 child: const SizedBox.square(dimension: 78),
               ),
@@ -204,20 +218,21 @@ class _MiniVocabularyCard extends StatelessWidget {
                   Icon(
                     Icons.menu_book_rounded,
                     size: 18,
-                    color: colors.onSurfaceVariant,
+                    color: cardTheme.secondaryTextColor,
                   ),
                   const Spacer(),
                   Text(
                     '勉強',
                     style: theme.textTheme.headlineMedium?.copyWith(
-                      color: colors.onSurface,
+                      color: cardTheme.primaryTextColor,
                       fontWeight: FontWeight.w700,
+                      shadows: cardTheme.textShadow,
                     ),
                   ),
                   Text(
                     'study',
                     style: theme.textTheme.bodyMedium?.copyWith(
-                      color: colors.onSurfaceVariant,
+                      color: cardTheme.secondaryTextColor,
                     ),
                   ),
                 ],

@@ -122,6 +122,29 @@ void main() {
     }
   });
 
+  testWidgets('tutorial card demonstrates the swipe timing', (tester) async {
+    await tester.pumpWidget(
+      const MaterialApp(home: Scaffold(body: VocabularyStudyDialog())),
+    );
+    await tester.pump();
+
+    final card = find.byKey(const ValueKey('tutorial-vocabulary-card'));
+    final restingCenter = tester.getCenter(card);
+
+    await tester.pump(const Duration(milliseconds: 400));
+    final draggedCenter = tester.getCenter(card);
+    expect(draggedCenter.dx - restingCenter.dx, closeTo(52, 0.1));
+
+    await tester.pump(const Duration(milliseconds: 200));
+    expect(tester.getCenter(card).dx, closeTo(draggedCenter.dx, 0.1));
+
+    await tester.pump(const Duration(milliseconds: 400));
+    expect(tester.getCenter(card).dx, closeTo(restingCenter.dx, 0.1));
+
+    await tester.pump(const Duration(milliseconds: 900));
+    expect(tester.getCenter(card).dx, closeTo(restingCenter.dx, 0.1));
+  });
+
   testWidgets('study dialog completes its build, animation, and route', (
     tester,
   ) async {
