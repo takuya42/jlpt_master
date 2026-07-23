@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -237,6 +239,55 @@ void main() {
     expect(find.byIcon(Icons.help_outline_rounded), findsNothing);
     expect(find.byTooltip('使い方'), findsNothing);
     expect(find.text('How to Study'), findsNothing);
+  });
+
+  testWidgets('idle card gently hints at swiping and resets after input', (
+    tester,
+  ) async {
+    SharedPreferences.setMockInitialValues({
+      'hasSeenVocabularyOnboarding': true,
+    });
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          vocabularyRepositoryProvider.overrideWithValue(
+            MockVocabularyRepository(),
+          ),
+        ],
+        child: const MaterialApp(home: VocabularyPage()),
+      ),
+    );
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 100));
+
+    final translation = find.byKey(
+      const ValueKey('vocabulary-idle-swipe-card'),
+    );
+    final rotation = find.byKey(
+      const ValueKey('vocabulary-idle-swipe-rotation'),
+    );
+    double translatedX() => tester.widget<Transform>(translation).transform.storage[12];
+
+    expect(translatedX(), closeTo(0, 0.01));
+    await tester.pump(const Duration(milliseconds: 3999));
+    expect(translatedX(), closeTo(0, 0.01));
+
+    await tester.pump(const Duration(milliseconds: 351));
+    expect(translatedX(), closeTo(20, 0.01));
+    final rotationMatrix = tester.widget<Transform>(rotation).transform.storage;
+    expect(rotationMatrix[0], closeTo(math.cos(10 * math.pi / 180), 0.001));
+    expect(rotationMatrix[1], closeTo(math.sin(10 * math.pi / 180), 0.001));
+
+    await tester.pump(const Duration(milliseconds: 199));
+    expect(translatedX(), closeTo(20, 0.01));
+    await tester.pump(const Duration(milliseconds: 351));
+    expect(translatedX(), closeTo(0, 0.01));
+
+    await tester.tap(translation);
+    await tester.pump(const Duration(milliseconds: 3999));
+    expect(translatedX(), closeTo(0, 0.01));
+    await tester.pump(const Duration(milliseconds: 351));
+    expect(translatedX(), closeTo(20, 0.01));
   });
 
   testWidgets('barrier dismissal does not mark onboarding as seen', (
