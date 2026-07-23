@@ -119,7 +119,11 @@ class _VocabularyStudyDialogState extends State<VocabularyStudyDialog>
                     child: Center(
                       child: AnimatedBuilder(
                         animation: _swipeProgress,
-                        child: const _PreviewCard(),
+                        // This animated card is illustrative only. Keeping its
+                        // static subtree out of semantics also prevents the
+                        // transform animation from dirtying semantics parent
+                        // data on every tick.
+                        child: const ExcludeSemantics(child: _PreviewCard()),
                         builder: (context, child) {
                           final progress = _swipeProgress.value;
                           return Transform.translate(
