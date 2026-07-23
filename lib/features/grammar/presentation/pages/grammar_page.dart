@@ -151,20 +151,27 @@ class _GrammarFilters extends ConsumerWidget {
               ref.read(grammarSearchQueryProvider.notifier).setQuery(value),
         ),
         const SizedBox(height: 14),
-        SingleChildScrollView(
-          scrollDirection: Axis.horizontal,
-          child: Row(
-            children: [
-              for (final level in grammarJlptLevels) ...[
-                FilterChip(
-                  label: Center(
-                    child: Text(
-                      !isPro && level != freeGrammarLevel
-                          ? '$level  🔒 Pro'
-                          : level,
-                      maxLines: 1,
-                    ),
+        Wrap(
+          spacing: 8,
+          runSpacing: 8,
+          children: [
+            for (final level in grammarJlptLevels)
+              SizedBox(
+                height: 40,
+                child: FilterChip(
+                  label: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(level, maxLines: 1),
+                      if (!isPro && level != freeGrammarLevel) ...[
+                        const SizedBox(width: 5),
+                        const Icon(Icons.lock_rounded, size: 14),
+                        const SizedBox(width: 3),
+                        const Text('Pro', maxLines: 1),
+                      ],
+                    ],
                   ),
+                  labelPadding: const EdgeInsets.symmetric(horizontal: 4),
                   selected: selectedLevel == level,
                   onSelected: (_) async {
                     if (!isPro && level != freeGrammarLevel) {
@@ -176,10 +183,8 @@ class _GrammarFilters extends ConsumerWidget {
                         .selectLevel(level);
                   },
                 ),
-                if (level != grammarJlptLevels.last) const SizedBox(width: 8),
-              ],
-            ],
-          ),
+              ),
+          ],
         ),
       ],
     );

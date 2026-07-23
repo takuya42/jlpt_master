@@ -555,129 +555,137 @@ class _VocabularyQuizCard extends ConsumerWidget {
                 ),
               ),
             ),
-            Padding(
-              padding: const EdgeInsets.fromLTRB(28, 16, 28, 16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  SizedBox(
-                    height: 48,
-                    child: Stack(
-                      alignment: Alignment.center,
+            LayoutBuilder(
+              builder: (context, constraints) => SingleChildScrollView(
+                padding: const EdgeInsets.fromLTRB(28, 16, 28, 16),
+                child: ConstrainedBox(
+                  constraints: BoxConstraints(
+                    minHeight: constraints.maxHeight - 32,
+                  ),
+                  child: IntrinsicHeight(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
-                        Padding(
-                          padding: const EdgeInsets.only(right: 96),
-                          child: Row(
-                            children: [
-                              Icon(
-                                Icons.menu_book_rounded,
-                                size: 22,
-                                color: cardTheme.secondaryTextColor,
-                              ),
-                              const SizedBox(width: 8),
-                              Expanded(
-                                child: Text(
-                                  'Vocabulary Quest',
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                  style: theme.textTheme.titleMedium?.copyWith(
-                                    fontWeight: FontWeight.w900,
-                                    letterSpacing: 1.2,
-                                    color: cardTheme.secondaryTextColor,
-                                    shadows: cardTheme.textShadow,
+                        SizedBox(
+                            height: 48,
+                            child: Stack(
+                              alignment: Alignment.center,
+                              children: [
+                                Padding(
+                                  padding: const EdgeInsets.only(right: 96),
+                                  child: Row(
+                                    children: [
+                                      Icon(
+                                        Icons.menu_book_rounded,
+                                        size: 22,
+                                        color: cardTheme.secondaryTextColor,
+                                      ),
+                                      const SizedBox(width: 8),
+                                      Expanded(
+                                        child: Text(
+                                          'Vocabulary Quest',
+                                          maxLines: 1,
+                                          overflow: TextOverflow.ellipsis,
+                                          style: theme.textTheme.titleMedium?.copyWith(
+                                            fontWeight: FontWeight.w900,
+                                            letterSpacing: 1.2,
+                                            color: cardTheme.secondaryTextColor,
+                                            shadows: cardTheme.textShadow,
+                                          ),
+                                        ),
+                                      ),
+                                    ],
                                   ),
                                 ),
-                              ),
-                            ],
-                          ),
+                                Positioned(
+                                  top: 0,
+                                  right: 0,
+                                  child: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      IconButton(
+                                        constraints: const BoxConstraints(
+                                          minWidth: 48,
+                                          minHeight: 48,
+                                        ),
+                                        tooltip: isFavorite
+                                            ? 'Favorite / お気に入り解除'
+                                            : 'Favorite / お気に入り追加',
+                                        onPressed: () => toggleFavorite(ref, word),
+                                        icon: Icon(
+                                          isFavorite
+                                              ? Icons.favorite
+                                              : Icons.favorite_border,
+                                          color: isFavorite ? Colors.red : Colors.grey,
+                                        ),
+                                      ),
+                                      IconButton(
+                                        constraints: const BoxConstraints(
+                                          minWidth: 48,
+                                          minHeight: 48,
+                                        ),
+                                        tooltip: 'Details / 詳細',
+                                        onPressed: () => context.push(
+                                          AppRoute.vocabularyDetailPath(word.id),
+                                          extra: word,
+                                        ),
+                                        icon: const Icon(Icons.open_in_new_rounded),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            ),
                         ),
-                        Positioned(
-                          top: 0,
-                          right: 0,
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              IconButton(
-                                constraints: const BoxConstraints(
-                                  minWidth: 48,
-                                  minHeight: 48,
-                                ),
-                                tooltip: isFavorite
-                                    ? 'Favorite / お気に入り解除'
-                                    : 'Favorite / お気に入り追加',
-                                onPressed: () => toggleFavorite(ref, word),
-                                icon: Icon(
-                                  isFavorite
-                                      ? Icons.favorite
-                                      : Icons.favorite_border,
-                                  color: isFavorite ? Colors.red : Colors.grey,
-                                ),
-                              ),
-                              IconButton(
-                                constraints: const BoxConstraints(
-                                  minWidth: 48,
-                                  minHeight: 48,
-                                ),
-                                tooltip: 'Details / 詳細',
-                                onPressed: () => context.push(
-                                  AppRoute.vocabularyDetailPath(word.id),
-                                  extra: word,
-                                ),
-                                icon: const Icon(Icons.open_in_new_rounded),
-                              ),
-                            ],
-                          ),
+                        const SizedBox(height: 10),
+                        AnimatedSwitcher(
+                            duration: const Duration(milliseconds: 180),
+                            transitionBuilder: (child, animation) => FadeTransition(opacity: animation, child: child),
+                            child: _VocabularyPrompt(
+                              key: ValueKey('${word.id}-${direction.name}'),
+                              word: word,
+                              direction: direction,
+                            ),
                         ),
-                      ],
-                    ),
+                        const Spacer(),
+                        Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 20),
+                            child: _GlassTextField(
+                              controller: answerController,
+                              enabled: !isAnswered,
+                              labelText: direction.inputLabel,
+                              onChanged: (value) {
+                                onInput();
+                                ref.read(vocabularyQuizProvider.notifier).updateAnswer(value);
+                              },
+                              onSubmitted: (_) {
+                                if (!isAnswered) _checkAnswer(context, ref);
+                              },
+                            ),
+                        ),
+                        const SizedBox(height: 10),
+                        PageTransitionSwitcher(
+                            duration: const Duration(milliseconds: 360),
+                            reverse: !isAnswered,
+                            transitionBuilder: (child, animation, secondaryAnimation) => FadeScaleTransition(animation: animation, child: child),
+                            child: !isAnswered
+                                ? _PressScaleButton(key: const ValueKey('check'), enabled: state.answer.trim().isNotEmpty, label: 'Check Answer', icon: Icons.auto_awesome, onPressed: () => _checkAnswer(context, ref))
+                                : Column(
+                                    key: const ValueKey('result'),
+                                    children: [
+                                      Text(state.isCorrect == true ? 'Correct!' : 'Incorrect', style: theme.textTheme.titleLarge?.copyWith(color: state.isCorrect == true ? const Color(0xFF16A34A) : const Color(0xFFEF4444), fontWeight: FontWeight.w900)),
+                                      const SizedBox(height: 8),
+                                      Text('Correct Answer', style: theme.textTheme.labelLarge?.copyWith(color: cardTheme.secondaryTextColor, fontWeight: FontWeight.w800)),
+                                      const SizedBox(height: 4),
+                                      Text(direction.correctAnswerFor(word), textAlign: TextAlign.center, style: theme.textTheme.headlineSmall?.copyWith(color: cardTheme.primaryTextColor, fontWeight: FontWeight.w900, shadows: cardTheme.textShadow)),
+                                      const SizedBox(height: 10),
+                                      const _SwipeForNextHint(),
+                                    ],
+                                  ),
+                                ),
+                    ],
                   ),
-                  const SizedBox(height: 10),
-                  AnimatedSwitcher(
-                    duration: const Duration(milliseconds: 180),
-                    transitionBuilder: (child, animation) => FadeTransition(opacity: animation, child: child),
-                    child: _VocabularyPrompt(
-                      key: ValueKey('${word.id}-${direction.name}'),
-                      word: word,
-                      direction: direction,
-                    ),
-                  ),
-                  const Spacer(),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 20),
-                    child: _GlassTextField(
-                      controller: answerController,
-                      enabled: !isAnswered,
-                      labelText: direction.inputLabel,
-                      onChanged: (value) {
-                        onInput();
-                        ref.read(vocabularyQuizProvider.notifier).updateAnswer(value);
-                      },
-                      onSubmitted: (_) {
-                        if (!isAnswered) _checkAnswer(context, ref);
-                      },
-                    ),
-                  ),
-                  const SizedBox(height: 10),
-                  PageTransitionSwitcher(
-                    duration: const Duration(milliseconds: 360),
-                    reverse: !isAnswered,
-                    transitionBuilder: (child, animation, secondaryAnimation) => FadeScaleTransition(animation: animation, child: child),
-                    child: !isAnswered
-                        ? _PressScaleButton(key: const ValueKey('check'), enabled: state.answer.trim().isNotEmpty, label: 'Check Answer', icon: Icons.auto_awesome, onPressed: () => _checkAnswer(context, ref))
-                        : Column(
-                            key: const ValueKey('result'),
-                            children: [
-                              Text(state.isCorrect == true ? 'Correct!' : 'Incorrect', style: theme.textTheme.titleLarge?.copyWith(color: state.isCorrect == true ? const Color(0xFF16A34A) : const Color(0xFFEF4444), fontWeight: FontWeight.w900)),
-                              const SizedBox(height: 8),
-                              Text('Correct Answer', style: theme.textTheme.labelLarge?.copyWith(color: cardTheme.secondaryTextColor, fontWeight: FontWeight.w800)),
-                              const SizedBox(height: 4),
-                              Text(direction.correctAnswerFor(word), textAlign: TextAlign.center, style: theme.textTheme.headlineSmall?.copyWith(color: cardTheme.primaryTextColor, fontWeight: FontWeight.w900, shadows: cardTheme.textShadow)),
-                              const SizedBox(height: 10),
-                              const _SwipeForNextHint(),
-                            ],
-                          ),
-                  ),
-                ],
+                ),
               ),
             ),
           ],
