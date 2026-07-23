@@ -688,6 +688,7 @@ class _VocabularyQuizCard extends ConsumerWidget {
                 ),
               ),
             ),
+            ),
           ],
         ),
       ),
