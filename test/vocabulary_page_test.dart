@@ -156,11 +156,28 @@ void main() {
     );
     await tester.pump();
 
+    final animatedBuilder = tester.widget<AnimatedBuilder>(
+      find.byType(AnimatedBuilder),
+    );
+    final staticPreview = animatedBuilder.child;
+    expect(staticPreview, isNotNull);
+    expect(staticPreview, isNot(isA<ExcludeSemantics>()));
+    expect(
+      find.ancestor(
+        of: find.byType(AnimatedBuilder),
+        matching: find.byType(ExcludeSemantics),
+      ),
+      findsOneWidget,
+    );
     expect(find.bySemanticsLabel('勉強'), findsNothing);
     expect(find.bySemanticsLabel('study'), findsNothing);
 
     for (var frame = 0; frame < 10; frame++) {
       await tester.pump(const Duration(milliseconds: 16));
+      expect(
+        tester.widget<AnimatedBuilder>(find.byType(AnimatedBuilder)).child,
+        same(staticPreview),
+      );
       expect(tester.takeException(), isNull);
     }
   });

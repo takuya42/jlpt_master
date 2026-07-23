@@ -117,26 +117,31 @@ class _VocabularyStudyDialogState extends State<VocabularyStudyDialog>
                   SizedBox(
                     height: 178,
                     child: Center(
-                      child: AnimatedBuilder(
-                        animation: _swipeProgress,
-                        // This animated card is illustrative only. Keeping its
-                        // static subtree out of semantics also prevents the
-                        // transform animation from dirtying semantics parent
-                        // data on every tick.
-                        child: const ExcludeSemantics(child: _PreviewCard()),
-                        builder: (context, child) {
-                          final progress = _swipeProgress.value;
-                          return Transform.translate(
-                            offset: Offset(
-                              _tutorialSwipeDistance * progress,
-                              0,
-                            ),
-                            child: Transform.rotate(
-                              angle: _tutorialSwipeRotation * progress,
-                              child: child,
-                            ),
-                          );
-                        },
+                      // Exclude the whole animated branch, rather than only
+                      // the card below the transforms. RenderTransform updates
+                      // semantic geometry when its matrix changes, so leaving
+                      // the transforms in the semantics tree dirties semantic
+                      // parent data on every animation tick.
+                      child: ExcludeSemantics(
+                        child: AnimatedBuilder(
+                          animation: _swipeProgress,
+                          // The static card is built once by AnimatedBuilder.
+                          // Only the two transform widgets change per tick.
+                          child: const _PreviewCard(),
+                          builder: (context, child) {
+                            final progress = _swipeProgress.value;
+                            return Transform.translate(
+                              offset: Offset(
+                                _tutorialSwipeDistance * progress,
+                                0,
+                              ),
+                              child: Transform.rotate(
+                                angle: _tutorialSwipeRotation * progress,
+                                child: child,
+                              ),
+                            );
+                          },
+                        ),
                       ),
                     ),
                   ),
