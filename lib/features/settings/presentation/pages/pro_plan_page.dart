@@ -5,6 +5,7 @@ import '../../../../app/theme/app_theme.dart';
 import '../../../../shared/presentation/widgets/app_background.dart';
 import '../../../auth/presentation/providers/auth_providers.dart';
 import '../../data/pro_purchase_service.dart';
+import '../../data/pro_plan_price.dart';
 
 class ProPlanPage extends ConsumerStatefulWidget {
   const ProPlanPage({super.key});
@@ -34,6 +35,8 @@ class _ProPlanPageState extends ConsumerState<ProPlanPage> {
   @override
   Widget build(BuildContext context) {
     final isPro = ref.watch(currentUserProvider).asData?.value?.plan == 'pro';
+    final price = ref.watch(proPlanPriceProvider).asData?.value ??
+        ProPlanPriceFormatter.fallback;
     return Scaffold(
       appBar: AppBar(title: const Text('Pro Plan')),
       body: AppBackground(
@@ -53,6 +56,7 @@ class _ProPlanPageState extends ConsumerState<ProPlanPage> {
                   child: _ProCard(
                     isPro: isPro,
                     isPurchasing: _isPurchasing,
+                    price: price,
                     onPurchase: _startPurchase,
                   ),
                 ),
@@ -69,11 +73,13 @@ class _ProCard extends StatelessWidget {
   const _ProCard({
     required this.isPro,
     required this.isPurchasing,
+    required this.price,
     required this.onPurchase,
   });
 
   final bool isPro;
   final bool isPurchasing;
+  final ProPlanPrice price;
   final VoidCallback onPurchase;
 
   static const _benefits = <(String, String)>[
@@ -167,28 +173,35 @@ class _ProCard extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 22),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            crossAxisAlignment: CrossAxisAlignment.end,
-            children: [
-              Text(
-                '¥980',
-                style: theme.textTheme.displayLarge?.copyWith(
-                  fontWeight: FontWeight.w900,
-                  height: 0.95,
-                ),
-              ),
-              Padding(
-                padding: const EdgeInsets.only(bottom: 7, left: 6),
-                child: Text('/month', style: theme.textTheme.titleMedium),
-              ),
-            ],
+          Text(
+            'Monthly',
+            style: theme.textTheme.titleMedium?.copyWith(
+              fontWeight: FontWeight.w800,
+            ),
           ),
+          const SizedBox(height: 8),
+          Text(
+            price.priceWithPeriod,
+            textAlign: TextAlign.center,
+            style: theme.textTheme.displaySmall?.copyWith(
+              fontWeight: FontWeight.w900,
+              height: 1,
+            ),
+          ),
+          if (price.referencePrice case final referencePrice?) ...[
+            const SizedBox(height: 8),
+            Text(
+              referencePrice,
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: colors.onSurfaceVariant,
+              ),
+            ),
+          ],
           const SizedBox(height: 26),
           _GradientButton(
             enabled: !isPro && !isPurchasing,
             isLoading: isPurchasing,
-            label: isPro ? 'Pro plan active' : 'Start Pro - ¥980/month',
+            label: isPro ? 'Pro plan active' : price.purchaseLabel,
             onPressed: onPurchase,
           ),
           const SizedBox(height: 14),
@@ -199,6 +212,14 @@ class _ProCard extends StatelessWidget {
             ),
           ),
           Text('いつでもキャンセルできます。', style: theme.textTheme.bodySmall),
+          const SizedBox(height: 10),
+          Text(
+            '※ 実際の購入価格はApp Store / Google Playの地域設定に従います。',
+            textAlign: TextAlign.center,
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: colors.onSurfaceVariant,
+            ),
+          ),
         ],
       ),
     );
