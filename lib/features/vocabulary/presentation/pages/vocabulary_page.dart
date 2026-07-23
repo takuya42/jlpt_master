@@ -78,6 +78,14 @@ class _VocabularyPageState extends ConsumerState<VocabularyPage> with TickerProv
     }
   }
 
+  /// Opens the study guide on demand without consulting the onboarding flag.
+  ///
+  /// This is intentionally separate from the first-visit flow in
+  /// [VocabularyOnboardingWidget]: a tap must always open the shared dialog.
+  void _showStudyGuide() {
+    unawaited(showVocabularyStudyDialog(context));
+  }
+
   void _handleCardDragStart(DragStartDetails details) {
     final asyncState = ref.read(vocabularyQuizProvider);
     final state = asyncState.hasValue ? asyncState.value : null;
@@ -164,7 +172,7 @@ class _VocabularyPageState extends ConsumerState<VocabularyPage> with TickerProv
             IconButton(
               tooltip: '使い方',
               icon: const Icon(Icons.help_outline_rounded),
-              onPressed: () => showVocabularyStudyDialog(context),
+              onPressed: _showStudyGuide,
             ),
           ],
         ),
