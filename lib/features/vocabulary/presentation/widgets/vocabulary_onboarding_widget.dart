@@ -8,11 +8,16 @@ import 'vocabulary_swipe_motion.dart';
 
 /// Shows the same study guide used by onboarding and the AppBar help action.
 Future<bool> showVocabularyStudyDialog(BuildContext context) async {
+  debugPrint('showDialog start');
   final dismissedWithButton = await showDialog<bool>(
     context: context,
     useRootNavigator: true,
-    builder: (context) => const VocabularyStudyDialog(),
+    builder: (context) {
+      debugPrint('dialog build');
+      return const VocabularyStudyDialog();
+    },
   );
+  debugPrint('dialog closed');
   return dismissedWithButton ?? false;
 }
 
@@ -26,10 +31,18 @@ class VocabularyStudyDialog extends StatefulWidget {
 
 class _VocabularyStudyDialogState extends State<VocabularyStudyDialog>
     with SingleTickerProviderStateMixin {
-  late final AnimationController _gestureController = AnimationController(
-    vsync: this,
-    duration: const Duration(milliseconds: 1800),
-  )..repeat();
+  late final AnimationController _gestureController;
+
+  @override
+  void initState() {
+    super.initState();
+    _gestureController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1800),
+    );
+    debugPrint('dialog animation start');
+    _gestureController.repeat();
+  }
 
   @override
   void dispose() {
@@ -39,6 +52,7 @@ class _VocabularyStudyDialogState extends State<VocabularyStudyDialog>
 
   @override
   Widget build(BuildContext context) {
+    debugPrint('VocabularyStudyDialog build');
     final theme = Theme.of(context);
     final colors = theme.colorScheme;
 
@@ -129,10 +143,10 @@ class _VocabularyStudyDialogState extends State<VocabularyStudyDialog>
       ),
       actions: [
         FilledButton(
-          onPressed: () => Navigator.of(
-            context,
-            rootNavigator: true,
-          ).pop(true),
+          // The builder's context belongs to the navigator selected by
+          // showDialog, so this always removes the route that owns the modal
+          // barrier, including when the page is inside a nested Navigator.
+          onPressed: () => Navigator.of(context).pop(true),
           child: const Text('Close / 閉じる'),
         ),
       ],
@@ -267,5 +281,8 @@ class _VocabularyOnboardingWidgetState
   }
 
   @override
-  Widget build(BuildContext context) => widget.child;
+  Widget build(BuildContext context) {
+    debugPrint('VocabularyOnboardingWidget build');
+    return widget.child;
+  }
 }

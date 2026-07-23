@@ -122,6 +122,54 @@ void main() {
     }
   });
 
+  testWidgets('study dialog completes its build, animation, and route', (
+    tester,
+  ) async {
+    final messages = <String>[];
+    final previousDebugPrint = debugPrint;
+    debugPrint = (message, {wrapWidth}) {
+      if (message != null) messages.add(message);
+    };
+    addTearDown(() => debugPrint = previousDebugPrint);
+
+    late BuildContext pageContext;
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Builder(
+          builder: (context) {
+            pageContext = context;
+            return const Scaffold();
+          },
+        ),
+      ),
+    );
+
+    final result = showVocabularyStudyDialog(pageContext);
+    await tester.pump();
+
+    expect(messages, containsAllInOrder(<String>[
+      'showDialog start',
+      'dialog build',
+      'dialog animation start',
+      'VocabularyStudyDialog build',
+    ]));
+    expect(tester.takeException(), isNull);
+    expect(
+      find.byKey(const ValueKey('vocabulary-study-dialog')),
+      findsOneWidget,
+    );
+
+    await tester.tap(find.text('Close / 閉じる'));
+    await tester.pumpAndSettle();
+
+    expect(await result, isTrue);
+    expect(messages, contains('dialog closed'));
+    expect(
+      find.byKey(const ValueKey('vocabulary-study-dialog')),
+      findsNothing,
+    );
+  });
+
   testWidgets('help action reopens the shared study dialog', (tester) async {
     SharedPreferences.setMockInitialValues({
       'hasSeenVocabularyOnboarding': true,
