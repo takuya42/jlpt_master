@@ -126,7 +126,7 @@ class _VocabularyStudyDialogState extends State<VocabularyStudyDialog>
                             ),
                             weight: 20,
                           ),
-                          const TweenSequenceItem(
+                          TweenSequenceItem(
                             tween: ConstantTween(0.0),
                             weight: 50,
                           ),
