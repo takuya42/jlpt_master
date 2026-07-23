@@ -7,6 +7,15 @@ import '../../../../app/constants/app_urls.dart';
 import '../../../../app/navigation/app_route.dart';
 import '../../../../shared/presentation/widgets/app_background.dart';
 import '../../../auth/presentation/providers/auth_providers.dart';
+import '../../../favorites/presentation/providers/favorite_providers.dart';
+import '../../../grammar/presentation/providers/grammar_providers.dart';
+import '../../../home/presentation/providers/home_content_provider.dart';
+import '../../../learning/presentation/providers/learning_providers.dart';
+import '../../../notes/presentation/providers/notes_providers.dart';
+import '../../../study_stats/presentation/providers/study_stats_provider.dart';
+import '../../../usage_limits/data/usage_limit_service.dart';
+import '../../../vocabulary/presentation/providers/vocabulary_providers.dart';
+import '../providers/account_deletion_provider.dart';
 import '../providers/theme_mode_provider.dart';
 
 class SettingsPage extends ConsumerStatefulWidget {
@@ -177,12 +186,10 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
     final shouldDelete = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Delete Account\nアカウントを削除'),
+        title: const Text('Delete Account\n退会'),
         content: const Text(
-          'Are you sure you want to permanently delete your account?\n'
-          'This action cannot be undone.\n\n'
-          'アカウントを完全に削除しますか？\n'
-          'この操作は元に戻せません。',
+          '退会すると学習履歴・メモ・お気に入りなどのデータは削除され、'
+          '元に戻せません。',
         ),
         actions: [
           TextButton(
@@ -206,9 +213,10 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
     setState(() => _isDeletingAccount = true);
     final messenger = ScaffoldMessenger.of(context);
     try {
-      await ref.read(authRepositoryProvider).deleteCurrentUserAccount();
+      await ref.read(accountDeletionServiceProvider).deleteAccount();
       if (!mounted) return;
-      context.go(AppRoute.home.path);
+      _invalidateUserState();
+      context.go(AppRoute.login.path);
       messenger.showSnackBar(
         const SnackBar(content: Text('Account deleted successfully.')),
       );
@@ -220,6 +228,36 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
     } finally {
       if (mounted) setState(() => _isDeletingAccount = false);
     }
+  }
+
+  void _invalidateUserState() {
+    // Drop every provider that can retain user-owned or locally persisted
+    // values. The next account starts from newly loaded, empty state.
+    ref
+      ..invalidate(authStateProvider)
+      ..invalidate(currentUserProvider)
+      ..invalidate(favoriteVocabularyProvider)
+      ..invalidate(favoriteGrammarProvider)
+      ..invalidate(homeContentProvider)
+      ..invalidate(grammarPatternsProvider)
+      ..invalidate(grammarPatternProvider)
+      ..invalidate(grammarSearchQueryProvider)
+      ..invalidate(selectedGrammarJlptLevelProvider)
+      ..invalidate(studiedGrammarIdsProvider)
+      ..invalidate(favoritesProvider)
+      ..invalidate(learningStatisticsProvider)
+      ..invalidate(favoriteEntriesProvider)
+      ..invalidate(learningGoalProvider)
+      ..invalidate(noteProvider)
+      ..invalidate(studyStatsProvider)
+      ..invalidate(isProProvider)
+      ..invalidate(vocabularyQuizProvider)
+      ..invalidate(vocabularyWordsProvider)
+      ..invalidate(vocabularyWordByIdProvider)
+      ..invalidate(vocabularySearchQueryProvider)
+      ..invalidate(selectedJlptLevelProvider)
+      ..invalidate(selectedVocabularyJlptProvider)
+      ..invalidate(themeModeControllerProvider);
   }
 
   @override
