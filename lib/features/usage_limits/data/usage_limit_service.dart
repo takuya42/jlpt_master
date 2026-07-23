@@ -54,9 +54,10 @@ class UsageLimitService {
   /// not write usage counters.
   Future<UsageLimitDecision> recordVocabularyAnswer() async {
     final uid = _uid;
-    // Guests retain the existing try-before-sign-in experience. Once an
-    // account exists, Firestore is the only source of truth for its usage.
-    if (uid == null) return UsageLimitDecision.allowed;
+    // Never fail open while Firebase Auth is still resolving. Allowing an
+    // answer here bypasses Firestore entirely and was the reason the daily
+    // limit could be exceeded.
+    if (uid == null) return UsageLimitDecision.limitReached;
     final userRef = _firestore.collection('users').doc(uid);
 
     return _firestore.runTransaction((transaction) async {
@@ -72,18 +73,13 @@ class UsageLimitService {
         return UsageLimitDecision.limitReached;
       }
 
-      transaction.set(
-        userRef,
-        {
-          'freeUsage': {
-            UsageFeature.vocabulary.name: {
-              'date': _today,
-              'answeredCount': answeredCount + 1,
-            },
-          },
-        },
-        SetOptions(merge: true),
-      );
+      // Dot notation updates only this feature's counter and preserves any
+      // sibling counters already stored under freeUsage.
+      transaction.update(userRef, {
+        'freeUsage.${UsageFeature.vocabulary.name}.date': _today,
+        'freeUsage.${UsageFeature.vocabulary.name}.answeredCount':
+            answeredCount + 1,
+      });
       return UsageLimitDecision.allowed;
     });
   }
