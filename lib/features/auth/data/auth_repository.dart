@@ -140,8 +140,11 @@ class AuthRepository {
       'grammar_history',
       'learning_history',
       'study_progress',
+      'notes',
       'statistics',
       'settings',
+      'question_history',
+      'usage_history',
     ];
 
     for (final collectionName in collectionNames) {
