@@ -216,7 +216,9 @@ void main() {
     );
   });
 
-  testWidgets('help action reopens the shared study dialog', (tester) async {
+  testWidgets('does not show an AppBar help action after onboarding', (
+    tester,
+  ) async {
     SharedPreferences.setMockInitialValues({
       'hasSeenVocabularyOnboarding': true,
     });
@@ -232,61 +234,9 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    expect(find.byIcon(Icons.help_outline_rounded), findsOneWidget);
+    expect(find.byIcon(Icons.help_outline_rounded), findsNothing);
+    expect(find.byTooltip('使い方'), findsNothing);
     expect(find.text('How to Study'), findsNothing);
-    await tester.tap(find.byTooltip('使い方'));
-    await tester.pumpAndSettle();
-
-    expect(find.text('How to Study'), findsOneWidget);
-    expect(find.text('Start Learning'), findsOneWidget);
-
-    await tester.tap(find.text('Start Learning'));
-    await tester.pumpAndSettle();
-    expect(find.text('How to Study'), findsNothing);
-
-    await tester.tap(find.byTooltip('使い方'));
-    await tester.pumpAndSettle();
-    expect(find.text('How to Study'), findsOneWidget);
-
-    final preferences = await SharedPreferences.getInstance();
-    expect(preferences.getBool('hasSeenVocabularyOnboarding'), isTrue);
-  });
-
-  testWidgets('help action uses the root navigator from a nested navigator', (
-    tester,
-  ) async {
-    SharedPreferences.setMockInitialValues({
-      'hasSeenVocabularyOnboarding': true,
-    });
-    final nestedNavigatorKey = GlobalKey<NavigatorState>();
-
-    await tester.pumpWidget(
-      ProviderScope(
-        overrides: [
-          vocabularyRepositoryProvider.overrideWithValue(
-            MockVocabularyRepository(),
-          ),
-        ],
-        child: MaterialApp(
-          home: Navigator(
-            key: nestedNavigatorKey,
-            onGenerateRoute: (_) => MaterialPageRoute<void>(
-              builder: (_) => const VocabularyPage(),
-            ),
-          ),
-        ),
-      ),
-    );
-    await tester.pumpAndSettle();
-
-    await tester.tap(find.byTooltip('使い方'));
-    await tester.pumpAndSettle();
-    expect(find.text('How to Study'), findsOneWidget);
-
-    await tester.tap(find.text('Start Learning'));
-    await tester.pumpAndSettle();
-    expect(find.text('How to Study'), findsNothing);
-    expect(nestedNavigatorKey.currentState!.canPop(), isFalse);
   });
 
   testWidgets('barrier dismissal does not mark onboarding as seen', (
