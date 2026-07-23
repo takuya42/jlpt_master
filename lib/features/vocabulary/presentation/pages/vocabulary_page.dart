@@ -13,6 +13,8 @@ import '../../../../app/navigation/app_route.dart';
 import '../../../../app/theme/vocabulary_card_theme.dart';
 import '../../../../shared/presentation/widgets/app_background.dart';
 import '../../../../shared/presentation/widgets/app_state_views.dart';
+import '../../../../shared/presentation/widgets/upgrade_dialog.dart';
+import '../../../usage_limits/data/usage_limit_service.dart';
 import '../../domain/vocabulary_word.dart';
 import '../providers/vocabulary_providers.dart';
 import '../widgets/vocabulary_onboarding_widget.dart';
@@ -482,6 +484,14 @@ class _VocabularyQuizCard extends ConsumerWidget {
   final double dragProgress;
   final VoidCallback onInput;
 
+  Future<void> _checkAnswer(BuildContext context, WidgetRef ref) async {
+    final decision =
+        await ref.read(vocabularyQuizProvider.notifier).checkAnswer();
+    if (decision == UsageLimitDecision.limitReached && context.mounted) {
+      await showUpgradeDialog(context);
+    }
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
@@ -643,7 +653,7 @@ class _VocabularyQuizCard extends ConsumerWidget {
                         ref.read(vocabularyQuizProvider.notifier).updateAnswer(value);
                       },
                       onSubmitted: (_) {
-                        if (!isAnswered) ref.read(vocabularyQuizProvider.notifier).checkAnswer();
+                        if (!isAnswered) _checkAnswer(context, ref);
                       },
                     ),
                   ),
@@ -653,7 +663,7 @@ class _VocabularyQuizCard extends ConsumerWidget {
                     reverse: !isAnswered,
                     transitionBuilder: (child, animation, secondaryAnimation) => FadeScaleTransition(animation: animation, child: child),
                     child: !isAnswered
-                        ? _PressScaleButton(key: const ValueKey('check'), enabled: state.answer.trim().isNotEmpty, label: 'Check Answer', icon: Icons.auto_awesome, onPressed: () => ref.read(vocabularyQuizProvider.notifier).checkAnswer())
+                        ? _PressScaleButton(key: const ValueKey('check'), enabled: state.answer.trim().isNotEmpty, label: 'Check Answer', icon: Icons.auto_awesome, onPressed: () => _checkAnswer(context, ref))
                         : Column(
                             key: const ValueKey('result'),
                             children: [

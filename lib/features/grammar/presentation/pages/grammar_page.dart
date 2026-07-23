@@ -6,11 +6,13 @@ import 'package:go_router/go_router.dart';
 
 import '../../../../shared/presentation/widgets/app_background.dart';
 import '../../../../shared/presentation/widgets/app_state_views.dart';
+import '../../../../shared/presentation/widgets/upgrade_dialog.dart';
 import '../../../../app/navigation/app_route.dart';
 import '../../domain/grammar_pattern.dart';
 import '../providers/grammar_providers.dart';
 import '../../../study_stats/presentation/providers/study_stats_provider.dart';
 import '../widgets/grammar_studied_toggle.dart';
+import '../../../usage_limits/data/usage_limit_service.dart';
 
 class GrammarPage extends ConsumerStatefulWidget {
   const GrammarPage({super.key});
@@ -136,6 +138,7 @@ class _GrammarFilters extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final selectedLevel = ref.watch(selectedGrammarJlptLevelProvider);
+    final isPro = ref.watch(isProProvider).asData?.value ?? false;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -148,21 +151,35 @@ class _GrammarFilters extends ConsumerWidget {
               ref.read(grammarSearchQueryProvider.notifier).setQuery(value),
         ),
         const SizedBox(height: 14),
-        Row(
-          children: [
-            for (final level in grammarJlptLevels) ...[
-              Expanded(
-                child: FilterChip(
-                  label: Center(child: Text(level, maxLines: 1)),
+        SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          child: Row(
+            children: [
+              for (final level in grammarJlptLevels) ...[
+                FilterChip(
+                  label: Center(
+                    child: Text(
+                      !isPro && level != freeGrammarLevel
+                          ? '$level  🔒 Pro'
+                          : level,
+                      maxLines: 1,
+                    ),
+                  ),
                   selected: selectedLevel == level,
-                  onSelected: (_) => ref
-                      .read(selectedGrammarJlptLevelProvider.notifier)
-                      .selectLevel(level),
+                  onSelected: (_) async {
+                    if (!isPro && level != freeGrammarLevel) {
+                      await showUpgradeDialog(context);
+                      return;
+                    }
+                    ref
+                        .read(selectedGrammarJlptLevelProvider.notifier)
+                        .selectLevel(level);
+                  },
                 ),
-              ),
-              if (level != grammarJlptLevels.last) const SizedBox(width: 8),
+                if (level != grammarJlptLevels.last) const SizedBox(width: 8),
+              ],
             ],
-          ],
+          ),
         ),
       ],
     );

@@ -6,6 +6,7 @@ import '../../data/vocabulary_repository.dart';
 import '../../../../features/favorites/presentation/providers/favorite_providers.dart';
 import '../../../../features/learning/presentation/providers/learning_providers.dart';
 import '../../../../features/study_stats/presentation/providers/study_stats_provider.dart';
+import '../../../../features/usage_limits/data/usage_limit_service.dart';
 import '../../domain/vocabulary_word.dart';
 
 const jlptLevels = ['N5', 'N4', 'N3', 'N2', 'N1'];
@@ -116,6 +117,7 @@ final vocabularyQuizProvider =
 
 class VocabularyQuizNotifier extends AsyncNotifier<VocabularyQuizState> {
   bool _isPrefetching = false;
+  bool _isCheckingAnswer = false;
   @override
   Future<VocabularyQuizState> build() async {
     debugPrint('vocabularyQuizProvider build start');
@@ -159,34 +161,47 @@ class VocabularyQuizNotifier extends AsyncNotifier<VocabularyQuizState> {
     state = AsyncData(current.copyWith(answer: '', clearResult: true));
   }
 
-  Future<void> checkAnswer() async {
-    if (!state.hasValue) {
-      return;
+  Future<UsageLimitDecision> checkAnswer() async {
+    if (_isCheckingAnswer || !state.hasValue) {
+      return UsageLimitDecision.allowed;
     }
     final current = state.value;
     final word = current?.word;
     if (current == null || word == null) {
-      return;
+      return UsageLimitDecision.allowed;
     }
 
-    final direction = ref.read(quizDirectionProvider);
-    final normalizedAnswer = _normalize(current.answer);
-    final bool isCorrect;
-    if (direction == QuizDirection.japaneseToEnglish) {
-      isCorrect =
-          normalizedAnswer == _normalize(direction.correctAnswerFor(word));
-    } else {
-      isCorrect = normalizedAnswer == _normalize(word.word) ||
-          normalizedAnswer == _normalize(word.reading);
+    _isCheckingAnswer = true;
+    try {
+      final usageDecision = await ref
+          .read(usageLimitServiceProvider)
+          .recordVocabularyAnswer();
+      if (usageDecision == UsageLimitDecision.limitReached) {
+        return usageDecision;
+      }
+
+      final direction = ref.read(quizDirectionProvider);
+      final normalizedAnswer = _normalize(current.answer);
+      final bool isCorrect;
+      if (direction == QuizDirection.japaneseToEnglish) {
+        isCorrect =
+            normalizedAnswer == _normalize(direction.correctAnswerFor(word));
+      } else {
+        isCorrect = normalizedAnswer == _normalize(word.word) ||
+            normalizedAnswer == _normalize(word.reading);
+      }
+      state = AsyncData(current.copyWith(isCorrect: isCorrect));
+      await Future.wait([
+        ref.read(userLearningRepositoryProvider).recordVocabularyQuizAnswer(
+              wordId: word.id,
+              isCorrect: isCorrect,
+            ),
+        ref.read(studyStatsProvider.notifier).markVocabularySolved(word.id),
+      ]);
+      return UsageLimitDecision.allowed;
+    } finally {
+      _isCheckingAnswer = false;
     }
-    state = AsyncData(current.copyWith(isCorrect: isCorrect));
-    await Future.wait([
-      ref.read(userLearningRepositoryProvider).recordVocabularyQuizAnswer(
-            wordId: word.id,
-            isCorrect: isCorrect,
-          ),
-      ref.read(studyStatsProvider.notifier).markVocabularySolved(word.id),
-    ]);
   }
 
   Future<void> nextQuestion() async {
