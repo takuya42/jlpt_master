@@ -35,6 +35,7 @@ class VocabularyStudyDialog extends StatefulWidget {
 class _VocabularyStudyDialogState extends State<VocabularyStudyDialog>
     with SingleTickerProviderStateMixin {
   late final AnimationController _gestureController;
+  late final Animation<double> _swipeProgress;
 
   @override
   void initState() {
@@ -43,6 +44,22 @@ class _VocabularyStudyDialogState extends State<VocabularyStudyDialog>
       vsync: this,
       duration: const Duration(seconds: 2),
     );
+    _swipeProgress = TweenSequence<double>([
+      TweenSequenceItem(
+        tween: Tween(begin: 0.0, end: 1.0).chain(
+          CurveTween(curve: Curves.easeInOut),
+        ),
+        weight: 20,
+      ),
+      TweenSequenceItem(tween: ConstantTween(1.0), weight: 10),
+      TweenSequenceItem(
+        tween: Tween(begin: 1.0, end: 0.0).chain(
+          CurveTween(curve: Curves.easeInOut),
+        ),
+        weight: 20,
+      ),
+      TweenSequenceItem(tween: ConstantTween(0.0), weight: 50),
+    ]).animate(_gestureController);
     debugPrint('dialog animation start');
     _gestureController.repeat();
   }
@@ -106,40 +123,24 @@ class _VocabularyStudyDialogState extends State<VocabularyStudyDialog>
                   const SizedBox(height: 24),
                   SizedBox(
                     height: 178,
-                    child: AnimatedBuilder(
-                      animation: _gestureController,
-                      builder: (context, child) {
-                        final progress = TweenSequence<double>([
-                          TweenSequenceItem(
-                            tween: Tween(begin: 0.0, end: 1.0).chain(
-                              CurveTween(curve: Curves.easeInOut),
+                    child: Center(
+                      child: AnimatedBuilder(
+                        animation: _swipeProgress,
+                        child: const _PreviewCard(),
+                        builder: (context, child) {
+                          final progress = _swipeProgress.value;
+                          return Transform.translate(
+                            offset: Offset(
+                              _tutorialSwipeDistance * progress,
+                              0,
                             ),
-                            weight: 20,
-                          ),
-                          TweenSequenceItem(
-                            tween: ConstantTween(1.0),
-                            weight: 10,
-                          ),
-                          TweenSequenceItem(
-                            tween: Tween(begin: 1.0, end: 0.0).chain(
-                              CurveTween(curve: Curves.easeInOut),
+                            child: Transform.rotate(
+                              angle: _tutorialSwipeRotation * progress,
+                              child: child,
                             ),
-                            weight: 20,
-                          ),
-                          TweenSequenceItem(
-                            tween: ConstantTween(0.0),
-                            weight: 50,
-                          ),
-                        ]).transform(_gestureController.value);
-                        return Transform.translate(
-                          offset: Offset(_tutorialSwipeDistance * progress, 0),
-                          child: Transform.rotate(
-                            angle: _tutorialSwipeRotation * progress,
-                            child: child,
-                          ),
-                        );
-                      },
-                      child: const _MiniVocabularyCard(),
+                          );
+                        },
+                      ),
                     ),
                   ),
                 ],
@@ -162,21 +163,23 @@ class _VocabularyStudyDialogState extends State<VocabularyStudyDialog>
   }
 }
 
-class _MiniVocabularyCard extends StatelessWidget {
-  const _MiniVocabularyCard();
+class _PreviewCard extends StatelessWidget {
+  const _PreviewCard();
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final cardTheme = theme.extension<VocabularyCardTheme>() ??
         VocabularyCardTheme.forBrightness(theme.brightness);
-    return Center(
-      child: Container(
-        key: const ValueKey('tutorial-vocabulary-card'),
-        width: 168,
-        height: 142,
+
+    return Card(
+      key: const ValueKey('tutorial-vocabulary-card'),
+      margin: EdgeInsets.zero,
+      elevation: 0,
+      clipBehavior: Clip.antiAlias,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+      child: DecoratedBox(
         decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(24),
           gradient: LinearGradient(
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
@@ -197,48 +200,37 @@ class _MiniVocabularyCard extends StatelessWidget {
             ),
           ],
         ),
-        child: Stack(
-          children: [
-            Positioned(
-              right: -22,
-              top: -28,
-              child: DecoratedBox(
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: cardTheme.decorationColor,
+        child: SizedBox(
+          width: 168,
+          height: 142,
+          child: Padding(
+            padding: const EdgeInsets.all(18),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Icon(
+                  Icons.menu_book_rounded,
+                  size: 18,
+                  color: cardTheme.secondaryTextColor,
                 ),
-                child: const SizedBox.square(dimension: 78),
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.all(18),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Icon(
-                    Icons.menu_book_rounded,
-                    size: 18,
+                const Spacer(),
+                Text(
+                  '勉強',
+                  style: theme.textTheme.headlineMedium?.copyWith(
+                    color: cardTheme.primaryTextColor,
+                    fontWeight: FontWeight.w700,
+                    shadows: cardTheme.textShadow,
+                  ),
+                ),
+                Text(
+                  'study',
+                  style: theme.textTheme.bodyMedium?.copyWith(
                     color: cardTheme.secondaryTextColor,
                   ),
-                  const Spacer(),
-                  Text(
-                    '勉強',
-                    style: theme.textTheme.headlineMedium?.copyWith(
-                      color: cardTheme.primaryTextColor,
-                      fontWeight: FontWeight.w700,
-                      shadows: cardTheme.textShadow,
-                    ),
-                  ),
-                  Text(
-                    'study',
-                    style: theme.textTheme.bodyMedium?.copyWith(
-                      color: cardTheme.secondaryTextColor,
-                    ),
-                  ),
-                ],
-              ),
+                ),
+              ],
             ),
-          ],
+          ),
         ),
       ),
     );
