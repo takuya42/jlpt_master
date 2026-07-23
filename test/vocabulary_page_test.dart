@@ -61,7 +61,7 @@ void main() {
     await tester.pump(const Duration(milliseconds: 100));
 
     expect(find.text('How to Study'), findsOneWidget);
-    expect(find.text('Close / 閉じる'), findsOneWidget);
+    expect(find.text('Start Learning'), findsOneWidget);
     expect(
       find.text('Swipe right to go to the next card.'),
       findsOneWidget,
@@ -76,7 +76,7 @@ void main() {
     expect(find.byIcon(Icons.play_arrow_rounded), findsNothing);
     expect(find.textContaining('☝'), findsNothing);
 
-    await tester.tap(find.text('Close / 閉じる'));
+    await tester.tap(find.text('Start Learning'));
     await tester.pumpAndSettle();
     expect(find.text('How to Study'), findsNothing);
 
@@ -145,16 +145,9 @@ void main() {
     expect(tester.getCenter(card).dx, closeTo(restingCenter.dx, 0.1));
   });
 
-  testWidgets('study dialog completes its build, animation, and route', (
+  testWidgets('study dialog closes from the Start Learning action', (
     tester,
   ) async {
-    final messages = <String>[];
-    final previousDebugPrint = debugPrint;
-    debugPrint = (message, {wrapWidth}) {
-      if (message != null) messages.add(message);
-    };
-    addTearDown(() => debugPrint = previousDebugPrint);
-
     late BuildContext pageContext;
     await tester.pumpWidget(
       MaterialApp(
@@ -170,23 +163,16 @@ void main() {
     final result = showVocabularyStudyDialog(pageContext);
     await tester.pump();
 
-    expect(messages, containsAllInOrder(<String>[
-      'showDialog start',
-      'dialog build',
-      'dialog animation start',
-      'VocabularyStudyDialog build',
-    ]));
     expect(tester.takeException(), isNull);
     expect(
       find.byKey(const ValueKey('vocabulary-study-dialog')),
       findsOneWidget,
     );
 
-    await tester.tap(find.text('Close / 閉じる'));
+    await tester.tap(find.text('Start Learning'));
     await tester.pumpAndSettle();
 
     expect(await result, isTrue);
-    expect(messages, contains('dialog closed'));
     expect(
       find.byKey(const ValueKey('vocabulary-study-dialog')),
       findsNothing,
@@ -215,9 +201,9 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('How to Study'), findsOneWidget);
-    expect(find.text('Close / 閉じる'), findsOneWidget);
+    expect(find.text('Start Learning'), findsOneWidget);
 
-    await tester.tap(find.text('Close / 閉じる'));
+    await tester.tap(find.text('Start Learning'));
     await tester.pumpAndSettle();
     expect(find.text('How to Study'), findsNothing);
 
@@ -260,7 +246,7 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('How to Study'), findsOneWidget);
 
-    await tester.tap(find.text('Close / 閉じる'));
+    await tester.tap(find.text('Start Learning'));
     await tester.pumpAndSettle();
     expect(find.text('How to Study'), findsNothing);
     expect(nestedNavigatorKey.currentState!.canPop(), isFalse);

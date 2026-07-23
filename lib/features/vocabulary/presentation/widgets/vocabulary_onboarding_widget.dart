@@ -11,16 +11,11 @@ const _tutorialSwipeRotation = 0.3141592653589793; // 18 degrees.
 
 /// Shows the same study guide used by onboarding and the AppBar help action.
 Future<bool> showVocabularyStudyDialog(BuildContext context) async {
-  debugPrint('showDialog start');
   final dismissedWithButton = await showDialog<bool>(
     context: context,
     useRootNavigator: true,
-    builder: (context) {
-      debugPrint('dialog build');
-      return const VocabularyStudyDialog();
-    },
+    builder: (context) => const VocabularyStudyDialog(),
   );
-  debugPrint('dialog closed');
   return dismissedWithButton ?? false;
 }
 
@@ -60,7 +55,6 @@ class _VocabularyStudyDialogState extends State<VocabularyStudyDialog>
       ),
       TweenSequenceItem(tween: ConstantTween(0.0), weight: 50),
     ]).animate(_gestureController);
-    debugPrint('dialog animation start');
     _gestureController.repeat();
   }
 
@@ -72,7 +66,6 @@ class _VocabularyStudyDialogState extends State<VocabularyStudyDialog>
 
   @override
   Widget build(BuildContext context) {
-    debugPrint('VocabularyStudyDialog build');
     final theme = Theme.of(context);
     final colors = theme.colorScheme;
 
@@ -155,7 +148,7 @@ class _VocabularyStudyDialogState extends State<VocabularyStudyDialog>
           // showDialog, so this always removes the route that owns the modal
           // barrier, including when the page is inside a nested Navigator.
           onPressed: () => Navigator.of(context).pop(true),
-          child: const Text('Close / 閉じる'),
+          child: const Text('Start Learning'),
         ),
       ],
       actionsPadding: const EdgeInsets.fromLTRB(24, 0, 24, 20),
@@ -289,7 +282,6 @@ class _VocabularyOnboardingWidgetState
 
   @override
   Widget build(BuildContext context) {
-    debugPrint('VocabularyOnboardingWidget build');
     return widget.child;
   }
 }
