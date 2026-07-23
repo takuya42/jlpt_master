@@ -3,7 +3,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../shared/presentation/widgets/app_background.dart';
 import '../../../../shared/presentation/widgets/app_state_views.dart';
+import '../../../auth/presentation/providers/auth_providers.dart';
 import '../providers/notes_providers.dart';
+
+const _freeMemoMaxLength = 50;
+const _freeMemoLimitMessage =
+    '無料プランではメモは50文字までです。Proにアップグレードすると無制限で入力できます。';
 
 class NotesPage extends ConsumerWidget {
   const NotesPage({super.key});
@@ -168,6 +173,7 @@ class _MemoEditorState extends ConsumerState<MemoEditor> with TickerProviderStat
 
   @override
   Widget build(BuildContext context) {
+    final isPro = ref.watch(currentUserProvider).asData?.value?.plan == 'pro';
     final editor = _FadeSlideTransition(
       animation: widget.entryAnimation,
       index: 1,
@@ -176,6 +182,7 @@ class _MemoEditorState extends ConsumerState<MemoEditor> with TickerProviderStat
         focusNode: _focusNode,
         onChanged: (_) {},
         expand: widget.entryAnimation != null,
+        isPro: isPro,
       ),
     );
 
@@ -193,6 +200,15 @@ class _MemoEditorState extends ConsumerState<MemoEditor> with TickerProviderStat
 
   Future<void> _save({bool showToast = false}) async {
     final memo = _memoController.text;
+    final isPro = ref.read(currentUserProvider).asData?.value?.plan == 'pro';
+    if (!isPro && memo.characters.length > _freeMemoMaxLength) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text(_freeMemoLimitMessage)),
+        );
+      }
+      return;
+    }
     if (_saving || memo == _lastSavedMemo) {
       if (showToast && mounted) _showSavedToast();
       return;
@@ -260,12 +276,14 @@ class _MemoInputArea extends StatelessWidget {
     required this.focusNode,
     required this.onChanged,
     required this.expand,
+    required this.isPro,
   });
 
   final TextEditingController controller;
   final FocusNode focusNode;
   final ValueChanged<String> onChanged;
   final bool expand;
+  final bool isPro;
 
   @override
   Widget build(BuildContext context) {
@@ -280,6 +298,7 @@ class _MemoInputArea extends StatelessWidget {
       minLines: expand ? null : 8,
       textAlignVertical: TextAlignVertical.top,
       keyboardType: TextInputType.multiline,
+      maxLength: isPro ? null : _freeMemoMaxLength,
       style: theme.textTheme.bodyLarge?.copyWith(color: colorScheme.onSurface),
       decoration: InputDecoration(
         hintText: 'Write your notes...',
@@ -289,6 +308,7 @@ class _MemoInputArea extends StatelessWidget {
         focusedBorder: InputBorder.none,
         filled: false,
         contentPadding: EdgeInsets.zero,
+        helperText: isPro ? null : _freeMemoLimitMessage,
       ),
       onChanged: onChanged,
     );
