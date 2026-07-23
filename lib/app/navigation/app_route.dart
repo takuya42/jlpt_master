@@ -9,6 +9,7 @@ enum AppRoute {
   grammarDetail('/grammar/:grammarId', 'Grammar Detail（文法詳細）'),
   notes('/notes', 'Notes（メモ）'),
   settings('/settings', 'Settings（設定）'),
+  proPlan('/settings/pro', 'Pro Plan'),
   favorite('/favorite', 'Favorite（お気に入り）'),
   learningGoal('/learning-goal', 'Learning Goal（学習目標）');
 
