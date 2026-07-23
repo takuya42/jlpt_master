@@ -145,6 +145,26 @@ void main() {
     expect(tester.getCenter(card).dx, closeTo(restingCenter.dx, 0.1));
   });
 
+  testWidgets('tutorial card is excluded from semantics while animating', (
+    tester,
+  ) async {
+    final semantics = tester.ensureSemantics();
+    addTearDown(semantics.dispose);
+
+    await tester.pumpWidget(
+      const MaterialApp(home: Scaffold(body: VocabularyStudyDialog())),
+    );
+    await tester.pump();
+
+    expect(find.bySemanticsLabel('勉強'), findsNothing);
+    expect(find.bySemanticsLabel('study'), findsNothing);
+
+    for (var frame = 0; frame < 10; frame++) {
+      await tester.pump(const Duration(milliseconds: 16));
+      expect(tester.takeException(), isNull);
+    }
+  });
+
   testWidgets('study dialog closes from the Start Learning action', (
     tester,
   ) async {
