@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../features/remote_config/presentation/startup_gate.dart';
 import '../features/remote_config/remote_config_repository.dart';
 import '../features/settings/presentation/providers/theme_mode_provider.dart';
+import '../features/settings/presentation/providers/purchase_providers.dart';
 import 'navigation/app_router.dart';
 import 'theme/app_theme.dart';
 
@@ -12,6 +13,7 @@ class JlptMasterApp extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    ref.watch(purchaseProvider);
     final router = ref.watch(appRouterProvider);
     final themeMode = ref.watch(themeModeControllerProvider).asData?.value ?? ThemeMode.system;
     return MaterialApp(

@@ -1,53 +1,64 @@
-import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'dart:async';
+
 import 'package:in_app_purchase/in_app_purchase.dart';
 
-import 'pro_plan_price.dart';
+const proMonthlyProductId = 'jlpt_master_pro_monthly';
 
-const proMonthlyProductId = 'pro_monthly';
-
-final proPurchaseServiceProvider = Provider<ProPurchaseService>(
-  (ref) => ProPurchaseService(InAppPurchase.instance),
-);
-
-final proPlanPriceProvider = FutureProvider<ProPlanPrice>((ref) async {
-  final product = await ref.watch(proPurchaseServiceProvider).monthlyProduct();
-  return const ProPlanPriceFormatter().fromProduct(product);
-});
-
-class ProPurchaseService {
-  const ProPurchaseService(this._store);
+class PurchaseService {
+  PurchaseService([InAppPurchase? store])
+      : _store = store ?? InAppPurchase.instance;
 
   final InAppPurchase _store;
 
-  Future<ProductDetails> monthlyProduct() async {
-    if (!await _store.isAvailable()) {
-      throw const ProPurchaseException('The store is currently unavailable.');
-    }
+  Stream<List<PurchaseDetails>> get purchaseStream => _store.purchaseStream;
 
+  Future<ProductDetails> loadMonthlyProduct() async {
+    if (!await _store.isAvailable()) {
+      throw const PurchaseException(
+        'The App Store / Google Play is unavailable.',
+      );
+    }
     final response = await _store.queryProductDetails({proMonthlyProductId});
-    if (response.error != null) {
-      throw ProPurchaseException(response.error!.message);
+    if (response.error case final error?) {
+      throw PurchaseException(error.message);
     }
-    if (response.productDetails.isEmpty) {
-      throw const ProPurchaseException('The Pro plan is currently unavailable.');
+    if (response.notFoundIDs.contains(proMonthlyProductId) ||
+        response.productDetails.isEmpty) {
+      throw const PurchaseException(
+        'Pro Monthly is not available in the store for this account or region.',
+      );
     }
-    return response.productDetails.first;
+    return response.productDetails.firstWhere(
+      (product) => product.id == proMonthlyProductId,
+      orElse: () => throw const PurchaseException(
+        'The store returned an unexpected product.',
+      ),
+    );
   }
 
-  /// Starts the existing App Store / Play Store purchase flow for Pro.
-  Future<void> purchaseMonthlyPro() async {
-    final purchaseParam = PurchaseParam(
-      productDetails: await monthlyProduct(),
+  Future<void> buy(ProductDetails product) async {
+    final started = await _store.buyNonConsumable(
+      purchaseParam: PurchaseParam(productDetails: product),
     );
-    final started = await _store.buyNonConsumable(purchaseParam: purchaseParam);
     if (!started) {
-      throw const ProPurchaseException('The purchase could not be started.');
+      throw const PurchaseException('The purchase could not be started.');
+    }
+  }
+
+  Future<void> restore() => _store.restorePurchases();
+
+  Future<void> complete(PurchaseDetails purchase) async {
+    if (purchase.pendingCompletePurchase) {
+      await _store.completePurchase(purchase);
     }
   }
 }
 
-class ProPurchaseException implements Exception {
-  const ProPurchaseException(this.message);
+class PurchaseException implements Exception {
+  const PurchaseException(this.message);
 
   final String message;
+
+  @override
+  String toString() => message;
 }
