@@ -2,6 +2,8 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../settings/presentation/providers/purchase_providers.dart';
+
 const freeVocabularyLimit = 5;
 const freeGrammarLevel = 'N5';
 const proPlanId = 'pro';
@@ -19,17 +21,21 @@ class UsageLimitService {
     FirebaseFirestore? firestore,
     FirebaseAuth? auth,
     DateTime Function()? now,
+    bool Function()? hasStoreEntitlement,
   })  : _firestore = firestore ?? FirebaseFirestore.instance,
         _auth = auth ?? FirebaseAuth.instance,
-        _now = now ?? DateTime.now;
+        _now = now ?? DateTime.now,
+        _hasStoreEntitlement = hasStoreEntitlement ?? (() => false);
 
   final FirebaseFirestore _firestore;
   final FirebaseAuth _auth;
   final DateTime Function() _now;
+  final bool Function() _hasStoreEntitlement;
 
   String? get _uid => _auth.currentUser?.uid;
 
   Future<bool> isPro() async {
+    if (_hasStoreEntitlement()) return true;
     final uid = _uid;
     if (uid == null) return false;
     final snapshot = await _firestore.collection('users').doc(uid).get();
@@ -53,6 +59,7 @@ class UsageLimitService {
   /// exceed the limit through concurrent Check Answer requests. Pro answers do
   /// not write usage counters.
   Future<UsageLimitDecision> recordVocabularyAnswer() async {
+    if (_hasStoreEntitlement()) return UsageLimitDecision.allowed;
     final uid = _uid;
     // Never fail open while Firebase Auth is still resolving. Allowing an
     // answer here bypasses Firestore entirely and was the reason the daily
@@ -104,7 +111,10 @@ class UsageLimitService {
 }
 
 final usageLimitServiceProvider = Provider<UsageLimitService>(
-  (ref) => UsageLimitService(),
+  (ref) {
+    final storeEntitlement = ref.watch(proStatusProvider);
+    return UsageLimitService(hasStoreEntitlement: () => storeEntitlement);
+  },
 );
 
 final isProProvider = FutureProvider<bool>(

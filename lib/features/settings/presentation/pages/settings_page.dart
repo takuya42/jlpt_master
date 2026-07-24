@@ -16,6 +16,7 @@ import '../../../study_stats/presentation/providers/study_stats_provider.dart';
 import '../../../usage_limits/data/usage_limit_service.dart';
 import '../../../vocabulary/presentation/providers/vocabulary_providers.dart';
 import '../providers/account_deletion_provider.dart';
+import '../providers/purchase_providers.dart';
 import '../providers/theme_mode_provider.dart';
 
 class SettingsPage extends ConsumerStatefulWidget {
@@ -263,6 +264,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final isPro = ref.watch(proStatusProvider);
     return Scaffold(
       appBar: AppBar(),
       body: AppBackground(
@@ -287,8 +289,8 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
                       children: [
                         _SettingsTile(
                           icon: Icons.workspace_premium_outlined,
-                          title: 'Pro Plan',
-                          subtitle: 'Proプラン',
+                          title: isPro ? 'Current Plan · Pro Member' : 'Pro Monthly',
+                          subtitle: isPro ? 'Proプラン利用中' : r'US$6.99 / month',
                           onTap: () => context.go(AppRoute.proPlan.path),
                         ),
                         _SettingsTile(icon: Icons.favorite_border, title: 'Favorites', subtitle: 'お気に入り', onTap: () => context.go(AppRoute.favorite.path)),
