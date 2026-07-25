@@ -64,6 +64,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
     try {
       await ref.read(authRepositoryProvider).signOut();
       if (!mounted) return;
+      _invalidateUserState();
       context.go(AppRoute.home.path);
       messenger.showSnackBar(
         const SnackBar(content: Text('Logged out successfully.')),

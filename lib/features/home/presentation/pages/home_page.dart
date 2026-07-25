@@ -52,21 +52,27 @@ class _HomeContentView extends StatelessWidget {
               icon: Icons.history_rounded,
               title: 'Recently Studied',
               subtitle: '最近学習した単語',
-              child: Column(
-                children: [
-                  for (final item in content.recentHistory)
-                    ListTile(
-                      contentPadding: EdgeInsets.zero,
-                      leading: CircleAvatar(child: Icon(item.icon)),
-                      title: Text(item.title.en, maxLines: 1, overflow: TextOverflow.ellipsis),
-                      subtitle: Text(
-                        '${item.title.ja}・${item.completedAtLabel}・Accuracy 正答率 ${item.accuracyPercent}%',
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
+              child: content.recentHistory.isEmpty
+                  ? const Text('No learning history yet.\n学習履歴はまだありません。')
+                  : Column(
+                      children: [
+                        for (final item in content.recentHistory)
+                          ListTile(
+                            contentPadding: EdgeInsets.zero,
+                            leading: CircleAvatar(child: Icon(item.icon)),
+                            title: Text(
+                              item.title.en,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                            subtitle: Text(
+                              '${item.title.ja}・${item.completedAtLabel}・Accuracy 正答率 ${item.accuracyPercent}%',
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                      ],
                     ),
-                ],
-              ),
             ),
           ],
         ),
