@@ -61,16 +61,24 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
 
     setState(() => _isLoggingOut = true);
     final messenger = ScaffoldMessenger.of(context);
+    final uid = ref.read(activeUserIdProvider);
+    final statsRepository = ref.read(studyStatsRepositoryProvider);
+    // Close the privacy boundary before any asynchronous sign-out work. This
+    // makes all user-scoped providers synchronously expose empty state.
+    ref.read(activeUserIdProvider.notifier).clear();
+    _invalidateUserState();
     try {
+      if (uid != null) await clearUserFavoriteCache(uid);
+      await statsRepository.clear();
       await ref.read(authRepositoryProvider).signOut();
       if (!mounted) return;
-      _invalidateUserState();
       context.go(AppRoute.home.path);
       messenger.showSnackBar(
         const SnackBar(content: Text('Logged out successfully.')),
       );
     } on Exception catch (error) {
       if (!mounted) return;
+      ref.read(activeUserIdProvider.notifier).restoreCurrentUser();
       messenger.showSnackBar(
         SnackBar(content: Text('Failed to log out: $error')),
       );
@@ -236,8 +244,6 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
     // Drop every provider that can retain user-owned or locally persisted
     // values. The next account starts from newly loaded, empty state.
     ref
-      ..invalidate(authStateProvider)
-      ..invalidate(currentUserProvider)
       ..invalidate(favoriteVocabularyProvider)
       ..invalidate(favoriteGrammarProvider)
       ..invalidate(homeContentProvider)

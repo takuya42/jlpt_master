@@ -8,9 +8,13 @@ import '../../data/user_learning_repository.dart';
 const _jlptLevels = ['N5', 'N4', 'N3', 'N2', 'N1'];
 
 final userLearningRepositoryProvider = Provider<UserLearningRepository>((ref) => UserLearningRepository());
-final favoritesProvider = StreamProvider.family<Set<String>, String>((ref, type) {
-  ref.watch(authStateProvider);
-  return ref.watch(userLearningRepositoryProvider).watchFavoriteIds(type);
+final _favoritesForUserProvider = StreamProvider.family<Set<String>, ({String uid, String type})>((ref, key) {
+  return ref.watch(userLearningRepositoryProvider).watchFavoriteIds(key.uid, key.type);
+});
+final favoritesProvider = Provider.family<AsyncValue<Set<String>>, String>((ref, type) {
+  final uid = ref.watch(activeUserIdProvider);
+  if (uid == null) return const AsyncData(<String>{});
+  return ref.watch(_favoritesForUserProvider((uid: uid, type: type)));
 });
 final learningQuestionTotalsProvider = FutureProvider<Map<String, int>>((ref) async {
   final totals = {for (final level in _jlptLevels) level: 0};
@@ -28,22 +32,32 @@ final learningQuestionTotalsProvider = FutureProvider<Map<String, int>>((ref) as
   return totals;
 });
 
-final learningStatisticsProvider = StreamProvider<LearningStatistics>((ref) {
-  ref.watch(authStateProvider);
+final _learningStatisticsForUserProvider = StreamProvider.family<LearningStatistics, String>((ref, uid) {
   final totals = ref.watch(learningQuestionTotalsProvider).asData?.value;
   if (totals == null) {
     return const Stream<LearningStatistics>.empty();
   }
-  return ref.watch(userLearningRepositoryProvider).watchStatistics(totalQuestionsByLevel: totals);
+  return ref.watch(userLearningRepositoryProvider).watchStatistics(uid, totalQuestionsByLevel: totals);
+});
+final learningStatisticsProvider = Provider<AsyncValue<LearningStatistics>>((ref) {
+  final uid = ref.watch(activeUserIdProvider);
+  if (uid == null) return AsyncData(LearningStatistics.empty());
+  return ref.watch(_learningStatisticsForUserProvider(uid));
 });
 final studyProgressProvider = learningStatisticsProvider;
 
-final favoriteEntriesProvider = StreamProvider<List<FavoriteEntry>>((ref) {
-  ref.watch(authStateProvider);
-  return ref.watch(userLearningRepositoryProvider).watchFavorites();
+final _favoriteEntriesForUserProvider = StreamProvider.family<List<FavoriteEntry>, String>((ref, uid) =>
+    ref.watch(userLearningRepositoryProvider).watchFavorites(uid));
+final favoriteEntriesProvider = Provider<AsyncValue<List<FavoriteEntry>>>((ref) {
+  final uid = ref.watch(activeUserIdProvider);
+  if (uid == null) return const AsyncData(<FavoriteEntry>[]);
+  return ref.watch(_favoriteEntriesForUserProvider(uid));
 });
 
-final learningGoalProvider = StreamProvider<LearningGoal>((ref) {
-  ref.watch(authStateProvider);
-  return ref.watch(userLearningRepositoryProvider).watchLearningGoal();
+final _learningGoalForUserProvider = StreamProvider.family<LearningGoal, String>((ref, uid) =>
+    ref.watch(userLearningRepositoryProvider).watchLearningGoal(uid));
+final learningGoalProvider = Provider<AsyncValue<LearningGoal>>((ref) {
+  final uid = ref.watch(activeUserIdProvider);
+  if (uid == null) return AsyncData(LearningGoal.defaultGoal());
+  return ref.watch(_learningGoalForUserProvider(uid));
 });

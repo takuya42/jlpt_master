@@ -62,9 +62,13 @@ class SelectedGrammarJlptLevelNotifier extends Notifier<String> {
 
 final favoriteGrammarIdsProvider = favoriteGrammarProvider;
 
-final studiedGrammarIdsProvider = StreamProvider<Set<String>>((ref) {
-  ref.watch(authStateProvider);
-  return ref.watch(userLearningRepositoryProvider).watchStudiedGrammarIds();
+final _studiedGrammarIdsForUserProvider = StreamProvider.family<Set<String>, String>((ref, uid) {
+  return ref.watch(userLearningRepositoryProvider).watchStudiedGrammarIds(uid);
+});
+final studiedGrammarIdsProvider = Provider<AsyncValue<Set<String>>>((ref) {
+  final uid = ref.watch(activeUserIdProvider);
+  if (uid == null) return const AsyncData(<String>{});
+  return ref.watch(_studiedGrammarIdsForUserProvider(uid));
 });
 
 final filteredGrammarPatternsProvider = Provider<AsyncValue<List<GrammarPattern>>>((ref) {
