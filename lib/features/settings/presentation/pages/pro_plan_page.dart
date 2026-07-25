@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../app/theme/app_theme.dart';
 import '../../../../shared/presentation/widgets/app_background.dart';
+import '../../data/pro_plan_price.dart';
 import '../providers/purchase_providers.dart';
 
 class ProPlanPage extends ConsumerWidget {
@@ -90,6 +91,9 @@ class _ProCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colors = theme.colorScheme;
+    final price = state.product == null
+        ? ProPlanPriceFormatter.fallback
+        : const ProPlanPriceFormatter().fromProduct(state.product!);
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
       decoration: BoxDecoration(
@@ -171,18 +175,53 @@ class _ProCard extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.center,
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
-              Text(
-                state.product?.price ?? r'US$6.99',
-                style: theme.textTheme.displayLarge?.copyWith(
-                  fontWeight: FontWeight.w900,
-                  height: 0.95,
+              Flexible(
+                child: Text(
+                  price.price,
+                  overflow: TextOverflow.ellipsis,
+                  style: theme.textTheme.displayLarge?.copyWith(
+                    fontWeight: FontWeight.w900,
+                    height: 0.95,
+                  ),
                 ),
               ),
               Padding(
                 padding: const EdgeInsets.only(bottom: 7, left: 6),
-                child: Text('/month', style: theme.textTheme.titleMedium),
+                child: Text(
+                  ' / ${price.period}',
+                  style: theme.textTheme.titleMedium,
+                ),
               ),
             ],
+          ),
+          if (price.referencePrice case final referencePrice?) ...[
+            const SizedBox(height: 10),
+            Text(
+              referencePrice,
+              textAlign: TextAlign.center,
+              style: theme.textTheme.titleMedium?.copyWith(
+                color: colors.onSurfaceVariant,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+          ],
+          const SizedBox(height: 14),
+          Text(
+            'The final price is determined by the App Store.\n'
+            'Actual prices may vary by country and currency.',
+            textAlign: TextAlign.center,
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: colors.onSurfaceVariant,
+              height: 1.4,
+            ),
+          ),
+          const SizedBox(height: 6),
+          Text(
+            'App Storeでの実際の価格は国・地域によって異なります。',
+            textAlign: TextAlign.center,
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: colors.onSurfaceVariant,
+            ),
           ),
           const SizedBox(height: 26),
           _GradientButton(
