@@ -2,7 +2,7 @@ import 'dart:async';
 
 import 'package:in_app_purchase/in_app_purchase.dart';
 
-const proMonthlyProductId = 'jlpt_master_pro_monthly';
+const proMonthlyProductId = 'jlpt_master_pro_monthly_v2';
 
 class PurchaseService {
   PurchaseService([InAppPurchase? store])
