@@ -7,7 +7,7 @@ import '../../data/study_stats_repository.dart';
 import '../../domain/study_stats.dart';
 
 final studyStatsRepositoryProvider = Provider<StudyStatsRepository>((ref) {
-  return StudyStatsRepository();
+  return StudyStatsRepository(userId: ref.watch(activeUserIdProvider));
 });
 
 final studyQuestionTotalsProvider = FutureProvider<({int vocabulary, int grammar})>((ref) async {
@@ -23,8 +23,8 @@ final studyStatsProvider = AsyncNotifierProvider<StudyStatsNotifier, StudyStatsS
 class StudyStatsNotifier extends AsyncNotifier<StudyStatsSummary> {
   @override
   Future<StudyStatsSummary> build() async {
-    final user = ref.watch(authStateProvider).value;
-    if (user == null) return _emptySummary;
+    final uid = ref.watch(activeUserIdProvider);
+    if (uid == null) return _emptySummary;
 
     final totals = await ref.watch(studyQuestionTotalsProvider.future);
     final stats = await ref.watch(studyStatsRepositoryProvider).load();

@@ -13,17 +13,16 @@ class UserLearningRepository {
 
   String? get _uid => _auth.currentUser?.uid;
   DocumentReference<Map<String, dynamic>>? get _userRef => _uid == null ? null : _firestore.collection('users').doc(_uid);
+  DocumentReference<Map<String, dynamic>> _userRefFor(String uid) => _firestore.collection('users').doc(uid);
 
-  Stream<Set<String>> watchFavoriteIds(String type) {
-    final ref = _userRef;
-    if (ref == null) return Stream.value(<String>{});
+  Stream<Set<String>> watchFavoriteIds(String uid, String type) {
+    final ref = _userRefFor(uid);
     return ref.collection('favorites').where('type', isEqualTo: type).snapshots().map((s) => s.docs.map((d) => d.id).toSet());
   }
 
 
-  Stream<Set<String>> watchStudiedGrammarIds() {
-    final ref = _userRef;
-    if (ref == null) return Stream.value(<String>{});
+  Stream<Set<String>> watchStudiedGrammarIds(String uid) {
+    final ref = _userRefFor(uid);
     return ref.collection('grammar_history').snapshots().map((snapshot) {
       return snapshot.docs.expand((doc) {
         final grammarId = doc.data()['grammarId'] as String?;
@@ -32,9 +31,8 @@ class UserLearningRepository {
     });
   }
 
-  Stream<List<FavoriteEntry>> watchFavorites() {
-    final ref = _userRef;
-    if (ref == null) return Stream.value(const <FavoriteEntry>[]);
+  Stream<List<FavoriteEntry>> watchFavorites(String uid) {
+    final ref = _userRefFor(uid);
     return ref.collection('favorites').orderBy('updatedAt', descending: true).snapshots().map(
           (snapshot) => snapshot.docs.map(FavoriteEntry.fromSnapshot).toList(growable: false),
         );
@@ -58,9 +56,8 @@ class UserLearningRepository {
     }
   }
 
-  Stream<LearningGoal> watchLearningGoal() {
-    final ref = _userRef;
-    if (ref == null) return Stream.value(LearningGoal.defaultGoal());
+  Stream<LearningGoal> watchLearningGoal(String uid) {
+    final ref = _userRefFor(uid);
     return ref.collection('settings').doc('learning_goal').snapshots().map(LearningGoal.fromSnapshot);
   }
 
@@ -137,9 +134,8 @@ class UserLearningRepository {
     await _incrementStat('grammarCount');
   }
 
-  Stream<LearningStatistics> watchStatistics({required Map<String, int> totalQuestionsByLevel}) {
-    final ref = _userRef;
-    if (ref == null) return Stream.value(LearningStatistics.empty(totalQuestionsByLevel: totalQuestionsByLevel));
+  Stream<LearningStatistics> watchStatistics(String uid, {required Map<String, int> totalQuestionsByLevel}) {
+    final ref = _userRefFor(uid);
 
     late StreamController<LearningStatistics> controller;
     DocumentSnapshot<Map<String, dynamic>>? summarySnapshot;
