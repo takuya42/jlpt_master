@@ -80,22 +80,9 @@ class MockHomeRepository implements HomeRepository {
         progressPercent: 0,
         goalProgress: 0,
       ),
-      recentHistory: const [
-        StudyHistoryItemData(
-          title: LocalizedText(en: 'N5 Vocabulary Review', ja: 'N5 語彙復習'),
-          subtitle: LocalizedText(en: '32 words practiced', ja: '32語を練習'),
-          completedAtLabel: 'Today',
-          accuracyPercent: 91,
-          icon: Icons.menu_book_outlined,
-        ),
-        StudyHistoryItemData(
-          title: LocalizedText(en: 'Grammar: particles', ja: '文法：助詞'),
-          subtitle: LocalizedText(en: '10 questions completed', ja: '10問完了'),
-          completedAtLabel: 'Yesterday',
-          accuracyPercent: 80,
-          icon: Icons.subject_outlined,
-        ),
-      ],
+      // Learning history must come from the signed-in user's data source.
+      // Never present sample activity as if it belonged to the current user.
+      recentHistory: const [],
     );
   }
 }
