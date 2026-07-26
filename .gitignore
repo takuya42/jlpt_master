@@ -32,9 +32,6 @@ migrate_working_dir/
 .pub/
 /build/
 /coverage/
-functions/lib/
-functions/node_modules/
-functions/.secret.local
 
 # Symbolication related
 app.*.symbols
