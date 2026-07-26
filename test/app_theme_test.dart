@@ -21,7 +21,7 @@ void main() {
 
     expect(AppTheme.light.appBarTheme.backgroundColor, light.appBarColor);
     expect(AppTheme.dark.appBarTheme.backgroundColor, dark.appBarColor);
-    expect(AppTheme.light.navigationBarTheme.backgroundColor, light.navigationBarColor);
+    expect(AppTheme.light.navigationBarTheme.backgroundColor, Colors.transparent);
     expect(light.appBarColor, isNot(const Color(0xFFFFFFFF)));
     expect(light.backgroundGradient, isNot(dark.backgroundGradient));
   });

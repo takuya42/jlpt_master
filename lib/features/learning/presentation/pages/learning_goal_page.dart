@@ -3,9 +3,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../data/user_learning_repository.dart';
 import '../providers/learning_providers.dart';
+import '../../../../shared/presentation/widgets/hero_app_bar_icon.dart';
 
 class LearningGoalPage extends ConsumerWidget {
-  const LearningGoalPage({super.key});
+  const LearningGoalPage({super.key, this.hero});
+
+  final HeroIconData? hero;
 
   static const _goals = [
     LearningGoal(type: LearningGoalType.questions, value: 10),
@@ -18,7 +21,17 @@ class LearningGoalPage extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final selected = ref.watch(learningGoalProvider).asData?.value ?? LearningGoal.defaultGoal();
     return Scaffold(
-      appBar: AppBar(title: const Text('Learning Goal / 学習目標')),
+      appBar: AppBar(
+        title: Row(
+          children: [
+            if (hero != null) ...[
+              HeroAppBarIcon(data: hero!),
+              const SizedBox(width: 12),
+            ],
+            const Expanded(child: Text('学習履歴')),
+          ],
+        ),
+      ),
       body: SafeArea(
         child: Center(
           child: ConstrainedBox(

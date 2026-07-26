@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
@@ -14,9 +15,25 @@ import '../../features/shell/presentation/main_shell.dart';
 import '../../features/vocabulary/domain/vocabulary_word.dart';
 import '../../features/vocabulary/presentation/pages/vocabulary_detail_page.dart';
 import '../../features/vocabulary/presentation/pages/vocabulary_page.dart';
+import '../../shared/presentation/widgets/hero_app_bar_icon.dart';
 import 'app_route.dart';
 
 final appRouterProvider = Provider<GoRouter>((ref) {
+  CustomTransitionPage<void> page(GoRouterState state, Widget child) =>
+      CustomTransitionPage<void>(
+        key: state.pageKey,
+        child: child,
+        transitionDuration: const Duration(milliseconds: 250),
+        transitionsBuilder: (context, animation, secondaryAnimation, child) =>
+            FadeTransition(
+              opacity: animation,
+              child: SlideTransition(
+                position: Tween(begin: const Offset(.025, .02), end: Offset.zero)
+                    .animate(CurvedAnimation(parent: animation, curve: Curves.easeOutCubic)),
+                child: child,
+              ),
+            ),
+      );
   return GoRouter(
     initialLocation: AppRoute.home.path,
     routes: [
@@ -25,11 +42,14 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         routes: [
           GoRoute(
             path: AppRoute.home.path,
-            builder: (context, state) => const HomePage(),
+            pageBuilder: (context, state) => page(state, const HomePage()),
           ),
           GoRoute(
             path: AppRoute.vocabulary.path,
-            builder: (context, state) => const VocabularyPage(),
+            pageBuilder: (context, state) => page(
+              state,
+              VocabularyPage(hero: _heroFrom(state)),
+            ),
           ),
           GoRoute(
             path: AppRoute.vocabularyDetail.path,
@@ -42,7 +62,10 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           ),
           GoRoute(
             path: AppRoute.grammar.path,
-            builder: (context, state) => const GrammarPage(),
+            pageBuilder: (context, state) => page(
+              state,
+              GrammarPage(hero: _heroFrom(state)),
+            ),
           ),
           GoRoute(
             path: AppRoute.grammarDetail.path,
@@ -52,11 +75,11 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           ),
           GoRoute(
             path: AppRoute.notes.path,
-            builder: (context, state) => const NotesPage(),
+            pageBuilder: (context, state) => page(state, const NotesPage()),
           ),
           GoRoute(
             path: AppRoute.settings.path,
-            builder: (context, state) => const SettingsPage(),
+            pageBuilder: (context, state) => page(state, const SettingsPage()),
           ),
           GoRoute(
             path: AppRoute.proPlan.path,
@@ -64,11 +87,17 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           ),
           GoRoute(
             path: AppRoute.favorite.path,
-            builder: (context, state) => const FavoritePage(),
+            pageBuilder: (context, state) => page(
+              state,
+              FavoritePage(hero: _heroFrom(state)),
+            ),
           ),
           GoRoute(
             path: AppRoute.learningGoal.path,
-            builder: (context, state) => const LearningGoalPage(),
+            pageBuilder: (context, state) => page(
+              state,
+              LearningGoalPage(hero: _heroFrom(state)),
+            ),
           ),
         ],
       ),
@@ -87,3 +116,6 @@ final appRouterProvider = Provider<GoRouter>((ref) {
     ],
   );
 });
+
+HeroIconData? _heroFrom(GoRouterState state) =>
+    state.extra is HeroIconData ? state.extra as HeroIconData : null;

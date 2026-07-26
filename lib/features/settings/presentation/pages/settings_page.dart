@@ -6,6 +6,7 @@ import 'package:url_launcher/url_launcher.dart';
 import '../../../../app/constants/app_urls.dart';
 import '../../../../app/navigation/app_route.dart';
 import '../../../../shared/presentation/widgets/app_background.dart';
+import '../../../../shared/presentation/widgets/loading_skeleton.dart';
 import '../../../auth/presentation/providers/auth_providers.dart';
 import '../../../favorites/presentation/providers/favorite_providers.dart';
 import '../../../grammar/presentation/providers/grammar_providers.dart';
@@ -493,11 +494,7 @@ class _DeleteAccountTile extends StatelessWidget {
     return ListTile(
       contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 6),
       leading: isDeleting
-          ? SizedBox(
-              width: 24,
-              height: 24,
-              child: CircularProgressIndicator(strokeWidth: 2, color: colorScheme.error),
-            )
+          ? const LoadingSkeletonBox(width: 24, height: 12)
           : Icon(Icons.delete_forever_outlined, color: colorScheme.error),
       title: Text('Delete Account', maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(color: colorScheme.error, fontWeight: FontWeight.w700)),
       subtitle: Text('退会', maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(color: colorScheme.error)),

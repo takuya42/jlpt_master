@@ -7,6 +7,7 @@ import 'package:go_router/go_router.dart';
 import '../../../../shared/presentation/widgets/app_background.dart';
 import '../../../../shared/presentation/widgets/app_state_views.dart';
 import '../../../../shared/presentation/widgets/upgrade_dialog.dart';
+import '../../../../shared/presentation/widgets/hero_app_bar_icon.dart';
 import '../../../../app/navigation/app_route.dart';
 import '../../domain/grammar_pattern.dart';
 import '../providers/grammar_providers.dart';
@@ -15,7 +16,9 @@ import '../widgets/grammar_studied_toggle.dart';
 import '../../../usage_limits/data/usage_limit_service.dart';
 
 class GrammarPage extends ConsumerStatefulWidget {
-  const GrammarPage({super.key});
+  const GrammarPage({super.key, this.hero});
+
+  final HeroIconData? hero;
 
   @override
   ConsumerState<GrammarPage> createState() => _GrammarPageState();
@@ -42,7 +45,17 @@ class _GrammarPageState extends ConsumerState<GrammarPage> {
 
     return Scaffold(
       backgroundColor: Colors.transparent,
-      appBar: AppBar(),
+      appBar: AppBar(
+        title: Row(
+          children: [
+            if (widget.hero != null) ...[
+              HeroAppBarIcon(data: widget.hero!),
+              const SizedBox(width: 12),
+            ],
+            const Text('文法学習'),
+          ],
+        ),
+      ),
       body: AppBackground(
         child: SafeArea(
           child: Center(

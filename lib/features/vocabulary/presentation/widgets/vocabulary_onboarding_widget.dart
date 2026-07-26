@@ -42,14 +42,14 @@ class _VocabularyStudyDialogState extends State<VocabularyStudyDialog>
     _swipeProgress = TweenSequence<double>([
       TweenSequenceItem(
         tween: Tween(begin: 0.0, end: 1.0).chain(
-          CurveTween(curve: Curves.easeInOut),
+          CurveTween(curve: Curves.easeOutCubic),
         ),
         weight: 20,
       ),
       TweenSequenceItem(tween: ConstantTween(1.0), weight: 10),
       TweenSequenceItem(
         tween: Tween(begin: 1.0, end: 0.0).chain(
-          CurveTween(curve: Curves.easeInOut),
+          CurveTween(curve: Curves.easeOutCubic),
         ),
         weight: 20,
       ),

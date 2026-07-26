@@ -22,10 +22,10 @@ class AppChromeTheme extends ThemeExtension<AppChromeTheme> {
   final Color decorationColor;
 
   static const light = AppChromeTheme(
-    appBarColor: Color(0xFFE9EAF8),
-    navigationBarColor: Color(0xFFE9EAF8),
-    backgroundGradient: [Color(0xFFF7F6FC), Color(0xFFEEEFF8), Color(0xFFE7EAF4)],
-    decorationColor: Color(0xFF59658A),
+    appBarColor: Color(0xFFF8FAFC),
+    navigationBarColor: Color(0xFFFFFFFF),
+    backgroundGradient: [Color(0xFFF8FAFC), Color(0xFFFFFFFF), Color(0xFFF8FAFC)],
+    decorationColor: Color(0xFF8EA6FF),
   );
 
   static const dark = AppChromeTheme(

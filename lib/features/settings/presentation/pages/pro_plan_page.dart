@@ -3,6 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../app/theme/app_theme.dart';
 import '../../../../shared/presentation/widgets/app_background.dart';
+import '../../../../shared/presentation/widgets/app_state_views.dart';
+import '../../../../shared/presentation/widgets/loading_skeleton.dart';
 import '../../data/pro_plan_price.dart';
 import '../providers/purchase_providers.dart';
 
@@ -29,7 +31,7 @@ class ProPlanPage extends ConsumerWidget {
         child: SafeArea(
           top: false,
           child: purchase.when(
-            loading: () => const Center(child: CircularProgressIndicator()),
+            loading: () => const AppLoadingView(message: 'プランを読み込み中'),
             error: (error, _) => _StoreError(
               message: error.toString(),
               onRetry: () => ref.read(purchaseProvider.notifier).retry(),
@@ -236,10 +238,7 @@ class _ProCard extends StatelessWidget {
           TextButton(
             onPressed: state.isRestoring ? null : onRestore,
             child: state.isRestoring
-                ? const SizedBox.square(
-                    dimension: 20,
-                    child: CircularProgressIndicator(strokeWidth: 2),
-                  )
+                ? const LoadingSkeletonBox(width: 80)
                 : const Text('Restore Purchases / 購入を復元'),
           ),
           const SizedBox(height: 4),
@@ -346,14 +345,7 @@ class _GradientButton extends StatelessWidget {
               height: 60,
               child: Center(
                 child: isLoading
-                    ? const SizedBox(
-                        width: 24,
-                        height: 24,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2.5,
-                          color: Colors.white,
-                        ),
-                      )
+                    ? const LoadingSkeletonBox(width: 72)
                     : Text(
                         label,
                         style: Theme.of(context).textTheme.titleMedium?.copyWith(

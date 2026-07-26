@@ -53,7 +53,7 @@ class _NotesContentState extends State<_NotesContent> with SingleTickerProviderS
   @override
   void initState() {
     super.initState();
-    _controller = AnimationController(vsync: this, duration: const Duration(milliseconds: 1000))..forward();
+    _controller = AnimationController(vsync: this, duration: const Duration(milliseconds: 220))..forward();
   }
 
   @override
@@ -107,7 +107,10 @@ class _MemoBottomSheet extends ConsumerWidget {
     return Padding(
       padding: EdgeInsets.fromLTRB(24, 24, 24, bottomInset + 24),
       child: note.when(
-        loading: () => const SizedBox(height: 240, child: Center(child: CircularProgressIndicator())),
+        loading: () => const SizedBox(
+          height: 240,
+          child: AppLoadingView(message: 'メモを読み込み中'),
+        ),
         error: (error, stackTrace) => AppErrorView(
           title: 'Memo',
           message: error.toString(),
@@ -230,7 +233,7 @@ class _MemoEditorState extends ConsumerState<MemoEditor> with TickerProviderStat
   void _showSavedToast() {
     _toastEntry?.remove();
     _toastController?.dispose();
-    _toastController = AnimationController(vsync: this, duration: const Duration(milliseconds: 300));
+    _toastController = AnimationController(vsync: this, duration: const Duration(milliseconds: 220));
     _toastEntry = OverlayEntry(
       builder: (context) => _SavedToast(animation: CurvedAnimation(parent: _toastController!, curve: Curves.easeOutCubic)),
     );
