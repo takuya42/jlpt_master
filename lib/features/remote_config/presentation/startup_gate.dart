@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import '../../../app/theme/app_radius.dart';
+import '../../../shared/extensions/build_context_extensions.dart';
 import '../remote_config_repository.dart';
 
 bool isNewerVersion(String requiredVersion, String currentVersion) {
@@ -58,11 +60,50 @@ class _StartupGateState extends State<StartupGate> {
     builder: (context, snapshot) {
       if (snapshot.data ?? false) return const ForceUpdatePage();
       if (snapshot.connectionState != ConnectionState.done) {
-        return const Scaffold(body: Center(child: CircularProgressIndicator()));
+        return const _SplashPage();
       }
       return widget.child;
     },
   );
+}
+
+class _SplashPage extends StatelessWidget {
+  const _SplashPage();
+
+  @override
+  Widget build(BuildContext context) => Scaffold(
+        body: Center(
+          child: TweenAnimationBuilder<double>(
+            duration: const Duration(milliseconds: 240),
+            curve: Curves.easeOutCubic,
+            tween: Tween(begin: 0, end: 1),
+            builder: (context, value, child) => Opacity(
+              opacity: value,
+              child: Transform.scale(scale: value, child: child),
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  width: 76,
+                  height: 76,
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF5B7FFF),
+                    borderRadius: BorderRadius.circular(AppRadius.extraLarge),
+                  ),
+                  child: const Icon(
+                    Icons.spa_rounded,
+                    color: Colors.white,
+                    size: 42,
+                  ),
+                ),
+                const SizedBox(height: 22),
+                Text('はりきゅうラボ', style: context.textStyles.headlineMedium),
+              ],
+            ),
+          ),
+        ),
+      );
 }
 
 class ForceUpdatePage extends StatelessWidget {

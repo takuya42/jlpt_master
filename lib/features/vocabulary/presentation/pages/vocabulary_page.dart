@@ -13,6 +13,7 @@ import '../../../../app/navigation/app_route.dart';
 import '../../../../app/theme/vocabulary_card_theme.dart';
 import '../../../../shared/presentation/widgets/app_background.dart';
 import '../../../../shared/presentation/widgets/app_state_views.dart';
+import '../../../../shared/presentation/widgets/hero_app_bar_icon.dart';
 import '../../../../shared/presentation/widgets/upgrade_dialog.dart';
 import '../../../usage_limits/data/usage_limit_service.dart';
 import '../../domain/vocabulary_word.dart';
@@ -22,7 +23,9 @@ import '../widgets/vocabulary_swipe_motion.dart';
 import '../../../study_stats/presentation/providers/study_stats_provider.dart';
 
 class VocabularyPage extends ConsumerStatefulWidget {
-  const VocabularyPage({super.key});
+  const VocabularyPage({super.key, this.hero});
+
+  final HeroIconData? hero;
 
   @override
   ConsumerState<VocabularyPage> createState() => _VocabularyPageState();
@@ -47,11 +50,11 @@ class _VocabularyPageState extends ConsumerState<VocabularyPage> with TickerProv
   void initState() {
     super.initState();
     _studyStartedAt = DateTime.now();
-    _cardEntranceController = AnimationController(vsync: this, duration: const Duration(milliseconds: 720))..forward();
-    _resultController = AnimationController(vsync: this, duration: const Duration(milliseconds: 780));
-    _shakeController = AnimationController(vsync: this, duration: const Duration(milliseconds: 520));
-    _confettiController = AnimationController(vsync: this, duration: const Duration(milliseconds: 900));
-    _swipeController = AnimationController(vsync: this, duration: const Duration(milliseconds: 460))
+    _cardEntranceController = AnimationController(vsync: this, duration: const Duration(milliseconds: 220))..forward();
+    _resultController = AnimationController(vsync: this, duration: const Duration(milliseconds: 220));
+    _shakeController = AnimationController(vsync: this, duration: const Duration(milliseconds: 220));
+    _confettiController = AnimationController(vsync: this, duration: const Duration(milliseconds: 220));
+    _swipeController = AnimationController(vsync: this, duration: const Duration(milliseconds: 220))
       ..addListener(() {
         final animation = _settleAnimation;
         if (animation != null && mounted) {
@@ -60,7 +63,7 @@ class _VocabularyPageState extends ConsumerState<VocabularyPage> with TickerProv
       });
     _idleSwipeController = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 900),
+      duration: const Duration(milliseconds: 220),
     )..addStatusListener((status) {
         if (status == AnimationStatus.completed) {
           _idleSwipeController.reset();
@@ -76,7 +79,7 @@ class _VocabularyPageState extends ConsumerState<VocabularyPage> with TickerProv
       TweenSequenceItem(tween: ConstantTween(1.0), weight: 200),
       TweenSequenceItem(
         tween: Tween(begin: 1.0, end: 0.0)
-            .chain(CurveTween(curve: Curves.easeInOutCubic)),
+            .chain(CurveTween(curve: Curves.easeOutCubic)),
         weight: 350,
       ),
     ]).animate(_idleSwipeController);
@@ -160,7 +163,7 @@ class _VocabularyPageState extends ConsumerState<VocabularyPage> with TickerProv
         ref.read(vocabularyQuizProvider.notifier).nextQuestion();
       });
     } else {
-      _settleAnimation = Tween<Offset>(begin: _dragOffset, end: Offset.zero).chain(CurveTween(curve: Curves.easeOutBack)).animate(_swipeController);
+      _settleAnimation = Tween<Offset>(begin: _dragOffset, end: Offset.zero).chain(CurveTween(curve: Curves.easeOutCubic)).animate(_swipeController);
       _swipeController.forward(from: 0);
     }
   }
@@ -207,7 +210,17 @@ class _VocabularyPageState extends ConsumerState<VocabularyPage> with TickerProv
 
     return VocabularyOnboardingWidget(
       child: Scaffold(
-        appBar: AppBar(),
+        appBar: AppBar(
+          title: Row(
+            children: [
+              if (widget.hero != null) ...[
+                HeroAppBarIcon(data: widget.hero!),
+                const SizedBox(width: 12),
+              ],
+              const Text('問題演習'),
+            ],
+          ),
+        ),
         body: Listener(
           behavior: HitTestBehavior.translucent,
           onPointerDown: (_) => _registerInteraction(),
@@ -289,7 +302,7 @@ class _VocabularyLevelFilters extends ConsumerWidget {
               for (final level in vocabularyJlptLevels)
                 Expanded(
                   child: AnimatedContainer(
-                    duration: const Duration(milliseconds: 260),
+                    duration: const Duration(milliseconds: 250),
                   curve: Curves.easeOutCubic,
                   decoration: BoxDecoration(
                       borderRadius: BorderRadius.circular(18),
@@ -386,7 +399,7 @@ class _VocabularyCardStack extends ConsumerWidget {
                     onInput: onInput,
                   ),
                   builder: (context, child) {
-                    final entrance = Curves.easeOutBack.transform(entranceController.value);
+                    final entrance = Curves.easeOutCubic.transform(entranceController.value);
                     final pop = math.sin(resultController.value * math.pi) * 0.045;
                     final lift = state.isCorrect == true ? -18.0 * Curves.easeOutCubic.transform(resultController.value) : 0.0;
                     final shake = state.isCorrect == false ? math.sin(shakeController.value * math.pi * 8) * 10 * (1 - shakeController.value) : 0.0;
@@ -665,7 +678,7 @@ class _VocabularyQuizCard extends ConsumerWidget {
                         ),
                         const SizedBox(height: 10),
                         PageTransitionSwitcher(
-                            duration: const Duration(milliseconds: 360),
+                            duration: const Duration(milliseconds: 220),
                             reverse: !isAnswered,
                             transitionBuilder: (child, animation, secondaryAnimation) => FadeScaleTransition(animation: animation, child: child),
                             child: !isAnswered
@@ -924,14 +937,14 @@ class _PressScaleButtonState extends State<_PressScaleButton> {
         VocabularyCardTheme.forBrightness(theme.brightness);
     return AnimatedScale(
       scale: _pressed ? 0.965 : 1,
-      duration: const Duration(milliseconds: 110),
+      duration: const Duration(milliseconds: 180),
       curve: Curves.easeOut,
       child: GestureDetector(
         onTapDown: widget.enabled ? (_) => setState(() => _pressed = true) : null,
         onTapCancel: () => setState(() => _pressed = false),
         onTapUp: widget.enabled ? (_) { setState(() => _pressed = false); widget.onPressed(); } : null,
         child: AnimatedContainer(
-          duration: const Duration(milliseconds: 130),
+          duration: const Duration(milliseconds: 180),
           curve: Curves.easeOutCubic,
           height: 46,
           transform: Matrix4.translationValues(0, _pressed ? 3 : 0, 0),

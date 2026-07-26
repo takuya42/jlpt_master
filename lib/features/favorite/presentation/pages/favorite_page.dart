@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../../../app/navigation/app_route.dart';
 import '../../../../shared/presentation/widgets/app_background.dart';
 import '../../../../shared/presentation/widgets/app_state_views.dart';
+import '../../../../shared/presentation/widgets/hero_app_bar_icon.dart';
 import '../../../favorites/presentation/providers/favorite_providers.dart';
 import '../../../grammar/domain/grammar_pattern.dart';
 import '../../../grammar/presentation/providers/grammar_providers.dart';
@@ -13,7 +14,9 @@ const _favoriteLevels = ['ALL', 'N5', 'N4', 'N3', 'N2', 'N1'];
 
 /// Displays grammar favorites saved with their globally unique JLPT/id key.
 class FavoritePage extends ConsumerStatefulWidget {
-  const FavoritePage({super.key});
+  const FavoritePage({super.key, this.hero});
+
+  final HeroIconData? hero;
 
   @override
   ConsumerState<FavoritePage> createState() => _FavoritePageState();
@@ -28,7 +31,17 @@ class _FavoritePageState extends ConsumerState<FavoritePage> {
     final patterns = ref.watch(grammarPatternsProvider);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Grammar Favorites\n文法のお気に入り')),
+      appBar: AppBar(
+        title: Row(
+          children: [
+            if (widget.hero != null) ...[
+              HeroAppBarIcon(data: widget.hero!),
+              const SizedBox(width: 12),
+            ],
+            const Expanded(child: Text('お気に入り')),
+          ],
+        ),
+      ),
       body: AppBackground(
         child: SafeArea(
           child: Center(

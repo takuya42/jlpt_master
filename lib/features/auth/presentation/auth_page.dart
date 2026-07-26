@@ -3,6 +3,7 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import '../../../shared/presentation/widgets/loading_skeleton.dart';
 import 'package:sign_in_with_apple/sign_in_with_apple.dart';
 
 import '../../../app/navigation/app_route.dart';
@@ -159,7 +160,7 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
 }
 
 
-class _AuthActionButton extends StatelessWidget { const _AuthActionButton({required this.onPressed, required this.loading, required this.icon, required this.label, required this.japaneseLabel}); final VoidCallback? onPressed; final bool loading; final IconData icon; final String label, japaneseLabel; @override Widget build(BuildContext context)=>FilledButton.tonalIcon(onPressed: onPressed, icon: loading ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2)) : Icon(icon), style: FilledButton.styleFrom(minimumSize: const Size.fromHeight(56), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16))), label: Text('$label\n$japaneseLabel', textAlign: TextAlign.center)); }
+class _AuthActionButton extends StatelessWidget { const _AuthActionButton({required this.onPressed, required this.loading, required this.icon, required this.label, required this.japaneseLabel}); final VoidCallback? onPressed; final bool loading; final IconData icon; final String label, japaneseLabel; @override Widget build(BuildContext context)=>FilledButton.tonalIcon(onPressed: onPressed, icon: loading ? const LoadingSkeletonBox(width: 20) : Icon(icon), style: FilledButton.styleFrom(minimumSize: const Size.fromHeight(56), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16))), label: Text('$label\n$japaneseLabel', textAlign: TextAlign.center)); }
 
 class _PasswordResetDialog extends StatefulWidget { const _PasswordResetDialog({required this.initialEmail}); final String initialEmail; @override State<_PasswordResetDialog> createState() => _PasswordResetDialogState(); }
 

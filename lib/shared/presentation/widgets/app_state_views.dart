@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'empty_state.dart';
+import 'loading_skeleton.dart';
 
 class AppLoadingView extends StatelessWidget {
   const AppLoadingView({super.key, this.message = 'Loading...'});
@@ -7,20 +9,7 @@ class AppLoadingView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return Center(
-      child: Semantics(
-        label: message,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const CircularProgressIndicator(),
-            const SizedBox(height: 16),
-            Text(message, style: theme.textTheme.bodyLarge),
-          ],
-        ),
-      ),
-    );
+    return const LoadingSkeleton();
   }
 }
 
@@ -40,33 +29,7 @@ class AppEmptyView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(icon, size: 64, color: theme.colorScheme.onSurfaceVariant),
-            const SizedBox(height: 16),
-            Text(
-              title,
-              style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 8),
-            Text(
-              message,
-              style: theme.textTheme.bodyMedium?.copyWith(
-                color: theme.colorScheme.onSurfaceVariant,
-              ),
-              textAlign: TextAlign.center,
-            ),
-            if (action != null) ...[const SizedBox(height: 20), action!],
-          ],
-        ),
-      ),
-    );
+    return Center(child: EmptyState(icon: icon, title: title, message: message, action: action));
   }
 }
 

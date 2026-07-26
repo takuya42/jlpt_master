@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../app/navigation/app_route.dart';
+import '../../../../shared/presentation/widgets/app_state_views.dart';
 import '../../../../shared/presentation/widgets/memo_button.dart';
 import '../../../notes/presentation/pages/notes_page.dart';
 import '../../domain/grammar_pattern.dart';
@@ -53,7 +54,7 @@ class _GrammarDetailPageState extends ConsumerState<GrammarDetailPage> {
           error: (error, stackTrace) => Center(
             child: Text('Could not load grammar detail. / 文法詳細を読み込めません。\n$error', textAlign: TextAlign.center),
           ),
-          loading: () => const Center(child: CircularProgressIndicator()),
+          loading: () => const AppLoadingView(message: '文法を読み込み中'),
         ),
       ),
     );
